@@ -1,0 +1,29 @@
+{
+  "name": "@openmeme/dev",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Developer utilities for OpenMeme contributors",
+  "type": "module",
+  "bin": {
+    "openmeme-dev": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src/**/*.ts",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@openmeme/scraper": "workspace:*",
+    "commander": "^13.0.0",
+    "chalk": "^5.0.0",
+    "ora": "^8.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "license": "Apache-2.0"
+}
