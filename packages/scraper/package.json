@@ -1,0 +1,28 @@
+{
+  "name": "@openmeme/scraper",
+  "version": "1.0.0",
+  "description": "Reddit meme scraper pipeline - migrated from reddit.memes",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src/**/*.ts",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "commander": "^13.0.0",
+    "p-queue": "^8.0.0",
+    "sharp": "^0.33.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "keywords": ["reddit", "meme", "scraper", "pipeline"],
+  "license": "Apache-2.0"
+}

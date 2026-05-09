@@ -3,15 +3,27 @@
   "version": "1.0.0",
   "private": true,
   "description": "OpenMeme monorepo",
+  "type": "module",
   "scripts": {
-    "build": "pnpm -r build",
-    "dev": "pnpm -r --parallel dev",
-    "lint": "pnpm -r lint",
-    "test": "pnpm -r test",
-    "clean": "pnpm -r clean"
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "turbo run clean",
+    "scrape": "pnpm --filter @openmeme/scraper start",
+    "guard": "pnpm --filter @openmeme/scripts guard",
+    "sync": "pnpm --filter @openmeme/scripts sync",
+    "optimize": "pnpm --filter @openmeme/scripts optimize",
+    "add-meme": "pnpm --filter @openmeme/cli add",
+    "validate": "pnpm --filter @openmeme/cli validate",
+    "stats": "pnpm --filter @openmeme/cli stats",
+    "setup-hooks": "pnpm --filter @openmeme/dev setup-hooks"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.33.0"
+  "keywords": ["meme", "reddit", "scraper", "monorepo"],
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@10.33.0",
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.7.0"
+  }
 }
