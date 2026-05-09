@@ -1,16 +1,28 @@
 {
   "name": "@openmeme/web",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "private": true,
-  "description": "OpenMeme web app",
   "scripts": {
-    "dev": "echo 'dev'",
-    "build": "echo 'build'",
-    "lint": "echo 'lint'",
-    "test": "echo 'test'",
-    "clean": "rm -rf dist"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "dependencies": {
+    "@openmeme/ui": "workspace:*",
+    "next": "16.2.4",
+    "next-intl": "^4.11.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.4",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
 }
