@@ -1,7 +1,7 @@
 {
   "name": "@openmeme/ui",
   "version": "1.0.0",
-  "description": "OpenMeme shared UI components",
+  "description": "OpenMeme shared React components for displaying memes with a consistent design",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
@@ -10,7 +10,12 @@
     "test": "echo 'test'",
     "clean": "rm -rf dist"
   },
-  "keywords": [],
+  "peerDependencies": {
+    "next": ">=16",
+    "react": ">=19",
+    "react-dom": ">=19"
+  },
+  "keywords": ["memes", "ui", "components", "react"],
   "author": "",
   "license": "ISC"
 }
