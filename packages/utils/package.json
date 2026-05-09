@@ -1,0 +1,16 @@
+{
+  "name": "@openmeme/utils",
+  "version": "1.0.0",
+  "description": "OpenMeme shared utilities",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "echo 'build'",
+    "lint": "echo 'lint'",
+    "test": "echo 'test'",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
