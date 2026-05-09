@@ -1,0 +1,72 @@
+spring:
+  application:
+    name: memes-api
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/memesdb}
+    username: ${DB_USER:memes}
+    password: ${DB_PASSWORD:memes}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: pg-pool
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    validate-on-migrate: true
+    out-of-order: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+
+  cache:
+    type: redis
+
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+
+memes:
+  root: ${MEMES_ROOT:../memes}
+  admin-api-key: ${ADMIN_API_KEY}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: alpha
+
+logging:
+  level:
+    com.memes.api: INFO
+
+app:
+  logging:
+    max-body-size: 1000
+    mask-headers:
+      - X-Api-Key
+      - Authorization
