@@ -1,0 +1,16 @@
+{
+  "name": "@openmeme/web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OpenMeme web app",
+  "scripts": {
+    "dev": "echo 'dev'",
+    "build": "echo 'build'",
+    "lint": "echo 'lint'",
+    "test": "echo 'test'",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

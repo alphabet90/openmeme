@@ -1,0 +1,15 @@
+{
+  "name": "@openmeme/config",
+  "version": "1.0.0",
+  "description": "OpenMeme shared configuration (TypeScript, ESLint, etc.)",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "echo 'lint'",
+    "test": "echo 'test'",
+    "clean": "echo 'nothing to clean'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
