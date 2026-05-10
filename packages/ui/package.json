@@ -15,6 +15,10 @@
     "react": ">=19",
     "react-dom": ">=19"
   },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0"
+  },
   "keywords": ["memes", "ui", "components", "react"],
   "author": "",
   "license": "ISC"
