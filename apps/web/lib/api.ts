@@ -1,7 +1,6 @@
 /**
  * Typed client for the OpenMEME memes API v2.
  *
- * Contract: NEXT_PUBLIC_MEMES_API_URL  (OpenAPI 3.0.3 v2)
  * Server-side fetches use Next.js' built-in `cache` + `revalidate`
  * options for ISR — no third-party SWR layer needed for SSR/SSG.
  *
