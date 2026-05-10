@@ -46,8 +46,8 @@ OpenMeme is a modular monorepo for scraping, classifying, indexing, and serving 
 │       └── package.json    # @openmeme/dev
 ├── craft/
 │   └── rules.md            # Brand manifesto + "good meme" criteria + anti-AI-slop
-├── api/                    # Java Spring Boot REST API
-├── clients/web/            # Next.js frontend
+├── apps/api/                    # Java Spring Boot REST API
+├── apps/web/            # Next.js frontend
 ├── memes/                  # Git-tracked meme collection (2,086 files, 134 MB, 388 categories)
 ├── docs/
 │   └── CLI.md              # Complete CLI reference
@@ -116,7 +116,7 @@ pnpm optimize --all
 docker-compose up
 
 # Frontend (in another terminal)
-cd clients/web && pnpm dev
+cd apps/web && pnpm dev
 ```
 
 ---
@@ -216,7 +216,7 @@ See `packages/design-system/references/design-refero.md` for full documentation.
 3. **CLI**: `tools/cli/src/commands/` — interactive commands
 4. **Design**: `packages/design-system/` — tokens, components
 5. **API**: `api/` — Java Spring Boot
-6. **Web**: `clients/web/` — Next.js frontend
+6. **Web**: `apps/web/` — Next.js frontend
 
 **Before committing**: Run `pnpm guard --staged` to validate your memes.
 

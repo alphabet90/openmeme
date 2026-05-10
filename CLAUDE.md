@@ -12,7 +12,7 @@ OpenMeme is a modular monorepo for scraping, classifying, curating, and serving 
 - **tools/dev/** — Developer utilities: lint, benchmark, prompt generation, db-check, git hooks
 - **packages/design-system/** — CSS tokens and components following Refero Research-First Design
 - **api/** — Java Spring Boot REST API (from reddit.memes)
-- **clients/web/** — Next.js frontend (from reddit.memes)
+- **apps/web/** — Next.js frontend (from reddit.memes)
 - **memes/** — Git-tracked meme images + MDX metadata
 
 ## Running the Application
@@ -44,7 +44,7 @@ pnpm optimize --all         # Compress images, enforce budget
 ### Full dev stack
 ```bash
 docker-compose up           # PostgreSQL + Redis + API
-cd clients/web && pnpm dev  # Frontend dev server
+cd apps/web && pnpm dev  # Frontend dev server
 ```
 
 ---
@@ -127,7 +127,7 @@ scripts/      # @openmeme/scripts — automation
 | Dev utilities | `tools/dev/src/commands/*` |
 | Design tokens / components | `packages/design-system/*` |
 | Backend / API | `api/*` |
-| Frontend / UI | `clients/web/*` |
+| Frontend / UI | `apps/web/*` |
 | Quality standards | `craft/rules.md` |
 
 **NEVER scan `memes/` in bulk.** Thousands of images will exhaust context.

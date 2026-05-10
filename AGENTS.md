@@ -9,8 +9,8 @@ Single source of truth for AI coding agents working on this repository. OpenMeme
 3. **CLI Tools** (`tools/cli/`) — Interactive meme management (add, list, search, validate, stats, import)
 4. **Dev Tools** (`tools/dev/`) — Lint, benchmark, prompt generation, db-check, git hooks
 5. **Design System** (`packages/design-system/`) — Color tokens, typography, components (Refero standard)
-6. **Java API** (`api/`) — Spring Boot REST API + PostgreSQL + Redis (from reddit.memes)
-7. **Next.js Web Client** (`clients/web/`) — React/TypeScript frontend (from reddit.memes)
+6. **Java API** (`apps/api/`) — Spring Boot REST API + PostgreSQL + Redis (from reddit.memes)
+7. **Next.js Web Client** (`apps/web/`) — React/TypeScript frontend (from reddit.memes)
 8. **Meme Collection** (`memes/`) — Git-tracked meme images + MDX metadata (from reddit.memes)
 
 ---
@@ -54,8 +54,8 @@ Single source of truth for AI coding agents working on this repository. OpenMeme
 │       └── package.json   # @openmeme/dev
 ├── craft/
 │   └── rules.md           # Brand manifesto + quality standards
-├── api/                   # Java Spring Boot REST API
-├── clients/web/           # Next.js frontend
+├── apps/api/                   # Java Spring Boot REST API
+├── apps/web/           # Next.js frontend
 ├── memes/                 # Git-tracked meme collection
 ├── .github/workflows/     # CI/CD (index-memes.yml)
 ├── docker-compose.yml     # Local dev stack
@@ -100,7 +100,7 @@ cd api && mvn verify         # Compile + test
 
 ### Web Client
 ```bash
-cd clients/web && pnpm dev   # Dev server
+cd apps/web && pnpm dev   # Dev server
 ```
 
 ### Docker Compose (full stack)
@@ -139,7 +139,7 @@ docker-compose up            # Postgres + Redis + API
 | Scraper | `cd packages/scraper && pnpm test` |
 | Bloom filter | `cd packages/scraper && pnpm test` |
 | API | `cd api && mvn test` |
-| Web | `cd clients/web && pnpm lint` |
+| Web | `cd apps/web && pnpm lint` |
 
 ---
 
