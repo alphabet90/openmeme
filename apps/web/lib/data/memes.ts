@@ -24,10 +24,10 @@ function hash(id: string): number {
 
 const placeholderTiles: Array<{ glyph: string; gradient: string }> = [
   { glyph: "🐕", gradient: "linear-gradient(135deg,#3a2510,#5a3510)" },
-  { glyph: "\ud83c\udfa d", gradient: "linear-gradient(135deg,#1a1a3a,#2a2a5a)" },
+  { glyph: "🎭", gradient: "linear-gradient(135deg,#1a1a3a,#2a2a5a)" },
   { glyph: "🐱", gradient: "linear-gradient(135deg,#1a3020,#204a30)" },
   { glyph: "🐧", gradient: "linear-gradient(135deg,#2a1a3a,#3a2a5a)" },
-  { glyph: "\ud83c\udfa c", gradient: "linear-gradient(135deg,#3a2a1a,#5a4020)" },
+  { glyph: "🎬", gradient: "linear-gradient(135deg,#3a2a1a,#5a4020)" },
   { glyph: "🐭", gradient: "linear-gradient(135deg,#0a1a2a,#0a2030)" },
   { glyph: "🦊", gradient: "linear-gradient(135deg,#2a1010,#401820)" },
   { glyph: "🐩", gradient: "linear-gradient(135deg,#1a0a1a,#2a1030)" },

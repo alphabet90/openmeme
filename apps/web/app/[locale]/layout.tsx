@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Space_Grotesk } from "next/font/google";
-import localFont from "next/font/local";
+import { Anton, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
@@ -20,16 +19,11 @@ const spaceGrotesk = Space_Grotesk({
   weight: ["300", "400", "500", "600", "700"],
 });
 
-const anton = localFont({
+const anton = Anton({
   variable: "--font-display",
   display: "swap",
-  src: [
-    {
-      path: "../../public/fonts/Anton-Regular.ttf",
-      weight: "400",
-      style: "normal",
-    },
-  ],
+  weight: "400",
+  subsets: ["latin"],
 });
 
 export const viewport: Viewport = {
