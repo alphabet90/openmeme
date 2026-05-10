@@ -1,7 +1,80 @@
-node_modules/
-dist/
-.turbo/
-*.local
+# ============================================================
+# OpenMeme — Git Ignore
+# ============================================================
+
+# ── SECRETS ──────────────────────────────────────────────────
 .env
-.env.*
-!.env.example
+.env.local
+.env.*.local
+secrets/
+**/*.key
+**/*.pem
+
+# ── DATA / CACHE ─────────────────────────────────────────────
+# Bloom filter (auto-generated, binary)
+processed.bloom
+*.bloom
+# JSON state files (legacy — replaced by bloom filter)
+*.json
+!package.json
+!tsconfig.json
+!sync.config.json
+# Temporary directories
+tmp/
+temp/
+
+# ── NODE / PNPM ──────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.pnpm-store/
+.pnpm-workspace.yaml.bak
+
+# ── BUILD OUTPUT ─────────────────────────────────────────────
+dist/
+build/
+.next/
+*.tsbuildinfo
+.turbo/
+
+# ── JAVA / MAVEN ─────────────────────────────────────────────
+target/
+.mvn/
+*.class
+*.jar
+*.war
+*.ear
+
+# ── IDE ──────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ── LOGS ─────────────────────────────────────────────────────
+*.log
+logs/
+log/
+
+# ── TESTING ──────────────────────────────────────────────────
+coverage/
+.nyc_output/
+*.lcov
+
+# ── SCRAPER OUTPUT ───────────────────────────────────────────
+# Ignored by default — controlled via SUBREDDIT env var
+# Output directories for processed memes
+out/
+output/
+
+# ── PYTHON (legacy compat) ───────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
