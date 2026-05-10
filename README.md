@@ -234,20 +234,6 @@ See `packages/design-system/references/design-refero.md` for full documentation.
 
 ---
 
-## Migrated From
-
-This project was originally [`reddit.memes`](https://github.com/alphabet90/reddit.memes) — a Python-based Reddit meme scraper. It was migrated to a modular TypeScript monorepo with:
-
-- Full TypeScript port of the scraper pipeline
-- New scripts (guard, sync, optimize)
-- CLI tool for interactive meme management
-- Developer utilities (lint, benchmark, db-check)
-- Design system with Refero standards
-- Docker Compose orchestration
-- CI/CD with GitHub Actions
-
----
-
 ## License
 
 [Apache-2.0](LICENSE)
