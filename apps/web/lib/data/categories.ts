@@ -1,6 +1,5 @@
 import type { Category, CategoryIcon } from "@openmeme/ui";
 import { fetchCategories, type ApiCategorySummary, type LocaleCode } from "@/lib/api";
-import { defaultLocale } from "@/i18n/routing";
 
 const iconBySlug: Record<string, CategoryIcon> = {
   "la-vida": "globe",
@@ -22,7 +21,7 @@ function humanize(slug: string): string {
     .join(" ");
 }
 
-function toCategory(api: ApiCategorySummary, locale: LocaleCode = defaultLocale): Category {
+function toCategory(api: ApiCategorySummary, locale: LocaleCode): Category {
   const translation =
     api.translations?.find((t) => t.locale === locale) ??
     api.translations?.[0];
@@ -35,7 +34,7 @@ function toCategory(api: ApiCategorySummary, locale: LocaleCode = defaultLocale)
   };
 }
 
-export async function getCategories(locale: LocaleCode = defaultLocale): Promise<Category[]> {
+export async function getCategories(locale: LocaleCode): Promise<Category[]> {
   const page = await fetchCategories({ limit: 100, locale });
   return page.data
     .map((c) => toCategory(c, locale))
@@ -44,7 +43,7 @@ export async function getCategories(locale: LocaleCode = defaultLocale): Promise
 
 export async function getCategory(
   slug: string,
-  locale: LocaleCode = defaultLocale,
+  locale: LocaleCode,
 ): Promise<Category | undefined> {
   const list = await getCategories(locale);
   return list.find((c) => c.slug === slug);

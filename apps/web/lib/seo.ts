@@ -1,9 +1,9 @@
 import { site } from "@/lib/site";
-import { defaultLocale, localeLangMap, type Locale } from "@/i18n/routing";
+import { localeLangMap, type Locale } from "@/i18n/routing";
 import type { Category, Meme } from "@openmeme/ui";
 
 export function websiteJsonLd(
-  locale: Locale = defaultLocale,
+  locale: Locale,
   strings: { tagline: string; description: string } = {
     tagline: site.tagline,
     description: site.description,
@@ -38,7 +38,7 @@ export function organizationJsonLd() {
 
 export function memeItemListJsonLd(
   memes: Meme[],
-  locale: Locale = defaultLocale,
+  locale: Locale,
   name = `Top memes — ${site.name}`,
 ) {
   const lang = localeLangMap[locale];
@@ -58,7 +58,7 @@ export function memeItemListJsonLd(
   };
 }
 
-export function memeImageObjectJsonLd(meme: Meme, locale: Locale = defaultLocale) {
+export function memeImageObjectJsonLd(meme: Meme, locale: Locale) {
   const lang = localeLangMap[locale];
   const pageUrl = `${site.url}/${locale}${meme.href}`;
   return {
@@ -87,7 +87,7 @@ export function memeImageObjectJsonLd(meme: Meme, locale: Locale = defaultLocale
 
 export function breadcrumbJsonLd(
   items: { name: string; href: string }[],
-  locale: Locale = defaultLocale,
+  locale: Locale,
 ) {
   return {
     "@context": "https://schema.org",
@@ -104,7 +104,7 @@ export function breadcrumbJsonLd(
 export function categoryCollectionJsonLd(
   category: Category,
   memes: Meme[],
-  locale: Locale = defaultLocale,
+  locale: Locale,
   strings?: { name: string; description: string },
 ) {
   const lang = localeLangMap[locale];
