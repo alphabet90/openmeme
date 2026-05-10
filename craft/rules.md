@@ -274,15 +274,6 @@ Target: 100% author attribution
 
 ---
 
-## 10. References
-
-- [Open Design Validation Scripts](https://opendesign.systems/)
-- [Nexu Anti-AI-Slop Checklist](https://nexu.dev/)
-- [Reddit Content Policy](https://www.redditinc.com/policies/content-policy)
-- [Creative Commons Licensing](https://creativecommons.org/)
-
----
-
 *Last updated: 2026-05-10*  
 *Version: 1.0.0*  
 *Maintained by: OpenMeme Contributors*
