@@ -24,10 +24,10 @@ function hash(id: string): number {
 
 const placeholderTiles: Array<{ glyph: string; gradient: string }> = [
   { glyph: "🐕", gradient: "linear-gradient(135deg,#3a2510,#5a3510)" },
-  { glyph: "\ud83c\udfa d", gradient: "linear-gradient(135deg,#1a1a3a,#2a2a5a)" },
+  { glyph: "🎭", gradient: "linear-gradient(135deg,#1a1a3a,#2a2a5a)" },
   { glyph: "🐱", gradient: "linear-gradient(135deg,#1a3020,#204a30)" },
   { glyph: "🐧", gradient: "linear-gradient(135deg,#2a1a3a,#3a2a5a)" },
-  { glyph: "\ud83c\udfa c", gradient: "linear-gradient(135deg,#3a2a1a,#5a4020)" },
+  { glyph: "🎬", gradient: "linear-gradient(135deg,#3a2a1a,#5a4020)" },
   { glyph: "🐭", gradient: "linear-gradient(135deg,#0a1a2a,#0a2030)" },
   { glyph: "🦊", gradient: "linear-gradient(135deg,#2a1010,#401820)" },
   { glyph: "🐩", gradient: "linear-gradient(135deg,#1a0a1a,#2a1030)" },
@@ -42,7 +42,7 @@ function inferFormat(imagePath: string | undefined | null): Meme["format"] {
 
 function getTranslation(
   translations: ApiMemeTranslation[],
-  preferLocale: LocaleCode = "en",
+  preferLocale: LocaleCode,
 ): ApiMemeTranslation | undefined {
   return translations.find((t) => t.locale === preferLocale) ?? translations[0];
 }
@@ -55,7 +55,7 @@ function makePlaceholder(id: string) {
   return placeholderTiles[hash(id) % placeholderTiles.length];
 }
 
-export function toMeme(api: ApiMeme, locale: LocaleCode = "en"): Meme {
+export function toMeme(api: ApiMeme, locale: LocaleCode): Meme {
   const id = `${api.category}/${api.slug}`;
   const tile = makePlaceholder(id);
   const translation = getTranslation(api.translations, locale);
@@ -110,7 +110,7 @@ export function toMemeFromSearchResult(api: ApiSearchResult): Meme {
   };
 }
 
-function toListing(page: ApiMemePage, locale: LocaleCode = "en"): MemeListing {
+function toListing(page: ApiMemePage, locale: LocaleCode): MemeListing {
   return {
     data: page.data.map((m) => toMeme(m, locale)),
     pageInfo: {
@@ -122,17 +122,17 @@ function toListing(page: ApiMemePage, locale: LocaleCode = "en"): MemeListing {
   };
 }
 
-export async function getTopMemes(limit = 5, locale: LocaleCode = "en"): Promise<Meme[]> {
+export async function getTopMemes(limit = 5, locale: LocaleCode): Promise<Meme[]> {
   const page = await fetchMemes({ limit, sort: "score", locale });
   return page.data.map((m) => toMeme(m, locale));
 }
 
-export async function getPopularMemes(limit = 12, locale: LocaleCode = "en"): Promise<Meme[]> {
+export async function getPopularMemes(limit = 12, locale: LocaleCode): Promise<Meme[]> {
   const page = await fetchMemes({ limit, sort: "score", page: 1, locale });
   return page.data.map((m) => toMeme(m, locale));
 }
 
-export async function getRecentMemes(limit = 12, locale: LocaleCode = "en"): Promise<Meme[]> {
+export async function getRecentMemes(limit = 12, locale: LocaleCode): Promise<Meme[]> {
   const page = await fetchMemes({ limit, sort: "created_at", locale });
   return page.data.map((m) => toMeme(m, locale));
 }
@@ -142,25 +142,23 @@ export async function getMemeListing(args: {
   limit?: number;
   sort?: SortKey;
   category?: string;
-  locale?: LocaleCode;
+  locale: LocaleCode;
 }): Promise<MemeListing> {
-  const locale = args.locale ?? "en";
-  return toListing(await fetchMemes(args), locale);
+  return toListing(await fetchMemes(args), args.locale);
 }
 
 export async function getCategoryListing(
   category: string,
-  args: { page?: number; limit?: number; sort?: SortKey; locale?: LocaleCode } = {},
+  args: { page?: number; limit?: number; sort?: SortKey; locale: LocaleCode },
 ): Promise<MemeListing | null> {
-  const locale = args.locale ?? "en";
   const page = await fetchMemesByCategory(category, args);
-  return page ? toListing(page, locale) : null;
+  return page ? toListing(page, args.locale) : null;
 }
 
 export async function getMeme(
   category: string,
   slug: string,
-  locale: LocaleCode = "en",
+  locale: LocaleCode,
 ): Promise<Meme | null> {
   const api = await fetchMeme(category, slug, locale);
   return api ? toMeme(api, locale) : null;
@@ -170,7 +168,7 @@ export async function searchListing(args: {
   q: string;
   page?: number;
   limit?: number;
-  locale?: LocaleCode;
+  locale: LocaleCode;
 }): Promise<MemeListing> {
   const limit = args.limit ?? 20;
   const page = args.page ?? 0;
