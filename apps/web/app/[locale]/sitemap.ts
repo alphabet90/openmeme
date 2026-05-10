@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { type Locale } from "@/i18n/routing";
+import { defaultLocale, type Locale } from "@/i18n/routing";
 import { site } from "@/lib/site";
 import { getCategories } from "@/lib/data/categories";
 import { fetchMemes } from "@/lib/api";
@@ -14,7 +14,7 @@ const PAGE_SIZE = 100;
 export default async function sitemap(
   props?: { params?: { locale?: string } },
 ): Promise<MetadataRoute.Sitemap> {
-  const locale = ((props?.params?.locale) ?? "en") as Locale;
+  const locale = ((props?.params?.locale) ?? defaultLocale) as Locale;
   const apiLocale = locale as LocaleCode;
   const base = `${site.url}/${locale}`;
   const now = new Date();

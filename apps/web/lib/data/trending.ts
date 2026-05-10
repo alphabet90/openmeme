@@ -1,9 +1,10 @@
 import type { TrendingTag } from "@openmeme/ui";
 import { fetchMemes, type LocaleCode } from "@/lib/api";
+import { defaultLocale } from "@/i18n/routing";
 
 export async function getTrending(
   limit = 5,
-  locale: LocaleCode = "en",
+  locale: LocaleCode = defaultLocale,
 ): Promise<TrendingTag[]> {
   const page = await fetchMemes({ limit: 60, sort: "score", locale });
 

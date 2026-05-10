@@ -14,7 +14,7 @@ import { site } from "@/lib/site";
 
 /* ───────────────────────── API contract types ───────────────────────── */
 
-export type LocaleCode = "en" | "es" | "pt" | "fr" | "de" | "ar";
+export type LocaleCode = "en" | "es" | "es-AR" | "pt" | "fr" | "de" | "ar";
 
 export interface ApiStats {
   total_memes: number;
@@ -107,6 +107,11 @@ function encodePathPart(p: string): string {
   return encodeURIComponent(p).replace(/%2F/gi, "/");
 }
 
+/** Normalize locale to the API's expected casing (es-AR → es-ar). */
+function normalizeLocale(locale: LocaleCode): string {
+  return locale.toLowerCase();
+}
+
 /* ───────────────────────────── Low-level fetch ──────────────────────── */
 
 class ApiError extends Error {
@@ -186,7 +191,7 @@ interface ListCategoriesArgs {
 export function fetchCategories(args: ListCategoriesArgs = {}): Promise<ApiCategoryPage> {
   return apiGet<ApiCategoryPage>(
     "/categories",
-    { page: args.page, limit: args.limit, locale: args.locale },
+    { page: args.page, limit: args.limit, locale: args.locale ? normalizeLocale(args.locale) : undefined },
     { revalidate: 3600, tags: ["categories"] },
   );
 }
@@ -208,7 +213,7 @@ export function fetchMemes(args: ListMemesArgs = {}): Promise<ApiMemePage> {
     category: args.category,
     subreddit: args.subreddit,
     sort: args.sort,
-    locale: args.locale,
+    locale: args.locale ? normalizeLocale(args.locale) : undefined,
   });
 }
 
@@ -227,7 +232,7 @@ export async function fetchMemesByCategory(
   try {
     return await apiGet<ApiMemePage>(
       `/memes/${encodePathPart(category)}`,
-      { page: args.page, limit: args.limit, sort: args.sort, locale: args.locale },
+      { page: args.page, limit: args.limit, sort: args.sort, locale: args.locale ? normalizeLocale(args.locale) : undefined },
       { allow404: true },
     );
   } catch (err) {
@@ -245,7 +250,7 @@ export async function fetchMeme(
   try {
     return await apiGet<ApiMeme>(
       `/memes/${encodePathPart(category)}/${encodePathPart(slug)}`,
-      locale ? { locale } : {},
+      locale ? { locale: normalizeLocale(locale) } : {},
       { allow404: true },
     );
   } catch (err) {
@@ -267,7 +272,7 @@ export async function searchMemes(args: SearchArgs): Promise<ApiSearchResult[]> 
   if (!q) return [];
   return apiGet<ApiSearchResult[]>(
     "/search",
-    { q, page: args.page, limit: args.limit, locale: args.locale },
+    { q, page: args.page, limit: args.limit, locale: args.locale ? normalizeLocale(args.locale) : undefined },
     { revalidate: 60 },
   );
 }
