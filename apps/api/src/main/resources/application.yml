@@ -21,7 +21,6 @@ spring:
     baseline-on-migrate: true
     baseline-version: 0
     validate-on-migrate: true
-    repair-on-migrate: true
     out-of-order: false
 
   data:
