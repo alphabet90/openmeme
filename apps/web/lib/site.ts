@@ -1,10 +1,5 @@
-const apiBaseUrl =
-  process.env.NEXT_PUBLIC_MEMES_API_URL?.replace(/\/+$/, "") ||
-  "https://api-production-681e.up.railway.app";
-
-const cdnBaseUrl =
-  process.env.NEXT_PUBLIC_MEMES_CDN_URL?.replace(/\/+$/, "") ||
-  "https://cdn-openmeme.clientes-g4a.workers.dev";
+const apiBaseUrl = process.env.NEXT_PUBLIC_MEMES_API_URL?.replace(/\/+$/, "") ?? "";
+const cdnBaseUrl = process.env.NEXT_PUBLIC_MEMES_CDN_URL?.replace(/\/+$/, "") ?? "";
 
 export const site = {
   name: "OPENMEME",
