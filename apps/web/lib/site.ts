@@ -1,8 +1,8 @@
 export const site = {
   name: "OPENMEME",
   legalName: "OpenMeme",
-  domain: "openmeme.com",
-  url: "https://openmeme.com",
+  domain: "openmeme.io",
+  url: "https://openmeme.io",
   tagline: "All the memes. In one place.",
   description:
     "The largest community meme repository. Thousands of memes in JPG/PNG, uploaded by the people for the people. Search, download and share the best memes.",
