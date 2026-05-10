@@ -147,7 +147,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         String result = body;
         for (String header : loggingProperties.getMaskHeaders()) {
             result = result.replaceAll(
-                    "(?i)(\"?" + Pattern.quote(header) + "\"?\\s*[:=]\\s*\\")[^\"]+\"",
+                    "(?i)(\"?" + Pattern.quote(header) + "\"?\\s*[:=]\\s*\")[^\"]+\"",
                     "$1[MASKED]\"");
         }
         return result;
