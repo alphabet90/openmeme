@@ -5,8 +5,6 @@ import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 
-import { PHProvider } from "@/app/providers";
-
 import { site } from "@/lib/site";
 import { websiteJsonLd, organizationJsonLd } from "@/lib/seo";
 import { locales, localeLangMap, localeOgMap, rtlLocales, type Locale } from "@/i18n/routing";
@@ -132,11 +130,9 @@ export default async function LocaleLayout({
         <a href="#contenido" className="skip-link">
           {t("skip_link")}
         </a>
-        <PHProvider>
-          <NextIntlClientProvider messages={messages}>
-            {children}
-          </NextIntlClientProvider>
-        </PHProvider>
+        <NextIntlClientProvider messages={messages}>
+          {children}
+        </NextIntlClientProvider>
         <Script
           id="ld-website"
           type="application/ld+json"
