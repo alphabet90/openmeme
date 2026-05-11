@@ -4,6 +4,12 @@ import Script from "next/script";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
+import { Suspense } from "react";
+import dynamic from "next/dynamic";
+
+import { PHProvider } from "@/app/providers";
+
+const PostHogPageView = dynamic(() => import("@/app/PostHogPageView"), { ssr: false });
 
 import { site } from "@/lib/site";
 import { websiteJsonLd, organizationJsonLd } from "@/lib/seo";
@@ -130,9 +136,14 @@ export default async function LocaleLayout({
         <a href="#contenido" className="skip-link">
           {t("skip_link")}
         </a>
-        <NextIntlClientProvider messages={messages}>
-          {children}
-        </NextIntlClientProvider>
+        <PHProvider>
+          <Suspense fallback={null}>
+            <PostHogPageView />
+          </Suspense>
+          <NextIntlClientProvider messages={messages}>
+            {children}
+          </NextIntlClientProvider>
+        </PHProvider>
         <Script
           id="ld-website"
           type="application/ld+json"
