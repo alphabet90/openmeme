@@ -7,7 +7,10 @@ import { getTranslations } from "next-intl/server";
 
 import { Nav } from "@/components/nav/Nav";
 import { Footer } from "@/components/Footer";
-import { MemeListingGrid, SectionTitle, formatCompact } from "@openmeme/ui";
+import { MemeListingGrid, SectionTitle } from "@openmeme/ui";
+import { CalendarIcon } from "@openmeme/ui";
+import { MemeActions } from "@/components/meme-detail/MemeActions";
+import { CopyButton } from "@/components/meme-detail/CopyButton";
 
 import { getCategoryListing, getMeme } from "@/lib/data/memes";
 import { breadcrumbJsonLd, memeImageObjectJsonLd } from "@/lib/seo";
@@ -29,6 +32,10 @@ function humanize(slug: string): string {
     .filter(Boolean)
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
+}
+
+function getInitials(name: string): string {
+  return name.charAt(0).toUpperCase();
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -142,59 +149,78 @@ export default async function MemeDetailPage({ params }: Props) {
                     {meme.placeholder}
                   </span>
                 )}
+
+                {meme.imageUrl ? (
+                  <div className={styles.imageActions}>
+                    <CopyButton
+                      text={meme.imageUrl}
+                      className={styles.imageActionBtn}
+                      ariaLabel={t("copiar")}
+                    />
+                  </div>
+                ) : null}
               </div>
 
-              <header className={styles.meta}>
-                <Link
-                  href={localePath(locale, `/categorias/${meme.category}`)}
-                  className={styles.categoryPill}
-                >
-                  {categoryDisplay}
-                </Link>
-
+              <div className={styles.info}>
                 <h1 className={styles.title}>{meme.title}</h1>
+
+                <div className={styles.metaRow}>
+                  {meme.author ? (
+                    <div className={styles.uploader}>
+                      <div className={styles.uploaderAvatar}>
+                        {getInitials(meme.author)}
+                      </div>
+                      <span className={styles.uploaderName}>
+                        u/{meme.author}
+                      </span>
+                    </div>
+                  ) : null}
+
+                  {meme.author ? (
+                    <span className={styles.metaDot} aria-hidden="true">
+                      ●
+                    </span>
+                  ) : null}
+
+                  <Link
+                    href={localePath(
+                      locale,
+                      `/categorias/${meme.category}`,
+                    )}
+                    className={styles.metaCategory}
+                  >
+                    #{meme.category}
+                  </Link>
+
+                  <span className={styles.metaDot} aria-hidden="true">
+                    ●
+                  </span>
+
+                  <span className={styles.metaDate}>
+                    <CalendarIcon size={13} />
+                    <time dateTime={meme.createdAt}>
+                      {new Date(meme.createdAt).toLocaleDateString(lang, {
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </time>
+                  </span>
+                </div>
 
                 {meme.description ? (
                   <p className={styles.description}>{meme.description}</p>
                 ) : null}
-
-                <dl className={styles.stats}>
-                  <div>
-                    <dt>{t("score_label")}</dt>
-                    <dd>{formatCompact(meme.score)}</dd>
-                  </div>
-                  {meme.author ? (
-                    <div>
-                      <dt>{t("autor_label")}</dt>
-                      <dd>u/{meme.author}</dd>
-                    </div>
-                  ) : null}
-                  {meme.subreddit ? (
-                    <div>
-                      <dt>{t("subreddit_label")}</dt>
-                      <dd>r/{meme.subreddit}</dd>
-                    </div>
-                  ) : null}
-                  <div>
-                    <dt>{t("publicado_label")}</dt>
-                    <dd>
-                      <time dateTime={meme.createdAt}>
-                        {new Date(meme.createdAt).toLocaleDateString(lang, {
-                          day: "2-digit",
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </time>
-                    </dd>
-                  </div>
-                </dl>
 
                 {meme.tags.length ? (
                   <ul className={styles.tags} aria-label={t("etiquetas_label")}>
                     {meme.tags.map((tag) => (
                       <li key={tag}>
                         <Link
-                          href={localePath(locale, `/buscar?q=${encodeURIComponent(tag)}`)}
+                          href={localePath(
+                            locale,
+                            `/buscar?q=${encodeURIComponent(tag)}`,
+                          )}
                           className={styles.tag}
                         >
                           #{tag}
@@ -204,30 +230,13 @@ export default async function MemeDetailPage({ params }: Props) {
                   </ul>
                 ) : null}
 
-                <div className={styles.actions}>
-                  {meme.imageUrl ? (
-                    <a
-                      href={meme.imageUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.primary}
-                      download
-                    >
-                      {t("descargar")}
-                    </a>
-                  ) : null}
-                  {meme.postUrl ? (
-                    <a
-                      href={meme.postUrl}
-                      target="_blank"
-                      rel="noopener noreferrer nofollow"
-                      className={styles.secondary}
-                    >
-                      {t("ver_reddit")}
-                    </a>
-                  ) : null}
-                </div>
-              </header>
+                <MemeActions
+                  imageUrl={meme.imageUrl}
+                  downloadLabel={t("descargar")}
+                  copyLabel={t("copiar")}
+                  copiedLabel={t("copiado")}
+                />
+              </div>
             </article>
 
             {relatedMemes.length ? (

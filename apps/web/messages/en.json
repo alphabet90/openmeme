@@ -113,6 +113,8 @@
     "etiquetas_label": "Tags",
     "descargar": "Download",
     "ver_reddit": "View on Reddit",
+    "copiar": "Copy",
+    "copiado": "Copied",
     "related_title": "More from {category}",
     "related_aria": "More {category} memes",
     "breadcrumb_inicio": "Home",
