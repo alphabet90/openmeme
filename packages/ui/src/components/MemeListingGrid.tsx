@@ -22,7 +22,6 @@ export function MemeListingGrid({
             meme={m}
             priority={i < priorityCount}
             naturalSize
-            sizes="(max-width: 540px) 50vw, (max-width: 820px) 33vw, (max-width: 1100px) 25vw, 20vw"
           />
         </li>
       ))}

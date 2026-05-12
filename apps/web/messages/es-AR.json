@@ -113,6 +113,8 @@
     "etiquetas_label": "Etiquetas",
     "descargar": "Descargar",
     "ver_reddit": "Ver en Reddit",
+    "copiar": "Copiar",
+    "copiado": "Copiado",
     "related_title": "Más de {category}",
     "related_aria": "Más memes de {category}",
     "breadcrumb_inicio": "Inicio",

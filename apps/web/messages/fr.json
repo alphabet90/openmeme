@@ -113,6 +113,8 @@
     "etiquetas_label": "Tags",
     "descargar": "Télécharger",
     "ver_reddit": "Voir sur Reddit",
+    "copiar": "Copier",
+    "copiado": "Copié",
     "related_title": "Plus de {category}",
     "related_aria": "Plus de mèmes {category}",
     "breadcrumb_inicio": "Accueil",
