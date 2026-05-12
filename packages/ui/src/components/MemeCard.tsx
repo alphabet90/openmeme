@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Meme } from "../types";
 import { CopyIcon, EyeIcon, ShareIcon } from "../icons";
@@ -15,8 +14,6 @@ type MemeCardProps = {
   height?: number;
   /** Lazy-load hint — true for above-the-fold cards */
   priority?: boolean;
-  /** `sizes` hint for the optimizer (responsive layout). */
-  sizes?: string;
   /** Render image at its natural aspect ratio instead of a fixed box */
   naturalSize?: boolean;
 };
@@ -34,7 +31,6 @@ export function MemeCard({
   aspectRatio = "1 / 1",
   height,
   priority = false,
-  sizes = "(max-width: 540px) 50vw, (max-width: 820px) 33vw, (max-width: 1100px) 25vw, 256px",
   naturalSize = false,
 }: MemeCardProps) {
   const badge = rank ? rankColor(rank) : null;
@@ -62,28 +58,20 @@ export function MemeCard({
         >
           {showImage ? (
             naturalSize ? (
-              <Image
+              <img
                 src={meme.imageUrl}
                 alt={meme.title}
-                width={0}
-                height={0}
-                sizes={sizes}
                 className={styles.imgNatural}
-                priority={priority}
                 loading={priority ? "eager" : "lazy"}
-                unoptimized={meme.format === "gif"}
-                style={{ width: "100%", height: "auto", display: "block" }}
+                fetchPriority={priority ? "high" : undefined}
               />
             ) : (
-              <Image
+              <img
                 src={meme.imageUrl}
                 alt={meme.title}
-                fill
-                sizes={sizes}
                 className={styles.img}
-                priority={priority}
                 loading={priority ? "eager" : "lazy"}
-                unoptimized={meme.format === "gif"}
+                fetchPriority={priority ? "high" : undefined}
               />
             )
           ) : (

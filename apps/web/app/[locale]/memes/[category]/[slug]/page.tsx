@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import { notFound } from "next/navigation";
@@ -135,14 +134,11 @@ export default async function MemeDetailPage({ params }: Props) {
                 style={{ background: meme.placeholderGradient }}
               >
                 {meme.imageUrl ? (
-                  <Image
+                  <img
                     src={meme.imageUrl}
-                    alt={meme.title}
-                    fill
-                    priority
+                    alt={meme.description}
                     className={styles.image}
-                    sizes="(max-width: 800px) 100vw, 720px"
-                    unoptimized={meme.format === "gif"}
+                    fetchPriority="high"
                   />
                 ) : (
                   <span className={styles.glyph} aria-hidden="true">
