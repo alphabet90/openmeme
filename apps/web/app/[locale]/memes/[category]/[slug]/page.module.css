@@ -225,12 +225,13 @@
 .btnDownload {
   background: var(--accent-primary);
   color: var(--color-negro);
-  font-weight: 700;
-  font-size: 12px;
+  font-weight: 600;
+  font-size: var(--text-sm);
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   padding: 9px 18px;
   border-radius: var(--radius-pill);
+  border: 1.5px solid var(--accent-primary);
   display: inline-flex;
   align-items: center;
   gap: 6px;
