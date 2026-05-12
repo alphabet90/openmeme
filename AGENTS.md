@@ -208,7 +208,6 @@ docker-compose up            # Postgres 16 + Redis 7 + API
 - CSS Modules for component-scoped styles
 - `next-intl` for i18n (default: `es-AR`, supported: `en`, `es`, `es-AR`, `pt`, `fr`, `de`, `ar`)
 - Arabic (`ar`) renders RTL
-- `next/image` with whitelisted CDN hostname from `NEXT_PUBLIC_MEMES_CDN_URL`
 - ISR with `revalidate` (300s–3600s) and fetch cache tags
 
 ---
@@ -305,7 +304,7 @@ Copy `.env.example` to `.env` and configure per subsystem:
 | Section | Key Vars |
 |---------|----------|
 | Scraper | `SUBREDDIT`, `REPO_PATH`, `TMP_DIR`, `BLOOM_FILTER_FILE`, `CLASSIFIER` (`claude`/`codex`), `CLASSIFY_WORKERS`, `REDDIT_CLIENT_ID/SECRET`, `REDDIT_USERNAME/PASSWORD` |
-| API | `PORT` (default `8080`), `DB_URL`, `DB_USER`, `DB_PASSWORD`, `REDIS_HOST`, `REDIS_PORT`, `ADMIN_API_KEY` |
+| API | `PORT` (default `8080`), `DB_URL`, `DB_USER`, `DB_PASSWORD`, `REDIS_HOST`, `REDIS_PORT`, `ADMIN_API_KEY`, `CDN_URL` |
 | Scripts | `BATCH_SIZE`, `DRY_RUN`, `PER_POST`, `FROM_FILE`, `POST_URL` |
 | Sync | `SYNC_SUBREDDITS`, `SYNC_LIMIT`, `SYNC_BATCH_SIZE`, `SYNC_CLASSIFIER`, `SYNC_CLASSIFY_WORKERS`, `SYNC_MIN_COMMENT_UPVOTES`, `SYNC_DRY_RUN`, `SYNC_TIME` |
 | Optimize | `OPTIMIZE_DRY_RUN`, `OPTIMIZE_RESIZE` |

@@ -20,9 +20,11 @@ import com.memes.api.repository.MemeRow;
 import com.memes.api.repository.MemeTranslationRow;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +35,9 @@ import java.util.Optional;
 public class MemeService {
 
     private final MemeRepository memeRepository;
+
+    @Value("${memes.cdn-url:}")
+    private String cdnUrl;
 
     @Cacheable(value = RedisConfig.CACHE_STATS)
     public Stats getStats() {
@@ -53,7 +58,7 @@ public class MemeService {
         List<CategoryRow> rows = memeRepository.findAllCategories(locale, offset, limit);
         int total = memeRepository.countCategories();
         CategoryPage cp = new CategoryPage();
-        cp.setData(rows.stream().map(MemeService::toCategorySummary).toList());
+        cp.setData(rows.stream().map(this::toCategorySummary).toList());
         cp.setPage(page);
         cp.setLimit(limit);
         cp.setTotal(total);
@@ -88,7 +93,7 @@ public class MemeService {
         return hits.stream().map(h -> toSearchResult(h.meme(), locale)).toList();
     }
 
-    private static SearchResult toSearchResult(MemeRow row, String locale) {
+    private SearchResult toSearchResult(MemeRow row, String locale) {
         SearchResult result = new SearchResult();
         result.setSlug(row.slug());
         result.setCategory(row.categorySlug());
@@ -111,11 +116,12 @@ public class MemeService {
             .findFirst()
             .or(() -> row.images().stream().findFirst())
             .map(MemeImageRow::path)
+            .map(this::resolveImageUrl)
             .ifPresent(result::setImagePath);
         return result;
     }
 
-    private static MemePage toMemePage(List<MemeRow> rows, int page, int limit, int total, String locale) {
+    private MemePage toMemePage(List<MemeRow> rows, int page, int limit, int total, String locale) {
         MemePage mp = new MemePage();
         mp.setData(rows.stream().map(r -> toMeme(r, locale)).toList());
         mp.setPage(page);
@@ -125,7 +131,7 @@ public class MemeService {
         return mp;
     }
 
-    private static Meme toMeme(MemeRow r, String locale) {
+    private Meme toMeme(MemeRow r, String locale) {
         Meme m = new Meme();
         m.setSlug(r.slug());
         m.setCategory(r.categorySlug());
@@ -138,13 +144,13 @@ public class MemeService {
         m.setPostUrl(r.postUrl());
         m.setTranslations(r.translations().stream()
             .filter(t -> locale.equals(t.locale()))
-            .map(MemeService::toTranslation).toList());
-        m.setImages(r.images().stream().map(MemeService::toImage).toList());
+            .map(this::toTranslation).toList());
+        m.setImages(r.images().stream().map(this::toImage).toList());
         m.setTags(r.tagSlugs());
         return m;
     }
 
-    private static MemeTranslation toTranslation(MemeTranslationRow t) {
+    private MemeTranslation toTranslation(MemeTranslationRow t) {
         MemeTranslation out = new MemeTranslation();
         out.setLocale(toLocaleCode(t.locale()));
         out.setTitle(t.title());
@@ -152,9 +158,9 @@ public class MemeService {
         return out;
     }
 
-    private static MemeImage toImage(MemeImageRow img) {
+    private MemeImage toImage(MemeImageRow img) {
         MemeImage out = new MemeImage();
-        out.setPath(img.path());
+        out.setPath(resolveImageUrl(img.path()));
         out.setWidth(img.width());
         out.setHeight(img.height());
         out.setBytes(img.bytes());
@@ -164,18 +170,18 @@ public class MemeService {
         return out;
     }
 
-    private static CategorySummary toCategorySummary(CategoryRow row) {
+    private CategorySummary toCategorySummary(CategoryRow row) {
         CategorySummary cs = new CategorySummary();
         cs.setCategory(row.slug());
         cs.setCount(row.count());
         cs.setTopScore(row.topScore());
         cs.setTranslations(row.translations().stream()
-            .map(MemeService::toCategoryTranslation)
+            .map(this::toCategoryTranslation)
             .toList());
         return cs;
     }
 
-    private static CategoryTranslation toCategoryTranslation(CategoryTranslationRow t) {
+    private CategoryTranslation toCategoryTranslation(CategoryTranslationRow t) {
         CategoryTranslation out = new CategoryTranslation();
         out.setLocale(toLocaleCode(t.locale()));
         out.setName(t.name());
@@ -187,5 +193,14 @@ public class MemeService {
         return Optional.ofNullable(value)
             .flatMap(v -> Optional.ofNullable(LocaleCode.fromValue(v)))
             .orElse(LocaleCode.EN);
+    }
+
+    private String resolveImageUrl(String relativePath) {
+        if (!StringUtils.hasText(cdnUrl) || !StringUtils.hasText(relativePath)) {
+            return relativePath;
+        }
+        String base = cdnUrl.endsWith("/") ? cdnUrl.substring(0, cdnUrl.length() - 1) : cdnUrl;
+        String path = relativePath.startsWith("/") ? relativePath.substring(1) : relativePath;
+        return base + "/" + path;
     }
 }

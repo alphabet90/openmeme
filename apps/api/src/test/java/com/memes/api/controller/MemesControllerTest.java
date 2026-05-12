@@ -38,7 +38,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     LoggingProperties.class, LocaleCodeConverter.class})
 @TestPropertySource(properties = {
     "memes.admin-api-key=test-secret",
-    "spring.cache.type=none"
+    "spring.cache.type=none",
+    "memes.cdn-url=https://cdn.example.com"
 })
 class MemesControllerTest {
 
