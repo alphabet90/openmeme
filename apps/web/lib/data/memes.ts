@@ -1,6 +1,5 @@
 import type { Meme, MemeListing } from "@openmeme/ui";
 import {
-  cdnUrl,
   fetchMeme,
   fetchMemes,
   fetchMemesByCategory,
@@ -75,7 +74,7 @@ export function toMeme(api: ApiMeme, locale: LocaleCode): Meme {
     subreddit: api.subreddit ?? undefined,
     score: api.score ?? 0,
     tags: api.tags ?? [],
-    imageUrl: cdnUrl(primaryImage?.path) ?? "",
+    imageUrl: primaryImage?.path ?? "",
     href: `/memes/${api.category}/${api.slug}`,
     format: inferFormat(primaryImage?.path),
     createdAt,
@@ -101,7 +100,7 @@ export function toMemeFromSearchResult(api: ApiSearchResult): Meme {
     subreddit: undefined,
     score: api.score,
     tags: api.tags,
-    imageUrl: cdnUrl(api.image_path) ?? "",
+    imageUrl: api.image_path ?? "",
     href: `/memes/${api.category}/${api.slug}`,
     format: inferFormat(api.image_path),
     createdAt: new Date(0).toISOString(),

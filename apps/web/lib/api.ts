@@ -7,7 +7,6 @@
  * V2: multilingual schema. Every read endpoint accepts `?locale=`.
  * `Meme` carries `translations[]` (per-locale title/description) and
  * `images[]` (multi-image support, `is_primary` marks the lead image).
- * Image URLs are constructed via {@link cdnUrl} from `path` fields.
  */
 
 import { site } from "@/lib/site";
@@ -164,17 +163,6 @@ async function apiGet<T>(
 }
 
 /* ──────────────────────────── Public helpers ────────────────────────── */
-
-/**
- * Build a public CDN URL for an image path returned by the API.
- * The API ships paths like `memes/argentina-reaction/foo.jpg`; the
- * worker serves them at the CDN root.
- */
-export function cdnUrl(imagePath: string | undefined | null): string | null {
-  if (!imagePath) return null;
-  const cleaned = imagePath.replace(/^\/+/, "");
-  return `${site.cdnBaseUrl}/${encodePathPart(cleaned)}`;
-}
 
 /** GET / — global stats. Cached for 1 hour. */
 export function fetchStats(): Promise<ApiStats> {
