@@ -9,7 +9,6 @@ export const site = {
   twitter: "@openmeme",
   ogImage: "/og-default.png",
   apiBaseUrl: process.env.NEXT_PUBLIC_MEMES_API_URL ?? "",
-  cdnBaseUrl: process.env.NEXT_PUBLIC_MEMES_CDN_URL ?? "",
 } as const;
 
 export type Site = typeof site;
