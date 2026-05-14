@@ -111,7 +111,7 @@ Lombok is a required dependency for all new and modified Java code in this modul
 - **Repository** returns `Optional<T>` for single-row lookups, `List<T>` (never `null`) for multi-row
 - **`IndexerService`**: full reindex via `reindex()`, single-meme upsert via `indexSingle(MemeIndexRequest)`
 - All Redis cache invalidation goes through `invalidateCaches()` in `IndexerService`
-- All admin endpoints are protected by `ApiKeyAuthFilter` — never bypass it
+- All admin endpoints are protected by Spring Security (`SecurityConfig`) with `ApiKeyAuthenticationFilter` + `RateLimitingFilter` — never bypass it
 
 ## OpenAPI Contract
 

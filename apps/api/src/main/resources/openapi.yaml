@@ -27,6 +27,8 @@ paths:
       tags: [memes]
       operationId: getStats
       summary: Global collection statistics
+      security:
+        - ApiKeyAuth: []
       responses:
         "200":
           description: OK
@@ -34,12 +36,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Stats"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
   /categories:
     get:
       tags: [memes]
       operationId: listCategories
       summary: Paginated list of categories with meme counts and top score
+      security:
+        - ApiKeyAuth: []
       parameters:
         - name: page
           in: query
@@ -62,12 +72,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CategoryPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
   /memes:
     get:
       tags: [memes]
       operationId: listMemes
       summary: Paginated list of memes with optional filters
+      security:
+        - ApiKeyAuth: []
       parameters:
         - name: page
           in: query
@@ -100,12 +118,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MemePage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
   /memes/{category}:
     get:
       tags: [memes]
       operationId: listMemesByCategory
       summary: All memes in a specific category
+      security:
+        - ApiKeyAuth: []
       parameters:
         - name: category
           in: path
@@ -139,18 +165,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MemePage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
           description: Category not found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
   /memes/{category}/{slug}:
     get:
       tags: [memes]
       operationId: getMeme
       summary: Single meme by category and slug
+      security:
+        - ApiKeyAuth: []
       parameters:
         - name: category
           in: path
@@ -170,18 +204,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Meme"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
           description: Meme not found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
   /search:
     get:
       tags: [memes]
       operationId: searchMemes
       summary: Locale-aware full-text search across title and description
+      security:
+        - ApiKeyAuth: []
       parameters:
         - name: q
           in: query
@@ -218,6 +260,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
   /admin/reindex:
     post:
@@ -240,11 +288,86 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReindexAccepted"
         "401":
-          description: Missing or invalid X-Api-Key
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /admin/api-keys:
+    get:
+      tags: [admin]
+      operationId: listApiKeys
+      summary: List all active API keys
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          description: OK
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                type: array
+                items:
+                  $ref: "#/components/schemas/ApiKey"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+    post:
+      tags: [admin]
+      operationId: createApiKey
+      summary: Create a new API key (returned once in plaintext)
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiKeyCreateRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiKeyCreated"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /admin/api-keys/{id}:
+    delete:
+      tags: [admin]
+      operationId: revokeApiKey
+      summary: Revoke an API key
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "204":
+          description: Revoked
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
 components:
   securitySchemes:
@@ -260,6 +383,32 @@ components:
       description: Locale for translatable fields. Defaults to `en`.
       schema:
         $ref: "#/components/schemas/LocaleCode"
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid X-Api-Key
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Insufficient permissions for this resource
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
 
   schemas:
     LocaleCode:
@@ -544,3 +693,53 @@ components:
           type: string
         message:
           type: string
+
+    ApiKey:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        client_name:
+          type: string
+        role:
+          type: string
+          enum: [READ, WRITE, ADMIN]
+        active:
+          type: boolean
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        last_used_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ApiKeyCreateRequest:
+      type: object
+      required: [client_name, role]
+      properties:
+        client_name:
+          type: string
+        role:
+          type: string
+          enum: [READ, WRITE, ADMIN]
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ApiKeyCreated:
+      type: object
+      required: [key, id]
+      properties:
+        id:
+          type: integer
+          format: int64
+        key:
+          type: string
+          description: "The plaintext API key. Store securely — it will never be shown again."
