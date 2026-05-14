@@ -75,7 +75,7 @@ public class MemeService {
                               String sort,
                               String locale) {
         int offset = page * limit;
-        List<MemeListItemRow> rows = memeRepository.findAllOptimized(offset, limit, category, sort, locale);
+        List<MemeListItemRow> rows = memeRepository.findAll(offset, limit, category, sort, locale);
         int total = memeRepository.countOptimized(category, locale);
         return toMemePage(rows, page, limit, total);
     }

@@ -86,57 +86,6 @@ public class MemeRepository {
             .toList();
     }
 
-    public List<MemeRow> findAll(int offset, int limit,
-                                 @Nullable String category, @Nullable String subreddit,
-                                 String sort, String locale) {
-        String orderCol = orderColumn(sort);
-        String resolvedLocale = resolveLocale(locale);
-        StringBuilder sql = new StringBuilder(
-            "SELECT m.id, m.slug, m.score, m.default_locale, "
-                + "m.created_at, m.indexed_at, m.source_url, m.post_url, "
-                + "c.slug AS category_slug, s.name AS subreddit_name, a.username AS author_username, "
-                + "COALESCE(( SELECT jsonb_agg(jsonb_build_object("
-                + "  'locale', mt.locale, 'title', mt.title, 'description', mt.description"
-                + ") ORDER BY mt.locale) FROM meme_translations mt "
-                + "WHERE mt.meme_id = m.id AND mt.locale = ?::locale_code), '[]'::jsonb) AS translations_json, "
-                + "COALESCE(( SELECT jsonb_agg(jsonb_build_object("
-                + "  'path', mi.path, 'width', mi.width, 'height', mi.height, "
-                + "  'bytes', mi.bytes, 'mime_type', mi.mime_type, "
-                + "  'position', mi.position, 'is_primary', mi.is_primary"
-                + ") ORDER BY mi.position) FROM meme_images mi WHERE mi.meme_id = m.id), '[]'::jsonb) AS images_json, "
-                + "COALESCE(( SELECT array_agg(t.slug::text ORDER BY t.slug) "
-                + "FROM meme_tags mtg JOIN tags t ON t.id = mtg.tag_id WHERE mtg.meme_id = m.id"
-                + "), ARRAY[]::text[]) AS tag_slugs "
-                + "FROM memes m JOIN categories c ON c.id = m.category_id "
-                + "LEFT JOIN subreddits s ON s.id = m.subreddit_id "
-                + "LEFT JOIN authors a ON a.id = m.author_id "
-                + "WHERE m.deleted_at IS NULL "
-                + "AND EXISTS (SELECT 1 FROM meme_translations mt "
-                + "WHERE mt.meme_id = m.id AND mt.locale = ?::locale_code)");
-        List<Object> params = new ArrayList<>();
-        params.add(resolvedLocale);
-        params.add(resolvedLocale);
-        Optional.ofNullable(category).filter(c -> !c.isBlank()).ifPresent(c -> {
-            sql.append(" AND c.slug = ?"); params.add(c);
-        });
-        Optional.ofNullable(subreddit).filter(s -> !s.isBlank()).ifPresent(s -> {
-            sql.append(" AND s.name = ?"); params.add(s);
-        });
-        if ("title".equals(orderCol)) {
-            sql.append(" ORDER BY (SELECT title FROM meme_translations mt2 "
-                + "WHERE mt2.meme_id = m.id AND mt2.locale = ?::locale_code LIMIT 1) ASC NULLS LAST, m.id DESC");
-            params.add(resolvedLocale);
-        } else if ("created_at".equals(orderCol)) {
-            sql.append(" ORDER BY m.created_at DESC NULLS LAST, m.id DESC");
-        } else {
-            sql.append(" ORDER BY m.score DESC, m.id DESC");
-        }
-        sql.append(" LIMIT ? OFFSET ?");
-        params.add(limit);
-        params.add(offset);
-        return jdbc.query(sql.toString(), MEME_ROW_MAPPER, params.toArray());
-    }
-
     public int countFiltered(@Nullable String category, @Nullable String subreddit) {
         StringBuilder sql = new StringBuilder(
             "SELECT COUNT(*) FROM memes m "
@@ -150,9 +99,9 @@ public class MemeRepository {
         return Optional.ofNullable(count).orElse(0);
     }
 
-    public List<MemeListItemRow> findAllOptimized(int offset, int limit,
-                                                  @Nullable String category,
-                                                  String sort, String locale) {
+    public List<MemeListItemRow> findAll(int offset, int limit,
+                                         @Nullable String category,
+                                         String sort, String locale) {
         String orderCol = orderColumn(sort);
         String resolvedLocale = resolveLocale(locale);
         StringBuilder sql = new StringBuilder(

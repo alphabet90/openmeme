@@ -106,8 +106,8 @@ class MemeRepositoryTest {
     void findAll_respectsPaginationAndCategoryFilter() {
         for (int i = 0; i < 5; i++) repository.upsertMeme(sample("meme-" + i, "test-cat"));
         repository.upsertMeme(sample("other", "other-cat"));
-        assertThat(repository.findAll(0, 3, null, null, "score", "en")).hasSize(3);
-        assertThat(repository.findAll(0, 10, "test-cat", null, "score", "en")).hasSize(5);
+        assertThat(repository.findAll(0, 3, null, "score", "en")).hasSize(3);
+        assertThat(repository.findAll(0, 10, "test-cat", "score", "en")).hasSize(5);
     }
 
     @Test
@@ -120,18 +120,18 @@ class MemeRepositoryTest {
     }
 
     @Test
-    void findAllOptimized_returnsFlatRows() {
+    void findAll_returnsFlatRows() {
         repository.upsertMeme(sample("m1", "football"));
         repository.upsertMeme(sample("m2", "football"));
         repository.upsertMeme(sample("m3", "humor"));
 
-        List<MemeListItemRow> rows = repository.findAllOptimized(0, 10, null, "score", "en");
+        List<MemeListItemRow> rows = repository.findAll(0, 10, null, "score", "en");
         assertThat(rows).hasSize(3);
         assertThat(rows.get(0).title()).startsWith("Test Meme");
         assertThat(rows.get(0).imagePath()).isNotNull();
         assertThat(rows.get(0).tagSlugs()).containsExactly("argentina");
 
-        List<MemeListItemRow> filtered = repository.findAllOptimized(0, 10, "football", "score", "en");
+        List<MemeListItemRow> filtered = repository.findAll(0, 10, "football", "score", "en");
         assertThat(filtered).hasSize(2);
 
         assertThat(repository.countOptimized(null, "en")).isEqualTo(3);
@@ -139,7 +139,7 @@ class MemeRepositoryTest {
     }
 
     @Test
-    void findAllOptimized_respectsLocale() {
+    void findAll_respectsLocale() {
         repository.upsertMeme(MemeUpsert.builder()
             .slug("cat-world-cup").categorySlug("argentina-football").defaultLocale("en")
             .subredditName("argentina").score(2840)
@@ -149,11 +149,11 @@ class MemeRepositoryTest {
             .images(List.of(MemeImageRow.builder().path("/cat.jpg").position(0).isPrimary(true).build()))
             .tagSlugs(List.of("argentina")).build());
 
-        List<MemeListItemRow> en = repository.findAllOptimized(0, 10, null, "score", "en");
+        List<MemeListItemRow> en = repository.findAll(0, 10, null, "score", "en");
         assertThat(en).hasSize(1);
         assertThat(en.get(0).title()).isEqualTo("Cat at the World Cup");
 
-        List<MemeListItemRow> es = repository.findAllOptimized(0, 10, null, "score", "es");
+        List<MemeListItemRow> es = repository.findAll(0, 10, null, "score", "es");
         assertThat(es).hasSize(1);
         assertThat(es.get(0).title()).isEqualTo("Gato en el Mundial");
     }
