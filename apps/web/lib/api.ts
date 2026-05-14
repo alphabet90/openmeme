@@ -66,17 +66,29 @@ export interface ApiMeme {
   default_locale: LocaleCode;
   author?: string | null;
   subreddit?: string | null;
-  score?: number;
+  score: number;
   created_at?: string | null;
   source_url?: string | null;
   post_url?: string | null;
   translations: ApiMemeTranslation[];
   images: ApiMemeImage[];
-  tags?: string[];
+  tags: string[];
+}
+
+export interface ApiMemeListItem {
+  slug: string;
+  score: number;
+  created_at?: string | null;
+  category: string;
+  author?: string | null;
+  title: string;
+  description?: string | null;
+  image_path?: string | null;
+  tags: string[];
 }
 
 export interface ApiMemePage {
-  data: ApiMeme[];
+  data: ApiMemeListItem[];
   page: number;
   limit: number;
   total: number;
