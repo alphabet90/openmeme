@@ -3,7 +3,7 @@ import { defaultLocale, type Locale } from "@/i18n/routing";
 import { site } from "@/lib/site";
 import { getCategories } from "@/lib/data/categories";
 import { fetchMemes } from "@/lib/api";
-import { toMeme } from "@/lib/data/memes";
+import { toMemeFromListItem } from "@/lib/data/memes";
 import type { LocaleCode } from "@/lib/api";
 
 export const revalidate = 3600;
@@ -42,11 +42,11 @@ export default async function sitemap(
   }
 
   try {
-    const collected: ReturnType<typeof toMeme>[] = [];
+    const collected: ReturnType<typeof toMemeFromListItem>[] = [];
     let page = 0;
     while (collected.length < MEME_LIMIT) {
       const res = await fetchMemes({ page, limit: PAGE_SIZE, sort: "score", locale: apiLocale });
-      collected.push(...res.data.map((m) => toMeme(m, apiLocale)));
+      collected.push(...res.data.map((m) => toMemeFromListItem(m)));
       if (res.page >= res.total_pages - 1 || res.data.length === 0) break;
       page += 1;
     }
