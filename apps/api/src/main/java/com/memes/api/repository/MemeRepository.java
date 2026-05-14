@@ -86,66 +86,42 @@ public class MemeRepository {
             .toList();
     }
 
-    public List<MemeRow> findAll(int offset, int limit,
-                                 @Nullable String category, @Nullable String subreddit,
-                                 String sort, String locale) {
+    public List<MemeListItemRow> findAll(int offset, int limit,
+                                         @Nullable String category,
+                                         String sort, String locale) {
         String orderCol = orderColumn(sort);
         String resolvedLocale = resolveLocale(locale);
         StringBuilder sql = new StringBuilder(
-            "SELECT m.id, m.slug, m.score, m.default_locale, "
-                + "m.created_at, m.indexed_at, m.source_url, m.post_url, "
-                + "c.slug AS category_slug, s.name AS subreddit_name, a.username AS author_username, "
-                + "COALESCE(( SELECT jsonb_agg(jsonb_build_object("
-                + "  'locale', mt.locale, 'title', mt.title, 'description', mt.description"
-                + ") ORDER BY mt.locale) FROM meme_translations mt "
-                + "WHERE mt.meme_id = m.id AND mt.locale = ?::locale_code), '[]'::jsonb) AS translations_json, "
-                + "COALESCE(( SELECT jsonb_agg(jsonb_build_object("
-                + "  'path', mi.path, 'width', mi.width, 'height', mi.height, "
-                + "  'bytes', mi.bytes, 'mime_type', mi.mime_type, "
-                + "  'position', mi.position, 'is_primary', mi.is_primary"
-                + ") ORDER BY mi.position) FROM meme_images mi WHERE mi.meme_id = m.id), '[]'::jsonb) AS images_json, "
-                + "COALESCE(( SELECT array_agg(t.slug::text ORDER BY t.slug) "
-                + "FROM meme_tags mtg JOIN tags t ON t.id = mtg.tag_id WHERE mtg.meme_id = m.id"
-                + "), ARRAY[]::text[]) AS tag_slugs "
-                + "FROM memes m JOIN categories c ON c.id = m.category_id "
-                + "LEFT JOIN subreddits s ON s.id = m.subreddit_id "
-                + "LEFT JOIN authors a ON a.id = m.author_id "
-                + "WHERE m.deleted_at IS NULL "
-                + "AND EXISTS (SELECT 1 FROM meme_translations mt "
-                + "WHERE mt.meme_id = m.id AND mt.locale = ?::locale_code)");
+            "SELECT id, slug, score, created_at, category_slug, author_username, "
+                + "title, description, image_path, tags "
+                + "FROM list_memes_flat(?::locale_code) WHERE 1=1");
         List<Object> params = new ArrayList<>();
         params.add(resolvedLocale);
-        params.add(resolvedLocale);
         Optional.ofNullable(category).filter(c -> !c.isBlank()).ifPresent(c -> {
-            sql.append(" AND c.slug = ?"); params.add(c);
-        });
-        Optional.ofNullable(subreddit).filter(s -> !s.isBlank()).ifPresent(s -> {
-            sql.append(" AND s.name = ?"); params.add(s);
+            sql.append(" AND category_slug = ?"); params.add(c);
         });
         if ("title".equals(orderCol)) {
-            sql.append(" ORDER BY (SELECT title FROM meme_translations mt2 "
-                + "WHERE mt2.meme_id = m.id AND mt2.locale = ?::locale_code LIMIT 1) ASC NULLS LAST, m.id DESC");
-            params.add(resolvedLocale);
+            sql.append(" ORDER BY title ASC NULLS LAST, id DESC");
         } else if ("created_at".equals(orderCol)) {
-            sql.append(" ORDER BY m.created_at DESC NULLS LAST, m.id DESC");
+            sql.append(" ORDER BY created_at DESC NULLS LAST, id DESC");
         } else {
-            sql.append(" ORDER BY m.score DESC, m.id DESC");
+            sql.append(" ORDER BY score DESC, id DESC");
         }
         sql.append(" LIMIT ? OFFSET ?");
         params.add(limit);
         params.add(offset);
-        return jdbc.query(sql.toString(), MEME_ROW_MAPPER, params.toArray());
+        return jdbc.query(sql.toString(), MEME_LIST_ITEM_ROW_MAPPER, params.toArray());
     }
 
-    public int countFiltered(@Nullable String category, @Nullable String subreddit) {
+    public int count(@Nullable String category, String locale) {
+        String resolvedLocale = resolveLocale(locale);
         StringBuilder sql = new StringBuilder(
-            "SELECT COUNT(*) FROM memes m "
-                + "JOIN categories c ON c.id = m.category_id "
-                + "LEFT JOIN subreddits s ON s.id = m.subreddit_id "
-                + "WHERE m.deleted_at IS NULL");
+            "SELECT COUNT(*) FROM list_memes_flat(?::locale_code) WHERE 1=1");
         List<Object> params = new ArrayList<>();
-        Optional.ofNullable(category).filter(v -> !v.isBlank()).ifPresent(v -> { sql.append(" AND c.slug = ?"); params.add(v); });
-        Optional.ofNullable(subreddit).filter(v -> !v.isBlank()).ifPresent(v -> { sql.append(" AND s.name = ?"); params.add(v); });
+        params.add(resolvedLocale);
+        Optional.ofNullable(category).filter(c -> !c.isBlank()).ifPresent(c -> {
+            sql.append(" AND category_slug = ?"); params.add(c);
+        });
         Integer count = jdbc.queryForObject(sql.toString(), Integer.class, params.toArray());
         return Optional.ofNullable(count).orElse(0);
     }
@@ -311,5 +287,22 @@ public class MemeRepository {
             .translations(JsonAggregates.parseTranslations(rs.getString("translations_json")))
             .images(JsonAggregates.parseImages(rs.getString("images_json")))
             .tagSlugs(tags).build();
+    };
+
+    private static final RowMapper<MemeListItemRow> MEME_LIST_ITEM_ROW_MAPPER = (rs, i) -> {
+        Array tagsArray = rs.getArray("tags");
+        List<String> tags = tagsArray == null ? List.of() : Arrays.asList((String[]) tagsArray.getArray());
+        return MemeListItemRow.builder()
+            .id(rs.getLong("id"))
+            .slug(rs.getString("slug"))
+            .score(rs.getInt("score"))
+            .createdAt(toOffsetDateTime(rs.getTimestamp("created_at")))
+            .categorySlug(rs.getString("category_slug"))
+            .authorUsername(rs.getString("author_username"))
+            .title(rs.getString("title"))
+            .description(rs.getString("description"))
+            .imagePath(rs.getString("image_path"))
+            .tagSlugs(tags)
+            .build();
     };
 }

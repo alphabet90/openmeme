@@ -86,10 +86,6 @@ paths:
           in: query
           schema:
             type: string
-        - name: subreddit
-          in: query
-          schema:
-            type: string
         - name: sort
           in: query
           schema:
@@ -416,6 +412,36 @@ components:
           items:
             type: string
 
+    MemeListItem:
+      type: object
+      required: [slug, category, score, title, tags]
+      properties:
+        slug:
+          type: string
+        score:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        category:
+          type: string
+        author:
+          type: string
+          nullable: true
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        image_path:
+          type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+
     CategoryPage:
       type: object
       required: [data, page, limit, total, total_pages]
@@ -440,7 +466,7 @@ components:
         data:
           type: array
           items:
-            $ref: "#/components/schemas/Meme"
+            $ref: "#/components/schemas/MemeListItem"
         page:
           type: integer
         limit:

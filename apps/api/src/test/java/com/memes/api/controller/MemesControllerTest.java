@@ -8,6 +8,7 @@ import com.memes.api.generated.model.CategorySummary;
 import com.memes.api.generated.model.LocaleCode;
 import com.memes.api.generated.model.Meme;
 import com.memes.api.generated.model.MemeImage;
+import com.memes.api.generated.model.MemeListItem;
 import com.memes.api.generated.model.MemePage;
 import com.memes.api.generated.model.MemeTranslation;
 import com.memes.api.generated.model.SearchResult;
@@ -112,13 +113,48 @@ class MemesControllerTest {
         page.setLimit(20);
         page.setTotal(0);
         page.setTotalPages(0);
-        when(memeService.listMemes(anyInt(), anyInt(), any(), any(), anyString(), anyString())).thenReturn(page);
+        when(memeService.listMemes(anyInt(), anyInt(), any(), anyString(), anyString())).thenReturn(page);
 
         mockMvc.perform(get("/memes?locale=es-ar")).andExpect(status().isOk());
 
         org.mockito.Mockito.verify(memeService).listMemes(
-            anyInt(), anyInt(), any(), any(), anyString(),
-            org.mockito.ArgumentMatchers.eq("es"));
+            anyInt(), anyInt(), any(), anyString(),
+            org.mockito.ArgumentMatchers.eq("es-ar"));
+    }
+
+    @Test
+    void listMemes_returnsFlatItem() throws Exception {
+        MemeListItem item = new MemeListItem();
+        item.setSlug("kermit-hanging");
+        item.setScore(7079);
+        item.setCategory("kermit-suicide");
+        item.setAuthor("TheCatOfDojima");
+        item.setTitle("Kermit Plush Hanging");
+        item.setDescription("Dark humor setup");
+        item.setImagePath("https://cdn.example.com/memes/kermit.png");
+        item.setTags(List.of("argentina", "kermit-suicide"));
+
+        MemePage page = new MemePage();
+        page.setData(List.of(item));
+        page.setPage(0);
+        page.setLimit(20);
+        page.setTotal(1);
+        page.setTotalPages(1);
+        when(memeService.listMemes(anyInt(), anyInt(), any(), anyString(), anyString())).thenReturn(page);
+
+        mockMvc.perform(get("/memes"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data[0].slug").value("kermit-hanging"))
+            .andExpect(jsonPath("$.data[0].score").value(7079))
+            .andExpect(jsonPath("$.data[0].category").value("kermit-suicide"))
+            .andExpect(jsonPath("$.data[0].author").value("TheCatOfDojima"))
+            .andExpect(jsonPath("$.data[0].title").value("Kermit Plush Hanging"))
+            .andExpect(jsonPath("$.data[0].description").value("Dark humor setup"))
+            .andExpect(jsonPath("$.data[0].image_path").value("https://cdn.example.com/memes/kermit.png"))
+            .andExpect(jsonPath("$.data[0].tags[0]").value("argentina"))
+            .andExpect(jsonPath("$.data[0].tags[1]").value("kermit-suicide"))
+            .andExpect(jsonPath("$.data[0].translations").doesNotExist())
+            .andExpect(jsonPath("$.data[0].images").doesNotExist());
     }
 
     @Test

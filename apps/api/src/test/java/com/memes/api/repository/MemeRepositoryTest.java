@@ -106,17 +106,47 @@ class MemeRepositoryTest {
     void findAll_respectsPaginationAndCategoryFilter() {
         for (int i = 0; i < 5; i++) repository.upsertMeme(sample("meme-" + i, "test-cat"));
         repository.upsertMeme(sample("other", "other-cat"));
-        assertThat(repository.findAll(0, 3, null, null, "score", "en")).hasSize(3);
-        assertThat(repository.findAll(0, 10, "test-cat", null, "score", "en")).hasSize(5);
+        assertThat(repository.findAll(0, 3, null, "score", "en")).hasSize(3);
+        assertThat(repository.findAll(0, 10, "test-cat", "score", "en")).hasSize(5);
     }
 
     @Test
-    void countFiltered_matchesFindAll() {
+    void findAll_returnsFlatRows() {
         repository.upsertMeme(sample("m1", "football"));
         repository.upsertMeme(sample("m2", "football"));
         repository.upsertMeme(sample("m3", "humor"));
-        assertThat(repository.countFiltered("football", null)).isEqualTo(2);
-        assertThat(repository.countFiltered(null, null)).isEqualTo(3);
+
+        List<MemeListItemRow> rows = repository.findAll(0, 10, null, "score", "en");
+        assertThat(rows).hasSize(3);
+        assertThat(rows.get(0).title()).startsWith("Test Meme");
+        assertThat(rows.get(0).imagePath()).isNotNull();
+        assertThat(rows.get(0).tagSlugs()).containsExactly("argentina");
+
+        List<MemeListItemRow> filtered = repository.findAll(0, 10, "football", "score", "en");
+        assertThat(filtered).hasSize(2);
+
+        assertThat(repository.count(null, "en")).isEqualTo(3);
+        assertThat(repository.count("football", "en")).isEqualTo(2);
+    }
+
+    @Test
+    void findAll_respectsLocale() {
+        repository.upsertMeme(MemeUpsert.builder()
+            .slug("cat-world-cup").categorySlug("argentina-football").defaultLocale("en")
+            .subredditName("argentina").score(2840)
+            .translations(List.of(
+                MemeTranslationRow.builder().locale("en").title("Cat at the World Cup").description("A cat").build(),
+                MemeTranslationRow.builder().locale("es").title("Gato en el Mundial").description("Un gato").build()))
+            .images(List.of(MemeImageRow.builder().path("/cat.jpg").position(0).isPrimary(true).build()))
+            .tagSlugs(List.of("argentina")).build());
+
+        List<MemeListItemRow> en = repository.findAll(0, 10, null, "score", "en");
+        assertThat(en).hasSize(1);
+        assertThat(en.get(0).title()).isEqualTo("Cat at the World Cup");
+
+        List<MemeListItemRow> es = repository.findAll(0, 10, null, "score", "es");
+        assertThat(es).hasSize(1);
+        assertThat(es.get(0).title()).isEqualTo("Gato en el Mundial");
     }
 
     @Test
