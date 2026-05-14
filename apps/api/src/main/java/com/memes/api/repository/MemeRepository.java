@@ -150,6 +150,46 @@ public class MemeRepository {
         return Optional.ofNullable(count).orElse(0);
     }
 
+    public List<MemeListItemRow> findAllOptimized(int offset, int limit,
+                                                  @Nullable String category,
+                                                  String sort, String locale) {
+        String orderCol = orderColumn(sort);
+        String resolvedLocale = resolveLocale(locale);
+        StringBuilder sql = new StringBuilder(
+            "SELECT id, slug, score, created_at, category_slug, author_username, "
+                + "title, description, image_path, tags "
+                + "FROM list_memes_flat(?::locale_code) WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+        params.add(resolvedLocale);
+        Optional.ofNullable(category).filter(c -> !c.isBlank()).ifPresent(c -> {
+            sql.append(" AND category_slug = ?"); params.add(c);
+        });
+        if ("title".equals(orderCol)) {
+            sql.append(" ORDER BY title ASC NULLS LAST, id DESC");
+        } else if ("created_at".equals(orderCol)) {
+            sql.append(" ORDER BY created_at DESC NULLS LAST, id DESC");
+        } else {
+            sql.append(" ORDER BY score DESC, id DESC");
+        }
+        sql.append(" LIMIT ? OFFSET ?");
+        params.add(limit);
+        params.add(offset);
+        return jdbc.query(sql.toString(), MEME_LIST_ITEM_ROW_MAPPER, params.toArray());
+    }
+
+    public int countOptimized(@Nullable String category, String locale) {
+        String resolvedLocale = resolveLocale(locale);
+        StringBuilder sql = new StringBuilder(
+            "SELECT COUNT(*) FROM list_memes_flat(?::locale_code) WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+        params.add(resolvedLocale);
+        Optional.ofNullable(category).filter(c -> !c.isBlank()).ifPresent(c -> {
+            sql.append(" AND category_slug = ?"); params.add(c);
+        });
+        Integer count = jdbc.queryForObject(sql.toString(), Integer.class, params.toArray());
+        return Optional.ofNullable(count).orElse(0);
+    }
+
     public Optional<MemeRow> findBySlugAndCategory(String slug, String category) {
         List<MemeRow> rows = jdbc.query(
             SELECT_MEME_BASE + " WHERE m.deleted_at IS NULL AND c.slug = ? AND m.slug = ?",
@@ -311,5 +351,22 @@ public class MemeRepository {
             .translations(JsonAggregates.parseTranslations(rs.getString("translations_json")))
             .images(JsonAggregates.parseImages(rs.getString("images_json")))
             .tagSlugs(tags).build();
+    };
+
+    private static final RowMapper<MemeListItemRow> MEME_LIST_ITEM_ROW_MAPPER = (rs, i) -> {
+        Array tagsArray = rs.getArray("tags");
+        List<String> tags = tagsArray == null ? List.of() : Arrays.asList((String[]) tagsArray.getArray());
+        return MemeListItemRow.builder()
+            .id(rs.getLong("id"))
+            .slug(rs.getString("slug"))
+            .score(rs.getInt("score"))
+            .createdAt(toOffsetDateTime(rs.getTimestamp("created_at")))
+            .categorySlug(rs.getString("category_slug"))
+            .authorUsername(rs.getString("author_username"))
+            .title(rs.getString("title"))
+            .description(rs.getString("description"))
+            .imagePath(rs.getString("image_path"))
+            .tagSlugs(tags)
+            .build();
     };
 }

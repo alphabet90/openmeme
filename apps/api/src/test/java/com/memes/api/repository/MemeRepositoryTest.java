@@ -120,6 +120,45 @@ class MemeRepositoryTest {
     }
 
     @Test
+    void findAllOptimized_returnsFlatRows() {
+        repository.upsertMeme(sample("m1", "football"));
+        repository.upsertMeme(sample("m2", "football"));
+        repository.upsertMeme(sample("m3", "humor"));
+
+        List<MemeListItemRow> rows = repository.findAllOptimized(0, 10, null, "score", "en");
+        assertThat(rows).hasSize(3);
+        assertThat(rows.get(0).title()).startsWith("Test Meme");
+        assertThat(rows.get(0).imagePath()).isNotNull();
+        assertThat(rows.get(0).tagSlugs()).containsExactly("argentina");
+
+        List<MemeListItemRow> filtered = repository.findAllOptimized(0, 10, "football", "score", "en");
+        assertThat(filtered).hasSize(2);
+
+        assertThat(repository.countOptimized(null, "en")).isEqualTo(3);
+        assertThat(repository.countOptimized("football", "en")).isEqualTo(2);
+    }
+
+    @Test
+    void findAllOptimized_respectsLocale() {
+        repository.upsertMeme(MemeUpsert.builder()
+            .slug("cat-world-cup").categorySlug("argentina-football").defaultLocale("en")
+            .subredditName("argentina").score(2840)
+            .translations(List.of(
+                MemeTranslationRow.builder().locale("en").title("Cat at the World Cup").description("A cat").build(),
+                MemeTranslationRow.builder().locale("es").title("Gato en el Mundial").description("Un gato").build()))
+            .images(List.of(MemeImageRow.builder().path("/cat.jpg").position(0).isPrimary(true).build()))
+            .tagSlugs(List.of("argentina")).build());
+
+        List<MemeListItemRow> en = repository.findAllOptimized(0, 10, null, "score", "en");
+        assertThat(en).hasSize(1);
+        assertThat(en.get(0).title()).isEqualTo("Cat at the World Cup");
+
+        List<MemeListItemRow> es = repository.findAllOptimized(0, 10, null, "score", "es");
+        assertThat(es).hasSize(1);
+        assertThat(es.get(0).title()).isEqualTo("Gato en el Mundial");
+    }
+
+    @Test
     void search_findsByTitleInLocale() {
         repository.upsertMeme(MemeUpsert.builder()
             .slug("cat-world-cup").categorySlug("argentina-football").defaultLocale("en")

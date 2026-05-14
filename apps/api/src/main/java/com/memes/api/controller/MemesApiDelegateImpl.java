@@ -39,12 +39,12 @@ public class MemesApiDelegateImpl implements MemesApiDelegate {
     @Override
     public ResponseEntity<MemePage> listMemes(
             Integer page, Integer limit,
-            String category, String subreddit, String sort,
+            String category, String sort,
             LocaleCode locale) {
         return ResponseEntity.ok(memeService.listMemes(
             Optional.ofNullable(page).orElse(0),
             Optional.ofNullable(limit).orElse(20),
-            category, subreddit,
+            category,
             Optional.ofNullable(sort).orElse("score"),
             localeValue(locale)
         ));
@@ -56,7 +56,7 @@ public class MemesApiDelegateImpl implements MemesApiDelegate {
         MemePage result = memeService.listMemes(
             Optional.ofNullable(page).orElse(0),
             Optional.ofNullable(limit).orElse(20),
-            category, null,
+            category,
             Optional.ofNullable(sort).orElse("score"),
             localeValue(locale)
         );

@@ -7,6 +7,7 @@ import com.memes.api.generated.model.CategoryTranslation;
 import com.memes.api.generated.model.LocaleCode;
 import com.memes.api.generated.model.Meme;
 import com.memes.api.generated.model.MemeImage;
+import com.memes.api.generated.model.MemeListItem;
 import com.memes.api.generated.model.MemePage;
 import com.memes.api.generated.model.MemeTranslation;
 import com.memes.api.generated.model.SearchResult;
@@ -14,6 +15,7 @@ import com.memes.api.generated.model.Stats;
 import com.memes.api.repository.CategoryRow;
 import com.memes.api.repository.CategoryTranslationRow;
 import com.memes.api.repository.MemeImageRow;
+import com.memes.api.repository.MemeListItemRow;
 import com.memes.api.repository.MemeRepository;
 import com.memes.api.repository.MemeRepository.SearchHit;
 import com.memes.api.repository.MemeRow;
@@ -67,16 +69,15 @@ public class MemeService {
     }
 
     @Cacheable(value = RedisConfig.CACHE_MEME_LIST,
-               key = "#page + '-' + #limit + '-' + #category + '-' + #subreddit + '-' + #sort + '-' + #locale")
+               key = "#page + '-' + #limit + '-' + #category + '-' + #sort + '-' + #locale")
     public MemePage listMemes(int page, int limit,
                               @Nullable String category,
-                              @Nullable String subreddit,
                               String sort,
                               String locale) {
         int offset = page * limit;
-        List<MemeRow> rows = memeRepository.findAll(offset, limit, category, subreddit, sort, locale);
-        int total = memeRepository.countFiltered(category, subreddit);
-        return toMemePage(rows, page, limit, total, locale);
+        List<MemeListItemRow> rows = memeRepository.findAllOptimized(offset, limit, category, sort, locale);
+        int total = memeRepository.countOptimized(category, locale);
+        return toMemePage(rows, page, limit, total);
     }
 
     @Cacheable(value = RedisConfig.CACHE_MEME, key = "#category + '/' + #slug + '-' + #locale")
@@ -121,14 +122,28 @@ public class MemeService {
         return result;
     }
 
-    private MemePage toMemePage(List<MemeRow> rows, int page, int limit, int total, String locale) {
+    private MemePage toMemePage(List<MemeListItemRow> rows, int page, int limit, int total) {
         MemePage mp = new MemePage();
-        mp.setData(rows.stream().map(r -> toMeme(r, locale)).toList());
+        mp.setData(rows.stream().map(this::toMemeListItem).toList());
         mp.setPage(page);
         mp.setLimit(limit);
         mp.setTotal(total);
         mp.setTotalPages(limit > 0 ? (int) Math.ceil((double) total / limit) : 0);
         return mp;
+    }
+
+    private MemeListItem toMemeListItem(MemeListItemRow r) {
+        MemeListItem item = new MemeListItem();
+        item.setSlug(r.slug());
+        item.setScore(r.score());
+        Optional.ofNullable(r.createdAt()).ifPresent(item::setCreatedAt);
+        item.setCategory(r.categorySlug());
+        item.setAuthor(r.authorUsername());
+        item.setTitle(r.title());
+        item.setDescription(r.description());
+        item.setImagePath(resolveImageUrl(r.imagePath()));
+        item.setTags(r.tagSlugs());
+        return item;
     }
 
     private Meme toMeme(MemeRow r, String locale) {
