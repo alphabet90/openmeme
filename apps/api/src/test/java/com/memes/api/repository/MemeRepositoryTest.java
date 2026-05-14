@@ -111,15 +111,6 @@ class MemeRepositoryTest {
     }
 
     @Test
-    void countFiltered_matchesFindAll() {
-        repository.upsertMeme(sample("m1", "football"));
-        repository.upsertMeme(sample("m2", "football"));
-        repository.upsertMeme(sample("m3", "humor"));
-        assertThat(repository.countFiltered("football", null)).isEqualTo(2);
-        assertThat(repository.countFiltered(null, null)).isEqualTo(3);
-    }
-
-    @Test
     void findAll_returnsFlatRows() {
         repository.upsertMeme(sample("m1", "football"));
         repository.upsertMeme(sample("m2", "football"));
@@ -134,8 +125,8 @@ class MemeRepositoryTest {
         List<MemeListItemRow> filtered = repository.findAll(0, 10, "football", "score", "en");
         assertThat(filtered).hasSize(2);
 
-        assertThat(repository.countOptimized(null, "en")).isEqualTo(3);
-        assertThat(repository.countOptimized("football", "en")).isEqualTo(2);
+        assertThat(repository.count(null, "en")).isEqualTo(3);
+        assertThat(repository.count("football", "en")).isEqualTo(2);
     }
 
     @Test

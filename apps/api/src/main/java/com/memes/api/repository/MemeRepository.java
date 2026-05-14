@@ -86,19 +86,6 @@ public class MemeRepository {
             .toList();
     }
 
-    public int countFiltered(@Nullable String category, @Nullable String subreddit) {
-        StringBuilder sql = new StringBuilder(
-            "SELECT COUNT(*) FROM memes m "
-                + "JOIN categories c ON c.id = m.category_id "
-                + "LEFT JOIN subreddits s ON s.id = m.subreddit_id "
-                + "WHERE m.deleted_at IS NULL");
-        List<Object> params = new ArrayList<>();
-        Optional.ofNullable(category).filter(v -> !v.isBlank()).ifPresent(v -> { sql.append(" AND c.slug = ?"); params.add(v); });
-        Optional.ofNullable(subreddit).filter(v -> !v.isBlank()).ifPresent(v -> { sql.append(" AND s.name = ?"); params.add(v); });
-        Integer count = jdbc.queryForObject(sql.toString(), Integer.class, params.toArray());
-        return Optional.ofNullable(count).orElse(0);
-    }
-
     public List<MemeListItemRow> findAll(int offset, int limit,
                                          @Nullable String category,
                                          String sort, String locale) {
@@ -126,7 +113,7 @@ public class MemeRepository {
         return jdbc.query(sql.toString(), MEME_LIST_ITEM_ROW_MAPPER, params.toArray());
     }
 
-    public int countOptimized(@Nullable String category, String locale) {
+    public int count(@Nullable String category, String locale) {
         String resolvedLocale = resolveLocale(locale);
         StringBuilder sql = new StringBuilder(
             "SELECT COUNT(*) FROM list_memes_flat(?::locale_code) WHERE 1=1");
