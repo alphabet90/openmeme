@@ -232,8 +232,7 @@ docker-compose up            # Postgres 16 + Redis 7 + API
 
 ## Security
 
-- Admin API (`/admin/*`) protected by `ApiKeyAuthFilter` with constant-time `MessageDigest.isEqual`
-- `ADMIN_API_KEY` via env var; default in Docker: `testing`
+- Admin API (`/admin/*`) protected by Spring Security + `ApiKeyAuthenticationFilter` with DB-backed key hashing
 - Sensitive headers (`X-Api-Key`, `Authorization`) masked in request/response logs
 - AI CLI processes (`claude`, `codex`) require installed + authenticated CLIs
 - `.env` is gitignored — never commit it
@@ -304,7 +303,7 @@ Copy `.env.example` to `.env` and configure per subsystem:
 | Section | Key Vars |
 |---------|----------|
 | Scraper | `SUBREDDIT`, `REPO_PATH`, `TMP_DIR`, `BLOOM_FILTER_FILE`, `CLASSIFIER` (`claude`/`codex`), `CLASSIFY_WORKERS`, `REDDIT_CLIENT_ID/SECRET`, `REDDIT_USERNAME/PASSWORD` |
-| API | `PORT` (default `8080`), `DB_URL`, `DB_USER`, `DB_PASSWORD`, `REDIS_HOST`, `REDIS_PORT`, `ADMIN_API_KEY`, `CDN_URL` |
+| API | `PORT` (default `8080`), `DB_URL`, `DB_USER`, `DB_PASSWORD`, `REDIS_HOST`, `REDIS_PORT`, `CDN_URL` |
 | Scripts | `BATCH_SIZE`, `DRY_RUN`, `PER_POST`, `FROM_FILE`, `POST_URL` |
 | Sync | `SYNC_SUBREDDITS`, `SYNC_LIMIT`, `SYNC_BATCH_SIZE`, `SYNC_CLASSIFIER`, `SYNC_CLASSIFY_WORKERS`, `SYNC_MIN_COMMENT_UPVOTES`, `SYNC_DRY_RUN`, `SYNC_TIME` |
 | Optimize | `OPTIMIZE_DRY_RUN`, `OPTIMIZE_RESIZE` |

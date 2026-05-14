@@ -2,7 +2,9 @@ package com.memes.api.controller;
 
 import com.memes.api.config.LocaleCodeConverter;
 import com.memes.api.config.LoggingProperties;
-import com.memes.api.filter.ApiKeyAuthFilter;
+import com.memes.api.config.SecurityConfig;
+import com.memes.api.filter.ApiKeyAuthenticationFilter;
+import com.memes.api.filter.RateLimitingFilter;
 import com.memes.api.generated.model.CategoryPage;
 import com.memes.api.generated.model.CategorySummary;
 import com.memes.api.generated.model.LocaleCode;
@@ -13,8 +15,14 @@ import com.memes.api.generated.model.MemePage;
 import com.memes.api.generated.model.MemeTranslation;
 import com.memes.api.generated.model.SearchResult;
 import com.memes.api.generated.model.Stats;
+import com.memes.api.repository.ApiKeyRepository;
+import com.memes.api.repository.ApiKeyRow;
+import com.memes.api.service.ApiKeyRateLimiter;
+import com.memes.api.service.ApiKeyService;
 import com.memes.api.service.IndexerService;
 import com.memes.api.service.MemeService;
+import com.memes.api.util.ApiKeyHasher;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -23,6 +31,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,10 +44,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest
-@Import({MemesApiDelegateImpl.class, AdminApiDelegateImpl.class, ApiKeyAuthFilter.class,
+@Import({MemesApiDelegateImpl.class, AdminApiDelegateImpl.class, SecurityConfig.class,
+    ApiKeyAuthenticationFilter.class, RateLimitingFilter.class,
     LoggingProperties.class, LocaleCodeConverter.class})
 @TestPropertySource(properties = {
-    "memes.admin-api-key=test-secret",
     "spring.cache.type=none",
     "memes.cdn-url=https://cdn.example.com"
 })
@@ -48,6 +57,35 @@ class MemesControllerTest {
 
     @MockBean MemeService memeService;
     @MockBean IndexerService indexerService;
+    @MockBean ApiKeyRepository apiKeyRepository;
+    @MockBean ApiKeyRateLimiter apiKeyRateLimiter;
+    @MockBean ApiKeyService apiKeyService;
+
+    private static final String READ_KEY = "test-read-key";
+
+    @BeforeEach
+    void setUp() {
+        ApiKeyRow row = ApiKeyRow.builder()
+            .id(1L)
+            .keyHash(ApiKeyHasher.hash(READ_KEY))
+            .clientName("Test")
+            .role("READ")
+            .active(true)
+            .expiresAt(null)
+            .createdAt(OffsetDateTime.now())
+            .lastUsedAt(null)
+            .build();
+        when(apiKeyRepository.findByKeyHash(anyString())).thenReturn(Optional.empty());
+        when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(READ_KEY))).thenReturn(Optional.of(row));
+        when(apiKeyRateLimiter.isAllowed(any(), anyString())).thenReturn(true);
+    }
+
+    @Test
+    void getStats_withoutKey_returns401() throws Exception {
+        when(apiKeyRepository.findByKeyHash(anyString())).thenReturn(Optional.empty());
+        mockMvc.perform(get("/"))
+            .andExpect(status().isUnauthorized());
+    }
 
     @Test
     void getStats_returns200() throws Exception {
@@ -56,7 +94,7 @@ class MemesControllerTest {
         stats.setTotalCategories(10);
         when(memeService.getStats()).thenReturn(stats);
 
-        mockMvc.perform(get("/"))
+        mockMvc.perform(get("/").header("X-Api-Key", READ_KEY))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.total_memes").value(100))
             .andExpect(jsonPath("$.total_categories").value(10));
@@ -76,7 +114,7 @@ class MemesControllerTest {
         page.setTotalPages(1);
         when(memeService.listCategories(anyString(), anyInt(), anyInt())).thenReturn(page);
 
-        mockMvc.perform(get("/categories"))
+        mockMvc.perform(get("/categories").header("X-Api-Key", READ_KEY))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data[0].category").value("argentina-football"))
             .andExpect(jsonPath("$.data[0].count").value(45))
@@ -94,7 +132,7 @@ class MemesControllerTest {
         page.setTotalPages(10);
         when(memeService.listCategories(anyString(), anyInt(), anyInt())).thenReturn(page);
 
-        mockMvc.perform(get("/categories?page=2&limit=5"))
+        mockMvc.perform(get("/categories?page=2&limit=5").header("X-Api-Key", READ_KEY))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.page").value(2))
             .andExpect(jsonPath("$.total_pages").value(10));
@@ -115,7 +153,7 @@ class MemesControllerTest {
         page.setTotalPages(0);
         when(memeService.listMemes(anyInt(), anyInt(), any(), anyString(), anyString())).thenReturn(page);
 
-        mockMvc.perform(get("/memes?locale=es-ar")).andExpect(status().isOk());
+        mockMvc.perform(get("/memes?locale=es-ar").header("X-Api-Key", READ_KEY)).andExpect(status().isOk());
 
         org.mockito.Mockito.verify(memeService).listMemes(
             anyInt(), anyInt(), any(), anyString(),
@@ -142,7 +180,7 @@ class MemesControllerTest {
         page.setTotalPages(1);
         when(memeService.listMemes(anyInt(), anyInt(), any(), anyString(), anyString())).thenReturn(page);
 
-        mockMvc.perform(get("/memes"))
+        mockMvc.perform(get("/memes").header("X-Api-Key", READ_KEY))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data[0].slug").value("kermit-hanging"))
             .andExpect(jsonPath("$.data[0].score").value(7079))
@@ -160,7 +198,7 @@ class MemesControllerTest {
     @Test
     void getMeme_returns404_whenNotFound() throws Exception {
         when(memeService.getMeme(anyString(), anyString(), anyString())).thenReturn(Optional.empty());
-        mockMvc.perform(get("/memes/unknown-category/unknown-slug"))
+        mockMvc.perform(get("/memes/unknown-category/unknown-slug").header("X-Api-Key", READ_KEY))
             .andExpect(status().isNotFound());
     }
 
@@ -182,7 +220,7 @@ class MemesControllerTest {
         when(memeService.getMeme("argentina-football", "cat-world-cup", "en"))
             .thenReturn(Optional.of(meme));
 
-        mockMvc.perform(get("/memes/argentina-football/cat-world-cup"))
+        mockMvc.perform(get("/memes/argentina-football/cat-world-cup").header("X-Api-Key", READ_KEY))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.slug").value("cat-world-cup"))
             .andExpect(jsonPath("$.translations[0].title").value("Cat at the World Cup"))
@@ -199,7 +237,7 @@ class MemesControllerTest {
         sr.setTags(List.of("argentina"));
         when(memeService.search(anyString(), anyInt(), anyInt(), anyString())).thenReturn(List.of(sr));
 
-        mockMvc.perform(get("/search?q=afip"))
+        mockMvc.perform(get("/search?q=afip").header("X-Api-Key", READ_KEY))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].slug").value("afip-peeking"));
     }
@@ -207,7 +245,7 @@ class MemesControllerTest {
     @Test
     void searchMemes_defaultsToEnLocale() throws Exception {
         when(memeService.search(anyString(), anyInt(), anyInt(), anyString())).thenReturn(List.of());
-        mockMvc.perform(get("/search?q=jubilado")).andExpect(status().isOk());
+        mockMvc.perform(get("/search?q=jubilado").header("X-Api-Key", READ_KEY)).andExpect(status().isOk());
         org.mockito.Mockito.verify(memeService).search(
             org.mockito.ArgumentMatchers.eq("jubilado"),
             anyInt(), anyInt(),

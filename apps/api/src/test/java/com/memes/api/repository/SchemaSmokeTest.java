@@ -108,4 +108,23 @@ class SchemaSmokeTest {
             "SELECT * FROM search_memes('messi', 'es'::locale_code, 10, 0)");
         assertThat(hits).isEmpty();
     }
+
+    @Test
+    void apiKeysTableExistsWithIndexes() {
+        Integer count = jdbc.queryForObject(
+            "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'api_keys'", Integer.class);
+        assertThat(count).isEqualTo(1);
+
+        List<String> indexes = jdbc.queryForList(
+            "SELECT indexname FROM pg_indexes WHERE tablename = 'api_keys'", String.class);
+        assertThat(indexes).contains("idx_api_keys_key_hash", "idx_api_keys_active");
+    }
+
+    @Test
+    void apiKeysRoleEnumConstrained() {
+        jdbc.update("INSERT INTO api_keys (key_hash, client_name, role) VALUES ('hash1', 'Test', 'READ')");
+        assertThatThrownBy(() -> jdbc.update(
+            "INSERT INTO api_keys (key_hash, client_name, role) VALUES ('hash2', 'Test', 'INVALID')"))
+            .isInstanceOf(DataIntegrityViolationException.class);
+    }
 }
