@@ -171,7 +171,6 @@ REDDIT_CLIENT_SECRET=your_secret
 # API
 PORT=8080
 DB_PASSWORD=memes
-ADMIN_API_KEY=testing
 API_BASE_URL=http://localhost:8080
 
 # Scripts
@@ -227,7 +226,6 @@ See `packages/design-system/references/design-refero.md` for full documentation.
 ## Security
 
 - Admin API endpoints protected by `ApiKeyAuthFilter`
-- `ADMIN_API_KEY` via environment variable
 - Sensitive headers masked in logs
 - `.env` is gitignored — never commit credentials
 - AI CLI processes require installed + authenticated CLIs
