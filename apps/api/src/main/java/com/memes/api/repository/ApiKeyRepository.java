@@ -11,7 +11,6 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -86,7 +85,7 @@ public class ApiKeyRepository {
             PreparedStatement ps = connection.prepareStatement(
                 "INSERT INTO api_keys (key_hash, client_name, role, active, expires_at) "
                     + "VALUES (?, ?, ?, ?, ?)",
-                Statement.RETURN_GENERATED_KEYS);
+                new String[]{"id"});
             ps.setString(1, insert.keyHash());
             ps.setString(2, insert.clientName());
             ps.setString(3, insert.role());
