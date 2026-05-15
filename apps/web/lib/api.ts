@@ -159,7 +159,7 @@ async function apiGet<T>(
     },
     headers: {
       Accept: "application/json",
-      ...(process.env.MEMES_API_KEY && { "X-Api-Key": process.env.MEMES_API_KEY }),
+      "X-Api-Key": process.env.MEMES_API_KEY,
     },
   });
 
