@@ -157,7 +157,10 @@ async function apiGet<T>(
       revalidate: opts.revalidate ?? DEFAULT_REVALIDATE,
       tags: opts.tags,
     },
-    headers: { Accept: "application/json" },
+    headers: {
+      Accept: "application/json",
+      "X-Api-Key": process.env.MEMES_API_KEY,
+    },
   });
 
   if (!res.ok) {
