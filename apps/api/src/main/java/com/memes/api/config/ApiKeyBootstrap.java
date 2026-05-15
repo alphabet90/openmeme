@@ -21,12 +21,12 @@ public class ApiKeyBootstrap implements CommandLineRunner {
         if (activeAdmins == 0) {
             ApiKeyService.ApiKeyCreationResult result = apiKeyService.createKey(
                 "bootstrap-emergency", "ADMIN", null);
-            log.warn("============================================================");
-            log.warn("EMERGENCY: No active ADMIN API keys found. A bootstrap key");
-            log.warn("has been created. Copy the key below immediately — it will");
-            log.warn("never be shown again. Revoke it after creating your own.");
-            log.warn("BOOTSTRAP API KEY: {}", result.plainKey());
-            log.warn("============================================================");
+            log.info("============================================================");
+            log.info("EMERGENCY: No active ADMIN API keys found. A bootstrap key");
+            log.info("has been created. Copy the key below immediately — it will");
+            log.info("never be shown again. Revoke it after creating your own.");
+            log.info("BOOTSTRAP API KEY: {}", result.plainKey());
+            log.info("============================================================");
         }
     }
 }
