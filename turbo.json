@@ -3,6 +3,9 @@
   "globalDependencies": ["**/.env.*local"],
   "tasks": {
     "build": {
+      "env": [
+        "MEMES_API_KEY"
+      ],
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]

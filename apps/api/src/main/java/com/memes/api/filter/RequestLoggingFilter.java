@@ -17,6 +17,10 @@ import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -59,6 +63,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         long startTime = System.currentTimeMillis();
         try {
             logIncomingRequest(wrappedRequest, traceId);
+            logRequestHeaders(wrappedRequest, traceId);
             chain.doFilter(wrappedRequest, wrappedResponse);
             long duration = System.currentTimeMillis() - startTime;
             MDC.put("http.response.status_code", String.valueOf(wrappedResponse.getStatus()));
@@ -110,6 +115,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         } else {
             log.info("[{}] <-- {} in {}ms (body={}B)", traceId, status, duration, bodySize);
         }
+        logResponseHeaders(response, traceId);
         if (bodySize == 0 || !isTextContentType(response.getContentType())) return;
         String bodyText = maskSensitiveValues(
                 truncate(new String(response.getContentAsByteArray(), StandardCharsets.UTF_8),
@@ -151,6 +157,24 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
                     "$1[MASKED]\"");
         }
         return result;
+    }
+
+    private void logRequestHeaders(HttpServletRequest request, String traceId) {
+        Map<String, String> headers = new LinkedHashMap<>();
+        Enumeration<String> names = request.getHeaderNames();
+        while (names != null && names.hasMoreElements()) {
+            String name = names.nextElement();
+            headers.put(name, String.join(", ", Collections.list(request.getHeaders(name))));
+        }
+        log.info("[{}] request headers: {}", traceId, headers);
+    }
+
+    private void logResponseHeaders(HttpServletResponse response, String traceId) {
+        Map<String, String> headers = new LinkedHashMap<>();
+        for (String name : response.getHeaderNames()) {
+            headers.put(name, String.join(", ", response.getHeaders(name)));
+        }
+        log.info("[{}] response headers: {}", traceId, headers);
     }
 
     private String truncate(String value, int maxLength) {

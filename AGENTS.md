@@ -233,7 +233,7 @@ docker-compose up            # Postgres 16 + Redis 7 + API
 ## Security
 
 - Admin API (`/admin/*`) protected by Spring Security + `ApiKeyAuthenticationFilter` with DB-backed key hashing
-- Sensitive headers (`X-Api-Key`, `Authorization`) masked in request/response logs
+- Request/response headers are logged in full (no redaction); body values are masked for sensitive headers (`X-Api-Key`, `Authorization`)
 - AI CLI processes (`claude`, `codex`) require installed + authenticated CLIs
 - `.env` is gitignored — never commit it
 - **Never scan `memes/` in bulk** — thousands of images will exhaust context
