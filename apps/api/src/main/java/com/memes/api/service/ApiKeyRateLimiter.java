@@ -1,5 +1,6 @@
 package com.memes.api.service;
 
+import com.memes.api.config.RateLimitProperties;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
@@ -17,6 +18,7 @@ import java.time.Duration;
 public class ApiKeyRateLimiter {
 
     private final ProxyManager<String> proxyManager;
+    private final RateLimitProperties rateLimitProperties;
 
     public boolean isAllowed(Long keyId, String role) {
         Bandwidth limit = resolveLimit(role);
@@ -28,9 +30,18 @@ public class ApiKeyRateLimiter {
 
     private Bandwidth resolveLimit(String role) {
         return switch (role) {
-            case "ADMIN" -> Bandwidth.classic(30, Refill.intervally(30, Duration.ofMinutes(1)));
-            case "WRITE" -> Bandwidth.classic(60, Refill.intervally(60, Duration.ofMinutes(1)));
-            default -> Bandwidth.classic(100, Refill.intervally(100, Duration.ofMinutes(1)));
+            case "ADMIN" -> {
+                int limit = rateLimitProperties.getAdminPerMinute();
+                yield Bandwidth.classic(limit, Refill.intervally(limit, Duration.ofMinutes(1)));
+            }
+            case "WRITE" -> {
+                int limit = rateLimitProperties.getWritePerMinute();
+                yield Bandwidth.classic(limit, Refill.intervally(limit, Duration.ofMinutes(1)));
+            }
+            default -> {
+                int limit = rateLimitProperties.getReadPerMinute();
+                yield Bandwidth.classic(limit, Refill.intervally(limit, Duration.ofMinutes(1)));
+            }
         };
     }
 }
