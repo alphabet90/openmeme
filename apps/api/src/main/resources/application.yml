@@ -48,7 +48,7 @@ memes:
   rate-limit:
     read-per-minute: 100
     write-per-minute: 60
-    admin-per-minute: 30
+    admin-per-minute: 1000
 
 management:
   endpoints:
