@@ -224,7 +224,11 @@ jobs:
               req = urllib.request.Request(
                   f"{api_url}/admin/reindex",
                   data=body,
-                  headers={'Content-Type': 'application/json', 'X-Api-Key': api_key},
+                  headers={
+                      'Content-Type': 'application/json',
+                      'X-Api-Key': api_key,
+                      'User-Agent': 'openmeme-indexer/1.0',
+                  },
                   method='POST'
               )
               try:
