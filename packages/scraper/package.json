@@ -11,7 +11,9 @@
     "dev": "tsc --watch",
     "lint": "eslint src/**/*.ts",
     "test": "vitest run",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "scrape": "node dist/cli.js scrape",
+    "validate": "node dist/cli.js validate"
   },
   "dependencies": {
     "commander": "^13.0.0",
