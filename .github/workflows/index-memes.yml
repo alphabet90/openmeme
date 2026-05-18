@@ -116,19 +116,24 @@ jobs:
 
           def submit_to_api(api_url, api_key, url_params, payload, item_type, item_id):
               """Submit a meme or category to the API."""
-              body = json.dumps(payload).encode('utf-8')
               url = f"{api_url}/admin/reindex"
               if url_params:
                   url += '?' + '&'.join(f"{k}={v}" for k, v in url_params.items())
 
+              # Only send a body when there's actual meme payload; category-only
+              # calls must omit the body so MemeIndexRequest validation does not fire.
+              data = json.dumps(payload).encode('utf-8') if payload else None
+              headers = {
+                  'X-Api-Key': api_key,
+                  'User-Agent': 'openmeme-indexer/1.0',
+              }
+              if data:
+                  headers['Content-Type'] = 'application/json'
+
               req = urllib.request.Request(
                   url,
-                  data=body,
-                  headers={
-                      'Content-Type': 'application/json',
-                      'X-Api-Key': api_key,
-                      'User-Agent': 'openmeme-indexer/1.0',
-                  },
+                  data=data,
+                  headers=headers,
                   method='POST'
               )
               try:
@@ -337,10 +342,9 @@ jobs:
 
                   default_locale = 'en' if os.path.isfile(base_file) else translations[0]['locale']
 
-                  # For categories, we send minimal payload (just slug is enough for full reindex)
-                  # The API endpoint expects a MemeIndexRequest, but for category-only indexing
-                  # we just send an empty body and rely on the flags
-                  payload = {}
+                  # No body: omitting the body triggers the full category scan path
+                  # (body=None skips MemeIndexRequest deserialization and validation)
+                  payload = None
 
                   url_params = {'indexMemes': 'false', 'indexCategories': 'true'}
                   if submit_to_api(api_url, api_key, url_params, payload, 'category', slug_val):
