@@ -434,7 +434,7 @@ public class IndexerService {
             return List.of();
         }
 
-        Pattern mdxFilePattern = Pattern.compile("^(.+)\\.([a-z]{2}(?:-[A-Z]{2})?)?\\.mdx$");
+        Pattern mdxFilePattern = Pattern.compile("^(.+?)(?:\\.([a-z]{2}(?:-[A-Z]{2})?))?\\.mdx$");
         Map<String, List<Path>> groupedFiles = new LinkedHashMap<>();
 
         try (var stream = Files.list(categoriesDir)) {
