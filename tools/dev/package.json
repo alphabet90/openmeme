@@ -12,7 +12,11 @@
     "dev": "tsc --watch",
     "lint": "eslint src/**/*.ts",
     "test": "vitest run",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "generate-prompt": "node dist/index.js generate-prompt",
+    "benchmark": "node dist/index.js benchmark",
+    "db-check": "node dist/index.js db-check",
+    "setup-hooks": "node dist/index.js setup-hooks"
   },
   "dependencies": {
     "@openmeme/scraper": "workspace:*",
