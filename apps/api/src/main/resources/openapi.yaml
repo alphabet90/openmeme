@@ -271,9 +271,24 @@ paths:
     post:
       tags: [admin]
       operationId: reindex
-      summary: Upsert a single meme (with body) or re-scan the full memes/ directory (no body)
+      summary: Upsert a single meme (with body) or re-scan the full memes/ and _categories/ directories (no body)
       security:
         - ApiKeyAuth: []
+      parameters:
+        - name: indexMemes
+          in: query
+          description: Whether to index memes from memes/ directory (default true)
+          required: false
+          schema:
+            type: boolean
+            default: true
+        - name: indexCategories
+          in: query
+          description: Whether to index categories from memes/_categories/ directory (default true)
+          required: false
+          schema:
+            type: boolean
+            default: true
       requestBody:
         required: false
         content:

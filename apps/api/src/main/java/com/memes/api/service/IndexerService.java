@@ -80,11 +80,16 @@ public class IndexerService {
 
     @Async("reindexExecutor")
     public void reindexAsync(MemeIndexRequest body) {
+        reindexAsync(body, true, true);
+    }
+
+    @Async("reindexExecutor")
+    public void reindexAsync(MemeIndexRequest body, boolean indexMemes, boolean indexCategories) {
         try {
             IndexResult result = Optional.ofNullable(body)
                 .filter(r -> r.getSlug() != null && !r.getSlug().isBlank())
                 .map(this::indexSingle)
-                .orElseGet(this::reindex);
+                .orElseGet(() -> reindex(indexMemes, indexCategories));
             log.info("Async reindex done: indexed={} durationMs={} errors={}",
                 result.indexed(), result.durationMs(), result.errors().size());
         } catch (Exception e) {
@@ -95,25 +100,36 @@ public class IndexerService {
     // ===== Public entry points ================================================
 
     public IndexResult reindex() {
+        return reindex(true, true);
+    }
+
+    public IndexResult reindex(boolean indexMemes, boolean indexCategories) {
         long start = System.currentTimeMillis();
         List<String> errors = new ArrayList<>();
+        int categoryCount = 0;
+        int memeCount = 0;
 
-        // Index categories first
-        List<CategoryUpsert> categories = scanCategoryMdxFiles(errors);
-        for (CategoryUpsert cat : categories) {
-            memeRepository.upsertCategory(cat);
+        // Index categories first (if enabled)
+        if (indexCategories) {
+            List<CategoryUpsert> categories = scanCategoryMdxFiles(errors);
+            for (CategoryUpsert cat : categories) {
+                memeRepository.upsertCategory(cat);
+            }
+            categoryCount = categories.size();
         }
 
-        // Index memes
-        List<MemeUpsert> memes = scanMdxFiles(errors);
-        int indexed = memeRepository.upsertAll(memes);
+        // Index memes (if enabled)
+        if (indexMemes) {
+            List<MemeUpsert> memes = scanMdxFiles(errors);
+            memeCount = memeRepository.upsertAll(memes);
+        }
 
         memeRepository.refreshStats();
         invalidateCaches();
         long duration = System.currentTimeMillis() - start;
         log.info("Reindex complete: {} categories, {} memes indexed in {}ms ({} errors)",
-            categories.size(), indexed, duration, errors.size());
-        return new IndexResult(indexed, duration, errors);
+            categoryCount, memeCount, duration, errors.size());
+        return new IndexResult(memeCount, duration, errors);
     }
 
     public IndexResult indexSingle(MemeIndexRequest req) {
