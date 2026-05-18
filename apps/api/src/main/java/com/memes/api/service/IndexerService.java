@@ -5,6 +5,7 @@ import com.memes.api.generated.model.LocaleCode;
 import com.memes.api.generated.model.MemeImage;
 import com.memes.api.generated.model.MemeIndexRequest;
 import com.memes.api.generated.model.MemeTranslation;
+import com.memes.api.repository.CategoryImageRow;
 import com.memes.api.repository.MemeImageRow;
 import com.memes.api.repository.MemeRepository;
 import com.memes.api.repository.MemeTranslationRow;
@@ -79,11 +80,16 @@ public class IndexerService {
 
     @Async("reindexExecutor")
     public void reindexAsync(MemeIndexRequest body) {
+        reindexAsync(body, true, true);
+    }
+
+    @Async("reindexExecutor")
+    public void reindexAsync(MemeIndexRequest body, boolean indexMemes, boolean indexCategories) {
         try {
             IndexResult result = Optional.ofNullable(body)
                 .filter(r -> r.getSlug() != null && !r.getSlug().isBlank())
                 .map(this::indexSingle)
-                .orElseGet(this::reindex);
+                .orElseGet(() -> reindex(indexMemes, indexCategories));
             log.info("Async reindex done: indexed={} durationMs={} errors={}",
                 result.indexed(), result.durationMs(), result.errors().size());
         } catch (Exception e) {
@@ -94,16 +100,36 @@ public class IndexerService {
     // ===== Public entry points ================================================
 
     public IndexResult reindex() {
+        return reindex(true, true);
+    }
+
+    public IndexResult reindex(boolean indexMemes, boolean indexCategories) {
         long start = System.currentTimeMillis();
         List<String> errors = new ArrayList<>();
-        List<MemeUpsert> upserts = scanMdxFiles(errors);
-        int indexed = memeRepository.upsertAll(upserts);
+        int categoryCount = 0;
+        int memeCount = 0;
+
+        // Index categories first (if enabled)
+        if (indexCategories) {
+            List<CategoryUpsert> categories = scanCategoryMdxFiles(errors);
+            for (CategoryUpsert cat : categories) {
+                memeRepository.upsertCategory(cat);
+            }
+            categoryCount = categories.size();
+        }
+
+        // Index memes (if enabled)
+        if (indexMemes) {
+            List<MemeUpsert> memes = scanMdxFiles(errors);
+            memeCount = memeRepository.upsertAll(memes);
+        }
+
         memeRepository.refreshStats();
         invalidateCaches();
         long duration = System.currentTimeMillis() - start;
-        log.info("Reindex complete: {} memes indexed in {}ms ({} errors)",
-            indexed, duration, errors.size());
-        return new IndexResult(indexed, duration, errors);
+        log.info("Reindex complete: {} categories, {} memes indexed in {}ms ({} errors)",
+            categoryCount, memeCount, duration, errors.size());
+        return new IndexResult(memeCount, duration, errors);
     }
 
     public IndexResult indexSingle(MemeIndexRequest req) {
@@ -399,6 +425,143 @@ public class IndexerService {
         return out;
     }
 
+    // ===== Category MDX scanning ==============================================
+
+    private List<CategoryUpsert> scanCategoryMdxFiles(List<String> errors) {
+        Path root = Paths.get(memesRoot);
+        Path categoriesDir = root.resolve("_categories");
+        if (!Files.isDirectory(categoriesDir)) {
+            return List.of();
+        }
+
+        Pattern mdxFilePattern = Pattern.compile("^(.+)\\.([a-z]{2}(?:-[A-Z]{2})?)?\\.mdx$");
+        Map<String, List<Path>> groupedFiles = new LinkedHashMap<>();
+
+        try (var stream = Files.list(categoriesDir)) {
+            stream.filter(Files::isDirectory).forEach(dir -> {
+                try (var files = Files.list(dir)) {
+                    files.filter(f -> f.toString().endsWith(".mdx")).forEach(f -> {
+                        String filename = f.getFileName().toString();
+                        Matcher m = mdxFilePattern.matcher(filename);
+                        String baseSlug = m.find() ? m.group(1) : filename;
+                        groupedFiles.computeIfAbsent(baseSlug, k -> new ArrayList<>()).add(f);
+                    });
+                } catch (IOException e) {
+                    log.warn("Error listing files in {}: {}", dir, e.getMessage());
+                }
+            });
+        } catch (IOException e) {
+            errors.add("Error scanning _categories directory: " + e.getMessage());
+            return List.of();
+        }
+
+        List<CategoryUpsert> categories = new ArrayList<>();
+        for (Map.Entry<String, List<Path>> entry : groupedFiles.entrySet()) {
+            String slug = entry.getKey();
+            List<Path> files = entry.getValue();
+            try {
+                CategoryUpsert category = mergeAndParseCategoryFiles(slug, files);
+                if (category != null) {
+                    categories.add(category);
+                }
+            } catch (Exception e) {
+                errors.add("Error parsing category " + slug + ": " + e.getMessage());
+            }
+        }
+
+        return categories;
+    }
+
+    private CategoryUpsert mergeAndParseCategoryFiles(String slug, List<Path> files) throws IOException {
+        Map<String, CategoryTranslationData> translations = new LinkedHashMap<>();
+        List<CategoryImageRow> images = new ArrayList<>();
+        String defaultLocale = "en";
+
+        for (Path file : files) {
+            String filename = file.getFileName().toString();
+            String locale = extractLocale(filename);
+
+            // Extract YAML frontmatter
+            List<String> lines = Files.readAllLines(file);
+            if (lines.isEmpty() || !"---".equals(lines.get(0).trim())) continue;
+            int end = -1;
+            for (int i = 1; i < lines.size(); i++) {
+                if ("---".equals(lines.get(i).trim())) { end = i; break; }
+            }
+            if (end < 0) continue;
+
+            String yamlBlock = String.join("\n", lines.subList(1, end));
+            Map<String, Object> fm = new Yaml().load(yamlBlock);
+            if (fm == null || fm.isEmpty()) continue;
+
+            String name = str(fm, "name");
+            String description = str(fm, "description");
+            @SuppressWarnings("unchecked")
+            List<String> tags = (List<String>) fm.get("tags");
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> imagesList = (List<Map<String, Object>>) fm.get("images");
+
+            String translationLocale = locale != null ? locale : defaultLocale;
+            if (name != null && !name.isBlank()) {
+                translations.put(translationLocale, new CategoryTranslationData(name, description, tags));
+            }
+
+            // Parse images from first file that has them
+            if (images.isEmpty() && imagesList != null && !imagesList.isEmpty()) {
+                images = parseImages(imagesList, file.getParent());
+            }
+        }
+
+        if (translations.isEmpty()) {
+            return null;
+        }
+
+        return new CategoryUpsert(slug, defaultLocale, translations, images);
+    }
+
+    private String extractLocale(String filename) {
+        // "argentina-futbol.es-AR.mdx" → "es-AR"
+        // "argentina-futbol.mdx" → null
+        Pattern p = Pattern.compile("^.+\\.([a-z]{2}(?:-[A-Z]{2})?)\\.mdx$");
+        Matcher m = p.matcher(filename);
+        return m.find() ? m.group(1) : null;
+    }
+
+    private List<CategoryImageRow> parseImages(List<Map<String, Object>> imagesList, Path categoryDir) throws IOException {
+        Path root = Paths.get(memesRoot);
+        List<CategoryImageRow> images = new ArrayList<>();
+        int position = 0;
+
+        for (Object imageObj : imagesList) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> img = (Map<String, Object>) imageObj;
+            String relativePath = (String) img.get("path");
+            String imageType = (String) img.get("image_type");
+
+            if (relativePath == null || imageType == null) continue;
+            if (!imageType.matches("^(icon|banner|thumbnail)$")) continue;
+
+            Path resolvedPath = categoryDir.resolve(relativePath.replace("./", ""));
+            if (!Files.exists(resolvedPath)) continue;
+
+            long bytes = Files.size(resolvedPath);
+            String mimeType = Files.probeContentType(resolvedPath);
+
+            Integer width = intOrNull(img.get("width"));
+            Integer height = intOrNull(img.get("height"));
+            Boolean isPrimary = (Boolean) img.getOrDefault("is_primary", position == 0);
+
+            String dbPath = root.relativize(resolvedPath).toString();
+
+            images.add(new CategoryImageRow(
+                0, 0, dbPath, width, height, bytes, mimeType, imageType, position, isPrimary
+            ));
+            position++;
+        }
+
+        return images;
+    }
+
     // ===== From admin API =====================================================
 
     private MemeUpsert fromIndexRequest(MemeIndexRequest req) {
@@ -610,4 +773,13 @@ public class IndexerService {
         if (v instanceof Number n) return n.longValue();
         return null;
     }
+
+    public record CategoryTranslationData(String name, String description, List<String> tags) {}
+
+    public record CategoryUpsert(
+        String slug,
+        String defaultLocale,
+        Map<String, CategoryTranslationData> translations,
+        List<CategoryImageRow> images
+    ) {}
 }

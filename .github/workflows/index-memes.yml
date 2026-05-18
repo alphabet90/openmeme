@@ -1,4 +1,4 @@
-name: Index Memes
+name: Index Memes and Categories
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   index:
-    name: Detect and index changed memes
+    name: Detect and index changed memes and categories
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -35,23 +35,35 @@ jobs:
       - name: Detect changed MDX files
         id: detect
         run: |
-          CHANGED=$(git diff HEAD~1 HEAD --name-only | grep 'memes/.*\.mdx$' || true)
-          if [ -n "$CHANGED" ]; then
-            echo "$CHANGED" > /tmp/changed_mdx.txt
-            COUNT=$(echo "$CHANGED" | wc -l | tr -d ' ')
-          else
-            touch /tmp/changed_mdx.txt
-            COUNT=0
-          fi
-          echo "count=$COUNT" >> $GITHUB_OUTPUT
-          echo "Found $COUNT changed MDX file(s)"
-          [ "$COUNT" -gt 0 ] && cat /tmp/changed_mdx.txt || true
+          ALL_MDX=$(git diff HEAD~1 HEAD --name-only | grep 'memes/.*\.mdx$' || true)
 
-      - name: Indexing memes...
-        if: steps.detect.outputs.count > 0
+          # Separate memes and categories
+          MEMES=$(echo "$ALL_MDX" | grep -v 'memes/_categories/' || true)
+          CATEGORIES=$(echo "$ALL_MDX" | grep 'memes/_categories/' || true)
+
+          # Count changes
+          MEME_COUNT=$([ -n "$MEMES" ] && echo "$MEMES" | wc -l | tr -d ' ' || echo 0)
+          CAT_COUNT=$([ -n "$CATEGORIES" ] && echo "$CATEGORIES" | wc -l | tr -d ' ' || echo 0)
+          TOTAL_COUNT=$((MEME_COUNT + CAT_COUNT))
+
+          echo "$MEMES" > /tmp/changed_memes.txt
+          echo "$CATEGORIES" > /tmp/changed_categories.txt
+
+          echo "meme_count=$MEME_COUNT" >> $GITHUB_OUTPUT
+          echo "category_count=$CAT_COUNT" >> $GITHUB_OUTPUT
+          echo "total_count=$TOTAL_COUNT" >> $GITHUB_OUTPUT
+
+          echo "Found $TOTAL_COUNT changed MDX file(s) ($MEME_COUNT memes, $CAT_COUNT categories)"
+          [ "$MEME_COUNT" -gt 0 ] && echo "=== Memes ===" && cat /tmp/changed_memes.txt || true
+          [ "$CAT_COUNT" -gt 0 ] && echo "=== Categories ===" && cat /tmp/changed_categories.txt || true
+
+      - name: Index memes and categories...
+        if: steps.detect.outputs.total_count > 0
         env:
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
           ADMIN_API_KEY: ${{ secrets.ADMIN_API_KEY }}
+          MEME_COUNT: ${{ steps.detect.outputs.meme_count }}
+          CAT_COUNT: ${{ steps.detect.outputs.category_count }}
         run: |
           python3 << 'PYEOF'
           import yaml, json, re, os, sys
@@ -77,7 +89,7 @@ jobs:
                   return 'en'
               return locale.split('-')[0].lower()
 
-          def find_all_mdx_for_meme(dir_part, stem):
+          def find_all_mdx_for_item(dir_part, stem):
               """Return all MDX files (base + locale variants) for the given stem."""
               try:
                   files = []
@@ -102,127 +114,15 @@ jobs:
                   return None
               return yaml.safe_load(match.group(1))
 
-          changed = [l for l in open('/tmp/changed_mdx.txt').read().splitlines() if l.strip()]
-          api_url = os.environ['API_BASE_URL'].rstrip('/')
-          api_key = os.environ['ADMIN_API_KEY']
-
-          # Deduplicate: group changed files by (dir, base_stem) so that a push
-          # touching both slug.mdx and slug.es-AR.mdx produces ONE API call.
-          seen_bases = set()
-          work_items = []
-
-          for mdx_path in changed:
-              dir_part = os.path.dirname(mdx_path)
-              fname    = os.path.basename(mdx_path)
-              stem     = base_stem(fname)
-              key      = (dir_part, stem)
-              if key in seen_bases:
-                  continue
-              seen_bases.add(key)
-
-              all_files = find_all_mdx_for_meme(dir_part, stem)
-              if all_files:
-                  work_items.append((dir_part, stem, all_files))
-
-          submitted = 0
-
-          for dir_part, stem, all_files in work_items:
-              # Use the base (no-locale) file as the source of meme metadata;
-              # fall back to the first available file if base doesn't exist.
-              base_file = os.path.join(dir_part, f'{stem}.mdx')
-              meta_file = base_file if os.path.isfile(base_file) else all_files[0]
-
-              try:
-                  meta_fm = parse_frontmatter(meta_file)
-              except Exception as e:
-                  print(f"ERROR reading {meta_file}: {e}", file=sys.stderr)
-                  sys.exit(1)
-
-              if not meta_fm:
-                  print(f"WARNING: No frontmatter in {meta_file}", file=sys.stderr)
-                  continue
-
-              category  = meta_fm.get('category') or ''
-              slug_val  = meta_fm.get('slug') or ''
-              image_raw = (meta_fm.get('image') or '').lstrip('./')
-
-              if not slug_val or not category:
-                  print(f"WARNING: Missing slug/category in {meta_file}", file=sys.stderr)
-                  continue
-
-              # Each MDX file is itself a translation: locale comes from the
-              # filename (slug.es-AR.mdx -> 'es', slug.mdx -> 'en' by default)
-              # and title/description come from the flat frontmatter fields.
-              translations = []
-              seen_locales = set()
-
-              for fpath in all_files:
-                  raw_locale = file_locale(os.path.basename(fpath))
-                  lc = lang_code(raw_locale)
-
-                  if lc in seen_locales:
-                      continue
-
-                  try:
-                      fm = parse_frontmatter(fpath)
-                      if not fm or not isinstance(fm, dict):
-                          print(f"WARNING: {fpath}: no frontmatter, skipping locale '{lc}'", file=sys.stderr)
-                          continue
-
-                      # str() guard: PyYAML may parse some values as int/bool
-                      # (e.g. title: 2023 -> int, title: false -> bool False).
-                      title       = str(fm.get('title') or '').strip()
-                      description = str(fm.get('description') or '').strip()
-
-                      if not title:
-                          print(f"WARNING: {fpath}: empty title, skipping locale '{lc}'", file=sys.stderr)
-                          continue
-
-                      seen_locales.add(lc)
-                      translations.append({
-                          'locale':      lc,
-                          'title':       title,
-                          'description': description,
-                      })
-                  except Exception as e:
-                      print(f"WARNING: Could not parse {fpath}: {e}", file=sys.stderr)
-                      continue
-
-              if not translations:
-                  print(f"WARNING: No translations found for {dir_part}/{stem}", file=sys.stderr)
-                  continue
-
-              # The default locale is 'en' when the base (no-locale) file exists,
-              # otherwise the locale of the first available file.
-              default_locale = 'en' if os.path.isfile(base_file) else translations[0]['locale']
-
-              image_path = (
-                  f"memes/{category}/{image_raw}"
-                  if image_raw
-                  else f"memes/{category}/{slug_val}.jpg"
-              )
-
-              payload = {
-                  'slug':           slug_val,
-                  'category':       category,
-                  'default_locale': default_locale,
-                  'author':         meta_fm.get('author') or '',
-                  'subreddit':      meta_fm.get('subreddit') or 'argentina',
-                  'score':          int(meta_fm.get('score') or 0),
-                  'images': [{
-                      'path':       image_path,
-                      'position':   0,
-                      'is_primary': True,
-                  }],
-                  'tags':           [str(t) for t in (meta_fm.get('tags') or [])],
-                  'source_url':     meta_fm.get('source_url') or '',
-                  'post_url':       meta_fm.get('post_url') or '',
-                  'translations':   translations,
-              }
-
+          def submit_to_api(api_url, api_key, url_params, payload, item_type, item_id):
+              """Submit a meme or category to the API."""
               body = json.dumps(payload).encode('utf-8')
+              url = f"{api_url}/admin/reindex"
+              if url_params:
+                  url += '?' + '&'.join(f"{k}={v}" for k, v in url_params.items())
+
               req = urllib.request.Request(
-                  f"{api_url}/admin/reindex",
+                  url,
                   data=body,
                   headers={
                       'Content-Type': 'application/json',
@@ -234,19 +134,217 @@ jobs:
               try:
                   with urllib.request.urlopen(req, timeout=10) as resp:
                       if resp.status != 200:
-                          print(f"ERROR: unexpected status {resp.status} for {dir_part}/{stem}", file=sys.stderr)
+                          print(f"ERROR: unexpected status {resp.status} for {item_id}", file=sys.stderr)
                           sys.exit(1)
-                      submitted += 1
-                      locale_summary = ', '.join(t['locale'] for t in translations)
-                      print(f"OK [{resp.status}] {category}/{slug_val} ({len(translations)} locale(s): {locale_summary})")
+                      print(f"OK [{resp.status}] {item_type}: {item_id}")
+                      return True
               except urllib.error.HTTPError as e:
                   resp_body = e.read().decode()
-                  print(f"ERROR: HTTP {e.code} for {dir_part}/{stem}: {resp_body}", file=sys.stderr)
+                  print(f"ERROR: HTTP {e.code} for {item_id}: {resp_body}", file=sys.stderr)
+                  print(f"  URL params: {url_params}", file=sys.stderr)
                   print(f"  sent payload: {json.dumps(payload, ensure_ascii=False)}", file=sys.stderr)
                   sys.exit(1)
               except Exception as e:
-                  print(f"ERROR: {dir_part}/{stem}: {e}", file=sys.stderr)
+                  print(f"ERROR: {item_id}: {e}", file=sys.stderr)
                   sys.exit(1)
 
-          print(f"\nSubmitted {submitted} meme(s) for async indexing")
+          meme_count = int(os.environ.get('MEME_COUNT', 0))
+          cat_count = int(os.environ.get('CAT_COUNT', 0))
+          api_url = os.environ['API_BASE_URL'].rstrip('/')
+          api_key = os.environ['ADMIN_API_KEY']
+
+          submitted = 0
+          seen_bases = set()
+
+          # Process memes
+          if meme_count > 0:
+              print("\n=== Processing Memes ===")
+              memes = [l for l in open('/tmp/changed_memes.txt').read().splitlines() if l.strip()]
+
+              for mdx_path in memes:
+                  dir_part = os.path.dirname(mdx_path)
+                  fname    = os.path.basename(mdx_path)
+                  stem     = base_stem(fname)
+                  key      = (dir_part, stem, 'meme')
+                  if key in seen_bases:
+                      continue
+                  seen_bases.add(key)
+
+                  all_files = find_all_mdx_for_item(dir_part, stem)
+                  if not all_files:
+                      continue
+
+                  base_file = os.path.join(dir_part, f'{stem}.mdx')
+                  meta_file = base_file if os.path.isfile(base_file) else all_files[0]
+
+                  try:
+                      meta_fm = parse_frontmatter(meta_file)
+                  except Exception as e:
+                      print(f"ERROR reading {meta_file}: {e}", file=sys.stderr)
+                      sys.exit(1)
+
+                  if not meta_fm:
+                      print(f"WARNING: No frontmatter in {meta_file}", file=sys.stderr)
+                      continue
+
+                  category  = meta_fm.get('category') or ''
+                  slug_val  = meta_fm.get('slug') or ''
+                  image_raw = (meta_fm.get('image') or '').lstrip('./')
+
+                  if not slug_val or not category:
+                      print(f"WARNING: Missing slug/category in {meta_file}", file=sys.stderr)
+                      continue
+
+                  translations = []
+                  seen_locales = set()
+
+                  for fpath in all_files:
+                      raw_locale = file_locale(os.path.basename(fpath))
+                      lc = lang_code(raw_locale)
+
+                      if lc in seen_locales:
+                          continue
+
+                      try:
+                          fm = parse_frontmatter(fpath)
+                          if not fm or not isinstance(fm, dict):
+                              print(f"WARNING: {fpath}: no frontmatter, skipping locale '{lc}'", file=sys.stderr)
+                              continue
+
+                          title       = str(fm.get('title') or '').strip()
+                          description = str(fm.get('description') or '').strip()
+
+                          if not title:
+                              print(f"WARNING: {fpath}: empty title, skipping locale '{lc}'", file=sys.stderr)
+                              continue
+
+                          seen_locales.add(lc)
+                          translations.append({
+                              'locale':      lc,
+                              'title':       title,
+                              'description': description,
+                          })
+                      except Exception as e:
+                          print(f"WARNING: Could not parse {fpath}: {e}", file=sys.stderr)
+                          continue
+
+                  if not translations:
+                      print(f"WARNING: No translations found for {dir_part}/{stem}", file=sys.stderr)
+                      continue
+
+                  default_locale = 'en' if os.path.isfile(base_file) else translations[0]['locale']
+
+                  image_path = (
+                      f"memes/{category}/{image_raw}"
+                      if image_raw
+                      else f"memes/{category}/{slug_val}.jpg"
+                  )
+
+                  payload = {
+                      'slug':           slug_val,
+                      'category':       category,
+                      'default_locale': default_locale,
+                      'author':         meta_fm.get('author') or '',
+                      'subreddit':      meta_fm.get('subreddit') or 'argentina',
+                      'score':          int(meta_fm.get('score') or 0),
+                      'images': [{
+                          'path':       image_path,
+                          'position':   0,
+                          'is_primary': True,
+                      }],
+                      'tags':           [str(t) for t in (meta_fm.get('tags') or [])],
+                      'source_url':     meta_fm.get('source_url') or '',
+                      'post_url':       meta_fm.get('post_url') or '',
+                      'translations':   translations,
+                  }
+
+                  url_params = {'indexMemes': 'true', 'indexCategories': 'false'}
+                  if submit_to_api(api_url, api_key, url_params, payload, 'meme', f"{category}/{slug_val}"):
+                      submitted += 1
+
+          # Process categories
+          if cat_count > 0:
+              print("\n=== Processing Categories ===")
+              categories = [l for l in open('/tmp/changed_categories.txt').read().splitlines() if l.strip()]
+
+              for mdx_path in categories:
+                  dir_part = os.path.dirname(mdx_path)
+                  fname    = os.path.basename(mdx_path)
+                  stem     = base_stem(fname)
+                  key      = (dir_part, stem, 'category')
+                  if key in seen_bases:
+                      continue
+                  seen_bases.add(key)
+
+                  all_files = find_all_mdx_for_item(dir_part, stem)
+                  if not all_files:
+                      continue
+
+                  base_file = os.path.join(dir_part, f'{stem}.mdx')
+                  meta_file = base_file if os.path.isfile(base_file) else all_files[0]
+
+                  try:
+                      meta_fm = parse_frontmatter(meta_file)
+                  except Exception as e:
+                      print(f"ERROR reading {meta_file}: {e}", file=sys.stderr)
+                      sys.exit(1)
+
+                  if not meta_fm:
+                      print(f"WARNING: No frontmatter in {meta_file}", file=sys.stderr)
+                      continue
+
+                  slug_val  = meta_fm.get('slug') or ''
+                  if not slug_val:
+                      print(f"WARNING: Missing slug in {meta_file}", file=sys.stderr)
+                      continue
+
+                  translations = []
+                  seen_locales = set()
+
+                  for fpath in all_files:
+                      raw_locale = file_locale(os.path.basename(fpath))
+                      lc = lang_code(raw_locale)
+
+                      if lc in seen_locales:
+                          continue
+
+                      try:
+                          fm = parse_frontmatter(fpath)
+                          if not fm or not isinstance(fm, dict):
+                              print(f"WARNING: {fpath}: no frontmatter, skipping locale '{lc}'", file=sys.stderr)
+                              continue
+
+                          name        = str(fm.get('name') or '').strip()
+                          description = str(fm.get('description') or '').strip()
+
+                          if not name:
+                              print(f"WARNING: {fpath}: empty name, skipping locale '{lc}'", file=sys.stderr)
+                              continue
+
+                          seen_locales.add(lc)
+                          translations.append({
+                              'locale':      lc,
+                              'name':        name,
+                              'description': description,
+                          })
+                      except Exception as e:
+                          print(f"WARNING: Could not parse {fpath}: {e}", file=sys.stderr)
+                          continue
+
+                  if not translations:
+                      print(f"WARNING: No translations found for {dir_part}/{stem}", file=sys.stderr)
+                      continue
+
+                  default_locale = 'en' if os.path.isfile(base_file) else translations[0]['locale']
+
+                  # For categories, we send minimal payload (just slug is enough for full reindex)
+                  # The API endpoint expects a MemeIndexRequest, but for category-only indexing
+                  # we just send an empty body and rely on the flags
+                  payload = {}
+
+                  url_params = {'indexMemes': 'false', 'indexCategories': 'true'}
+                  if submit_to_api(api_url, api_key, url_params, payload, 'category', slug_val):
+                      submitted += 1
+
+          print(f"\nSubmitted {submitted} item(s) for async indexing")
           PYEOF

@@ -82,7 +82,14 @@ public class MemeRepository {
                     .build()));
         }
         return builders.entrySet().stream()
-            .map(e -> e.getValue().translations(translationsById.get(e.getKey())).build())
+            .map(e -> {
+                long catId = e.getKey();
+                List<CategoryImageRow> images = findCategoryImages(catId);
+                return e.getValue()
+                    .translations(translationsById.get(catId))
+                    .images(images.isEmpty() ? null : images)
+                    .build();
+            })
             .toList();
     }
 
@@ -229,6 +236,27 @@ public class MemeRepository {
         return n;
     }
 
+    @Transactional
+    public void upsertCategory(com.memes.api.service.IndexerService.CategoryUpsert u) {
+        long categoryId = upsertCategory(u.slug());
+        upsertCategoryTranslations(categoryId, u.defaultLocale(), u.translations());
+        replaceCategoryImages(categoryId, u.images());
+    }
+
+    private void upsertCategoryTranslations(
+        long categoryId,
+        String defaultLocale,
+        Map<String, com.memes.api.service.IndexerService.CategoryTranslationData> translations) {
+        if (translations == null || translations.isEmpty()) return;
+        for (Map.Entry<String, com.memes.api.service.IndexerService.CategoryTranslationData> entry : translations.entrySet()) {
+            String locale = entry.getKey();
+            var data = entry.getValue();
+            jdbc.update("INSERT INTO category_translations (category_id, locale, name, description) VALUES (?, ?::locale_code, ?, ?) "
+                    + "ON CONFLICT (category_id, locale) DO UPDATE SET name=EXCLUDED.name, description=EXCLUDED.description",
+                categoryId, locale, data.name(), data.description());
+        }
+    }
+
     public void refreshStats() { jdbc.execute("SELECT refresh_stats()"); }
 
     private static String resolveLocale(@Nullable String locale) {
@@ -305,4 +333,54 @@ public class MemeRepository {
             .tagSlugs(tags)
             .build();
     };
+
+    public List<CategoryImageRow> findCategoryImages(long categoryId) {
+        return jdbc.query(
+            "SELECT id, category_id, path, width, height, bytes, mime_type, image_type, position, is_primary "
+                + "FROM category_images WHERE category_id = ? ORDER BY position ASC",
+            (rs, i) -> new CategoryImageRow(
+                rs.getLong("id"),
+                rs.getLong("category_id"),
+                rs.getString("path"),
+                rs.getObject("width", Integer.class),
+                rs.getObject("height", Integer.class),
+                rs.getObject("bytes", Long.class),
+                rs.getString("mime_type"),
+                rs.getString("image_type"),
+                rs.getInt("position"),
+                rs.getBoolean("is_primary")
+            ),
+            categoryId);
+    }
+
+    public List<CategoryImageRow> findCategoryImagesByType(long categoryId, String imageType) {
+        return jdbc.query(
+            "SELECT id, category_id, path, width, height, bytes, mime_type, image_type, position, is_primary "
+                + "FROM category_images WHERE category_id = ? AND image_type = ? ORDER BY position ASC",
+            (rs, i) -> new CategoryImageRow(
+                rs.getLong("id"),
+                rs.getLong("category_id"),
+                rs.getString("path"),
+                rs.getObject("width", Integer.class),
+                rs.getObject("height", Integer.class),
+                rs.getObject("bytes", Long.class),
+                rs.getString("mime_type"),
+                rs.getString("image_type"),
+                rs.getInt("position"),
+                rs.getBoolean("is_primary")
+            ),
+            categoryId, imageType);
+    }
+
+    private void replaceCategoryImages(long categoryId, List<CategoryImageRow> images) {
+        jdbc.update("DELETE FROM category_images WHERE category_id = ?", categoryId);
+        if (images == null || images.isEmpty()) return;
+        for (CategoryImageRow img : images) {
+            jdbc.update(
+                "INSERT INTO category_images (category_id, path, width, height, bytes, mime_type, image_type, position, is_primary) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                categoryId, img.path(), img.width(), img.height(), img.bytes(), img.mimeType(),
+                img.imageType(), img.position(), img.isPrimary());
+        }
+    }
 }

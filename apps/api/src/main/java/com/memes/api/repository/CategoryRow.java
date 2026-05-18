@@ -10,5 +10,6 @@ public record CategoryRow(
     String slug,
     int count,
     int topScore,
-    List<CategoryTranslationRow> translations
+    List<CategoryTranslationRow> translations,
+    List<CategoryImageRow> images
 ) {}

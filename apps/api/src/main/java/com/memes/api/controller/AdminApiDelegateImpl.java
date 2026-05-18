@@ -23,8 +23,13 @@ public class AdminApiDelegateImpl implements AdminApiDelegate {
     private final ApiKeyService apiKeyService;
 
     @Override
-    public ResponseEntity<ReindexAccepted> reindex(MemeIndexRequest body) {
-        indexerService.reindexAsync(body);
+    public ResponseEntity<ReindexAccepted> reindex(
+        Boolean indexMemes,
+        Boolean indexCategories,
+        MemeIndexRequest body) {
+        boolean memes = indexMemes != null ? indexMemes : true;
+        boolean categories = indexCategories != null ? indexCategories : true;
+        indexerService.reindexAsync(body, memes, categories);
         ReindexAccepted accepted = new ReindexAccepted();
         accepted.setStatus(ReindexAccepted.StatusEnum.ACCEPTED);
         return ResponseEntity.ok(accepted);

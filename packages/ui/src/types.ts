@@ -43,10 +43,25 @@ export interface Category {
   slug: string;
   /** Human-readable label (Title Case, with diacritics). */
   name: string;
+  /** Category description (translated if available). */
+  description?: string;
   count: number;
   /** Highest score in this category — drives sort/rank in the sidebar. */
   topScore: number;
   iconName: CategoryIcon;
+  /** Category images (icons, banners, thumbnails) from MDX files. */
+  images?: CategoryImage[];
+}
+
+export interface CategoryImage {
+  path: string;
+  width?: number;
+  height?: number;
+  bytes?: number;
+  mimeType?: string;
+  imageType: "icon" | "banner" | "thumbnail";
+  position: number;
+  isPrimary: boolean;
 }
 
 export type CategoryIcon =
