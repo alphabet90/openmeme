@@ -431,8 +431,10 @@ public class IndexerService {
         Path root = Paths.get(memesRoot);
         Path categoriesDir = root.resolve("_categories");
         if (!Files.isDirectory(categoriesDir)) {
+            log.warn("Categories directory not found, skipping: {}", categoriesDir.toAbsolutePath());
             return List.of();
         }
+        log.info("Scanning categories from: {}", categoriesDir.toAbsolutePath());
 
         Pattern mdxFilePattern = Pattern.compile("^(.+?)(?:\\.([a-z]{2}(?:-[A-Z]{2})?))?\\.mdx$");
         Map<String, List<Path>> groupedFiles = new LinkedHashMap<>();
