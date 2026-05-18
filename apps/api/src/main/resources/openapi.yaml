@@ -457,6 +457,11 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/CategoryTranslation"
+        images:
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/CategoryImage"
 
     MemeTranslation:
       type: object
@@ -489,6 +494,33 @@ components:
         mime_type:
           type: string
           nullable: true
+        position:
+          type: integer
+        is_primary:
+          type: boolean
+
+    CategoryImage:
+      type: object
+      required: [path, image_type, position, is_primary]
+      properties:
+        path:
+          type: string
+        width:
+          type: integer
+          nullable: true
+        height:
+          type: integer
+          nullable: true
+        bytes:
+          type: integer
+          format: int64
+          nullable: true
+        mime_type:
+          type: string
+          nullable: true
+        image_type:
+          type: string
+          enum: [icon, banner, thumbnail]
         position:
           type: integer
         is_primary:
