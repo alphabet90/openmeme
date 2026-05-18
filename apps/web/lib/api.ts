@@ -29,11 +29,23 @@ export interface ApiCategoryTranslation {
   description?: string | null;
 }
 
+export interface ApiCategoryImage {
+  path: string;
+  width?: number | null;
+  height?: number | null;
+  bytes?: number | null;
+  mime_type?: string | null;
+  image_type: "icon" | "banner" | "thumbnail";
+  position: number;
+  is_primary: boolean;
+}
+
 export interface ApiCategorySummary {
   category: string;
   count: number;
   top_score: number;
   translations?: ApiCategoryTranslation[];
+  images?: ApiCategoryImage[] | null;
 }
 
 export interface ApiCategoryPage {
