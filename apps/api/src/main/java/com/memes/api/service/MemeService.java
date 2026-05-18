@@ -1,6 +1,7 @@
 package com.memes.api.service;
 
 import com.memes.api.config.RedisConfig;
+import com.memes.api.generated.model.CategoryImage;
 import com.memes.api.generated.model.CategoryPage;
 import com.memes.api.generated.model.CategorySummary;
 import com.memes.api.generated.model.CategoryTranslation;
@@ -12,6 +13,7 @@ import com.memes.api.generated.model.MemePage;
 import com.memes.api.generated.model.MemeTranslation;
 import com.memes.api.generated.model.SearchResult;
 import com.memes.api.generated.model.Stats;
+import com.memes.api.repository.CategoryImageRow;
 import com.memes.api.repository.CategoryRow;
 import com.memes.api.repository.CategoryTranslationRow;
 import com.memes.api.repository.MemeImageRow;
@@ -193,6 +195,11 @@ public class MemeService {
         cs.setTranslations(row.translations().stream()
             .map(this::toCategoryTranslation)
             .toList());
+        if (row.images() != null && !row.images().isEmpty()) {
+            cs.setImages(row.images().stream()
+                .map(this::toCategoryImage)
+                .toList());
+        }
         return cs;
     }
 
@@ -202,6 +209,19 @@ public class MemeService {
         out.setName(t.name());
         out.setDescription(t.description());
         return out;
+    }
+
+    private CategoryImage toCategoryImage(CategoryImageRow row) {
+        CategoryImage img = new CategoryImage();
+        img.setPath(row.path());
+        img.setWidth(row.width());
+        img.setHeight(row.height());
+        img.setBytes(row.bytes());
+        img.setMimeType(row.mimeType());
+        img.setImageType(CategoryImage.ImageTypeEnum.fromValue(row.imageType()));
+        img.setPosition(row.position());
+        img.setIsPrimary(row.isPrimary());
+        return img;
     }
 
     private static LocaleCode toLocaleCode(@Nullable String value) {

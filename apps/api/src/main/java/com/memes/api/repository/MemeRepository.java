@@ -82,7 +82,14 @@ public class MemeRepository {
                     .build()));
         }
         return builders.entrySet().stream()
-            .map(e -> e.getValue().translations(translationsById.get(e.getKey())).build())
+            .map(e -> {
+                long catId = e.getKey();
+                List<CategoryImageRow> images = findCategoryImages(catId);
+                return e.getValue()
+                    .translations(translationsById.get(catId))
+                    .images(images.isEmpty() ? null : images)
+                    .build();
+            })
             .toList();
     }
 
