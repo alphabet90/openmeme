@@ -3,7 +3,7 @@
  * Ported from reddit.memes/src/saver.py
  */
 
-import { copyFileSync, writeFileSync, mkdirSync } from "fs";
+import { copyFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
 import { dirname, join, resolve } from "path";
 import { execSync } from "child_process";
 import type { ClassificationResult, PostMetadata } from "./models.js";
@@ -12,6 +12,7 @@ const logger = {
   info: (...args: unknown[]) => console.log("[saver]", ...args),
   warning: (...args: unknown[]) => console.warn("[saver]", ...args),
   error: (...args: unknown[]) => console.error("[saver]", ...args),
+  debug: (...args: unknown[]) => console.log("[saver:debug]", ...args),
 };
 
 function yamlStr(s: string): string {
@@ -33,7 +34,6 @@ function sanitizeSlug(slug: string): string {
 }
 
 function uniqueDest(basePath: string): string {
-  const { existsSync } = require("fs");
   if (!existsSync(basePath)) return basePath;
 
   const ext = basePath.match(/\.[^.]+$/)?.[0] || "";

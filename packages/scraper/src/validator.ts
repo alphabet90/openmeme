@@ -324,4 +324,3 @@ export function validateMemeFile(imagePath: string): {
   return validateMeme(memeData);
 }
 
-export { VALIDATION_RULES };
