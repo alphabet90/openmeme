@@ -236,6 +236,27 @@ public class MemeRepository {
         return n;
     }
 
+    @Transactional
+    public void upsertCategory(com.memes.api.service.IndexerService.CategoryUpsert u) {
+        long categoryId = upsertCategory(u.slug());
+        upsertCategoryTranslations(categoryId, u.defaultLocale(), u.translations());
+        replaceCategoryImages(categoryId, u.images());
+    }
+
+    private void upsertCategoryTranslations(
+        long categoryId,
+        String defaultLocale,
+        Map<String, com.memes.api.service.IndexerService.CategoryTranslationData> translations) {
+        if (translations == null || translations.isEmpty()) return;
+        for (Map.Entry<String, com.memes.api.service.IndexerService.CategoryTranslationData> entry : translations.entrySet()) {
+            String locale = entry.getKey();
+            var data = entry.getValue();
+            jdbc.update("INSERT INTO category_translations (category_id, locale, name, description) VALUES (?, ?::locale_code, ?, ?) "
+                    + "ON CONFLICT (category_id, locale) DO UPDATE SET name=EXCLUDED.name, description=EXCLUDED.description",
+                categoryId, locale, data.name(), data.description());
+        }
+    }
+
     public void refreshStats() { jdbc.execute("SELECT refresh_stats()"); }
 
     private static String resolveLocale(@Nullable String locale) {
