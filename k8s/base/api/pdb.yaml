@@ -1,0 +1,14 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: memes-api
+  namespace: openmeme
+  labels:
+    app.kubernetes.io/name: memes-api
+    app.kubernetes.io/part-of: openmeme
+spec:
+  # Always keep at least 1 replica running during voluntary disruptions (node drains, upgrades)
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: memes-api

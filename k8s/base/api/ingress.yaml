@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: memes-api
+  namespace: openmeme
+  labels:
+    app.kubernetes.io/name: memes-api
+    app.kubernetes.io/part-of: openmeme
+  annotations:
+    # Rancher uses nginx ingress by default; switch to "traefik" if using k3s/RKE2 default
+    kubernetes.io/ingress.class: "nginx"
+    # cert-manager: automatically provision a Let's Encrypt certificate
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # Proxy settings for Spring Boot behind nginx
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    # Rate-limit at the ingress level (requests per second per IP)
+    nginx.ingress.kubernetes.io/limit-rps: "20"
+spec:
+  tls:
+    - hosts:
+        - api.openmeme.app        # Replace with your actual domain
+      secretName: memes-api-tls
+  rules:
+    - host: api.openmeme.app      # Replace with your actual domain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: memes-api
+                port:
+                  name: http

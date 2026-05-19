@@ -1,0 +1,102 @@
+name: Build & Publish API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - ".github/workflows/build-api.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/openmeme-api
+
+jobs:
+  test:
+    name: Run API tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: temurin
+          cache: maven
+
+      - name: Run tests
+        working-directory: apps/api
+        run: mvn verify -q
+
+  build-and-push:
+    name: Build & push Docker image
+    runs-on: ubuntu-latest
+    needs: test
+    # Only push images from the main branch, not from PRs
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=latest,enable=true
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: apps/api
+          file: apps/api/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Update image tag in k8s manifests
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get short SHA
+        id: sha
+        run: echo "short=$(echo $GITHUB_SHA | cut -c1-7)" >> "$GITHUB_OUTPUT"
+
+      - name: Update image tag in deployment manifest
+        run: |
+          sed -i "s|image: ghcr.io/alphabet90/openmeme-api:.*|image: ghcr.io/alphabet90/openmeme-api:sha-${{ steps.sha.outputs.short }}|" \
+            k8s/base/api/deployment.yaml
+
+      - name: Commit updated manifest
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add k8s/base/api/deployment.yaml
+          git diff --cached --quiet || git commit -m "chore(k8s): bump API image to sha-${{ steps.sha.outputs.short }}"
+          git push

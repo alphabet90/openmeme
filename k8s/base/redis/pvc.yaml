@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data
+  namespace: openmeme
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/part-of: openmeme
+spec:
+  accessModes:
+    - ReadWriteOnce
+  # storageClassName: "" — use cluster default or set to your Rancher StorageClass
+  resources:
+    requests:
+      storage: 2Gi

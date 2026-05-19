@@ -1,0 +1,132 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memes-api
+  namespace: openmeme
+  labels:
+    app.kubernetes.io/name: memes-api
+    app.kubernetes.io/part-of: openmeme
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: memes-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0       # Zero-downtime: never kill a pod before a new one is ready
+  template:
+    metadata:
+      labels:
+        app: memes-api
+        app.kubernetes.io/name: memes-api
+        app.kubernetes.io/part-of: openmeme
+    spec:
+      terminationGracePeriodSeconds: 60   # > spring.lifecycle.timeout-per-shutdown-phase (30s)
+      initContainers:
+        # Wait for Postgres to accept connections before the API starts Flyway migrations
+        - name: wait-for-postgres
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h postgres -U $(DB_USER) -d memesdb; do
+                echo "Waiting for postgres..."; sleep 2;
+              done
+          env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: api-secret
+                  key: DB_USER
+        # Wait for Redis to accept connections
+        - name: wait-for-redis
+          image: redis:7-alpine
+          command:
+            - sh
+            - -c
+            - |
+              until redis-cli -h redis ping | grep -q PONG; do
+                echo "Waiting for redis..."; sleep 2;
+              done
+      containers:
+        - name: memes-api
+          # Update this tag to match your CI/CD image push (e.g. ghcr.io/alphabet90/openmeme-api:sha-abc123)
+          image: ghcr.io/alphabet90/openmeme-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+          envFrom:
+            - configMapRef:
+                name: api-config
+          env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: api-secret
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: api-secret
+                  key: DB_PASSWORD
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: api-secret
+                  key: REDIS_PASSWORD
+            - name: ADMIN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: api-secret
+                  key: ADMIN_API_KEY
+          volumeMounts:
+            - name: memes
+              mountPath: /memes
+              readOnly: true
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"          # MaxRAMPercentage=75% → JVM heap ≤ 768 Mi
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 12    # 30s + 12×10s = up to 150s for JVM startup + Flyway
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 0
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          lifecycle:
+            preStop:
+              exec:
+                # Give the load balancer time to drain before Spring begins shutdown
+                command: ["sh", "-c", "sleep 5"]
+      volumes:
+        - name: memes
+          persistentVolumeClaim:
+            claimName: memes-data
+            readOnly: true
+      # Pull from GHCR if the image is private
+      # imagePullSecrets:
+      #   - name: ghcr-credentials

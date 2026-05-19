@@ -1,0 +1,18 @@
+# Memes PVC — populated externally (git-sync, CI job, or manual upload).
+# Requires ReadWriteMany if multiple API replicas are scheduled on different nodes;
+# use ReadWriteOnce only when all replicas run on the same node (single-node clusters).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: memes-data
+  namespace: openmeme
+  labels:
+    app.kubernetes.io/name: memes-api
+    app.kubernetes.io/part-of: openmeme
+spec:
+  accessModes:
+    - ReadWriteMany
+  # storageClassName: "nfs-client"  — use an RWX-capable StorageClass (NFS, Longhorn, CephFS)
+  resources:
+    requests:
+      storage: 5Gi

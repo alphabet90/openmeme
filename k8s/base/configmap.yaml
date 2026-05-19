@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  namespace: openmeme
+  labels:
+    app.kubernetes.io/name: memes-api
+    app.kubernetes.io/part-of: openmeme
+data:
+  DB_URL: "jdbc:postgresql://postgres:5432/memesdb"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  MEMES_ROOT: "/memes"
+  PORT: "8080"
