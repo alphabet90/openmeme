@@ -1,0 +1,84 @@
+# Requires the Elastic Cloud on Kubernetes (ECK) Operator installed cluster-wide.
+# Install once:
+#   kubectl create -f https://download.elastic.co/downloads/eck/2.13.0/crds.yaml
+#   kubectl apply  -f https://download.elastic.co/downloads/eck/2.13.0/operator.yaml
+---
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: elasticsearch
+  namespace: logging
+spec:
+  version: 8.15.0
+  nodeSets:
+    - name: default
+      count: 3
+      config:
+        node.store.allow_mmap: false
+        xpack.security.enabled: true
+      podTemplate:
+        spec:
+          securityContext:
+            runAsNonRoot: true
+            fsGroup: 1000
+          initContainers:
+            - name: sysctl
+              securityContext:
+                privileged: true
+                runAsUser: 0
+              command: [sh, -c, "sysctl -w vm.max_map_count=262144"]
+          containers:
+            - name: elasticsearch
+              resources:
+                requests: { cpu: 500m, memory: 2Gi }
+                limits:   { cpu: "2",  memory: 4Gi }
+              env:
+                - name: ES_JAVA_OPTS
+                  value: -Xms1g -Xmx1g
+      volumeClaimTemplates:
+        - metadata: { name: elasticsearch-data }
+          spec:
+            accessModes: [ReadWriteOnce]
+            resources:
+              requests:
+                storage: 50Gi
+---
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: kibana
+  namespace: logging
+spec:
+  version: 8.15.0
+  count: 1
+  elasticsearchRef:
+    name: elasticsearch
+  podTemplate:
+    spec:
+      containers:
+        - name: kibana
+          resources:
+            requests: { cpu: 200m, memory: 512Mi }
+            limits:   { cpu: "1",  memory: 1Gi }
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: false
+---
+# Ingress for Kibana — exposed only via Tailscale (no public DNS)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kibana
+  namespace: logging
+  annotations:
+    kubernetes.io/ingress.class: tailscale
+    tailscale.com/hostname: "kibana"
+spec:
+  defaultBackend:
+    service:
+      name: kibana-kb-http
+      port:
+        number: 5601
+  tls:
+    - hosts: [kibana]

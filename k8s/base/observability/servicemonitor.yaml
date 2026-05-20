@@ -1,0 +1,23 @@
+# Requires the Prometheus Operator (Rancher Monitoring / kube-prometheus-stack).
+# The release's Prometheus is configured to discover ServiceMonitors with this label.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: memes-api
+  namespace: openmeme
+  labels:
+    app.kubernetes.io/name: memes-api
+    app.kubernetes.io/part-of: openmeme
+    release: rancher-monitoring     # Match your Prometheus selector — adjust if different
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: memes-api
+  namespaceSelector:
+    matchNames: [openmeme]
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 30s
+      scrapeTimeout: 10s
+      honorLabels: true

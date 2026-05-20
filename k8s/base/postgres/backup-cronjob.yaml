@@ -1,0 +1,98 @@
+# Daily pg_dump → PVC. For offsite, swap the volume for s3cmd / restic / wal-g.
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-backups
+  namespace: openmeme
+  labels:
+    app.kubernetes.io/name: postgres-backup
+    app.kubernetes.io/part-of: openmeme
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: openmeme
+  labels:
+    app.kubernetes.io/name: postgres-backup
+    app.kubernetes.io/part-of: openmeme
+spec:
+  schedule: "0 3 * * *"            # Daily 03:00 UTC
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 3600
+      template:
+        metadata:
+          labels:
+            app: postgres-backup
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            runAsUser: 999
+            runAsGroup: 999
+            fsGroup: 999
+            runAsNonRoot: true
+          containers:
+            - name: pg-dump
+              image: postgres:16-alpine
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              env:
+                - name: PGHOST
+                  value: postgres
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: api-secret
+                      key: DB_USER
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: api-secret
+                      key: DB_PASSWORD
+                - name: PGDATABASE
+                  value: memesdb
+              command:
+                - sh
+                - -c
+                - |
+                  set -euo pipefail
+                  STAMP=$(date -u +%Y%m%d-%H%M%S)
+                  OUT="/backups/memesdb-${STAMP}.sql.gz"
+                  echo "Dumping to ${OUT}"
+                  pg_dump --no-owner --no-acl --clean --if-exists | gzip -9 > "${OUT}"
+                  # Retain 14 days
+                  find /backups -name 'memesdb-*.sql.gz' -mtime +14 -delete
+                  echo "Backup complete: ${OUT}"
+                  ls -lh /backups | tail -20
+              volumeMounts:
+                - name: backups
+                  mountPath: /backups
+                - name: tmp
+                  mountPath: /tmp
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+          volumes:
+            - name: backups
+              persistentVolumeClaim:
+                claimName: postgres-backups
+            - name: tmp
+              emptyDir: {}

@@ -1,0 +1,83 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: memes-api
+  namespace: openmeme
+  labels:
+    app.kubernetes.io/name: memes-api
+    app.kubernetes.io/part-of: openmeme
+    release: rancher-monitoring
+spec:
+  groups:
+    - name: memes-api.availability
+      interval: 30s
+      rules:
+        - alert: MemesApiDown
+          expr: up{job="memes-api"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "memes-api pod {{ $labels.instance }} is down"
+            description: "No Prometheus scrape on {{ $labels.instance }} for 2 minutes."
+
+        - alert: MemesApiHighErrorRate
+          expr: |
+            (sum(rate(http_server_requests_seconds_count{application="memes-api",status=~"5.."}[5m]))
+             /
+             sum(rate(http_server_requests_seconds_count{application="memes-api"}[5m]))) > 0.05
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "memes-api 5xx error rate > 5%"
+            description: "Sustained 5xx error rate above 5% for 5 minutes."
+
+        - alert: MemesApiHighLatencyP95
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(http_server_requests_seconds_bucket{application="memes-api"}[5m])) by (le, uri)
+            ) > 1.0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "memes-api p95 latency > 1s on {{ $labels.uri }}"
+
+        - alert: MemesApiHighHeapUsage
+          expr: |
+            (jvm_memory_used_bytes{application="memes-api",area="heap"}
+             /
+             jvm_memory_max_bytes{application="memes-api",area="heap"}) > 0.85
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "memes-api heap usage > 85%"
+
+    - name: memes-api.data
+      interval: 30s
+      rules:
+        - alert: PostgresDown
+          expr: pg_up == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Postgres instance is down"
+
+        - alert: RedisDown
+          expr: redis_up == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Redis instance is down"
+
+        - alert: PostgresBackupMissing
+          expr: time() - max(kube_job_status_completion_time{namespace="openmeme",job_name=~"postgres-backup-.*"}) > 30 * 3600
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "No successful Postgres backup in the last 30h"

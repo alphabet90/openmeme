@@ -69,6 +69,12 @@
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
 
+    <!-- Prometheus metrics exporter (scraped by kube-prometheus-stack) -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+    </dependency>
+
     <!-- Bean validation (required by generated models) -->
     <dependency>
       <groupId>org.springframework.boot</groupId>

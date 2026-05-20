@@ -1,0 +1,143 @@
+# Filebeat DaemonSet that ships container stdout logs (JSON/ECS) to Elasticsearch.
+# Runs in its own namespace; uses host log mount.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: logging
+  labels:
+    kubernetes.io/metadata.name: logging
+    app.kubernetes.io/part-of: openmeme
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: filebeat
+  namespace: logging
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: filebeat
+rules:
+  - apiGroups: [""]
+    resources: [namespaces, pods, nodes]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: filebeat
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: filebeat
+subjects:
+  - kind: ServiceAccount
+    name: filebeat
+    namespace: logging
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: filebeat-config
+  namespace: logging
+data:
+  filebeat.yml: |
+    filebeat.autodiscover:
+      providers:
+        - type: kubernetes
+          node: ${NODE_NAME}
+          hints.enabled: true
+          templates:
+            - condition:
+                equals:
+                  kubernetes.namespace: openmeme
+              config:
+                - type: container
+                  paths:
+                    - /var/log/containers/*-${data.kubernetes.container.id}.log
+                  json.keys_under_root: true
+                  json.add_error_key: true
+
+    processors:
+      - add_kubernetes_metadata:
+          host: ${NODE_NAME}
+          matchers:
+            - logs_path:
+                logs_path: "/var/log/containers/"
+      - add_cloud_metadata: {}
+
+    output.elasticsearch:
+      hosts: ["https://elasticsearch-es-http.logging.svc:9200"]
+      username: "elastic"
+      password: "${ELASTIC_PASSWORD}"
+      ssl.verification_mode: certificate
+      ssl.certificate_authorities: ["/mnt/elastic-ca/ca.crt"]
+      index: "openmeme-%{[agent.version]}-%{+yyyy.MM.dd}"
+
+    setup.template.name: "openmeme"
+    setup.template.pattern: "openmeme-*"
+    setup.ilm.enabled: false
+
+    logging.level: info
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: filebeat
+  namespace: logging
+  labels:
+    app.kubernetes.io/name: filebeat
+spec:
+  selector:
+    matchLabels:
+      app: filebeat
+  template:
+    metadata:
+      labels:
+        app: filebeat
+    spec:
+      serviceAccountName: filebeat
+      terminationGracePeriodSeconds: 30
+      hostNetwork: false
+      containers:
+        - name: filebeat
+          image: docker.elastic.co/beats/filebeat:8.15.0
+          args: [-c, /etc/filebeat.yml, -e]
+          securityContext:
+            runAsUser: 0
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: ELASTIC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: elasticsearch-es-elastic-user
+                  key: elastic
+          resources:
+            requests: { cpu: 100m, memory: 200Mi }
+            limits:   { cpu: 500m, memory: 500Mi }
+          volumeMounts:
+            - { name: config,    mountPath: /etc/filebeat.yml, subPath: filebeat.yml, readOnly: true }
+            - { name: data,      mountPath: /usr/share/filebeat/data }
+            - { name: varlog,    mountPath: /var/log,                                readOnly: true }
+            - { name: varlibdocker, mountPath: /var/lib/docker/containers,           readOnly: true }
+            - { name: elastic-ca, mountPath: /mnt/elastic-ca,                        readOnly: true }
+      volumes:
+        - name: config
+          configMap: { name: filebeat-config }
+        - name: data
+          emptyDir: {}
+        - name: varlog
+          hostPath: { path: /var/log }
+        - name: varlibdocker
+          hostPath: { path: /var/lib/docker/containers }
+        - name: elastic-ca
+          secret: { secretName: elasticsearch-es-http-certs-public }

@@ -3,15 +3,23 @@ kind: Kustomization
 
 namespace: openmeme
 
+commonLabels:
+  app.kubernetes.io/part-of: openmeme
+
 resources:
   # Namespace
   - ../namespace.yaml
+  # Governance
+  - resourcequota.yaml
+  - networkpolicy.yaml
+  - serviceaccount.yaml
   # Config & secrets
   - configmap.yaml
   - secret.yaml
   # PostgreSQL
   - postgres/statefulset.yaml
   - postgres/service.yaml
+  - postgres/backup-cronjob.yaml
   # Redis
   - redis/pvc.yaml
   - redis/deployment.yaml
@@ -23,3 +31,11 @@ resources:
   - api/hpa.yaml
   - api/pdb.yaml
   - api/ingress.yaml
+  # Observability (requires Prometheus Operator + ECK installed cluster-wide)
+  - observability/servicemonitor.yaml
+  - observability/prometheusrule.yaml
+  - observability/grafana-dashboard.yaml
+  - observability/elastic-kibana.yaml
+  - observability/filebeat.yaml
+  # Private access (requires Tailscale Operator — see tailscale/README-install.md)
+  - tailscale/api-tailscale.yaml

@@ -8,6 +8,7 @@ metadata:
     app.kubernetes.io/part-of: openmeme
 spec:
   replicas: 2
+  revisionHistoryLimit: 5
   selector:
     matchLabels:
       app: memes-api
@@ -15,24 +16,59 @@ spec:
     type: RollingUpdate
     rollingUpdate:
       maxSurge: 1
-      maxUnavailable: 0       # Zero-downtime: never kill a pod before a new one is ready
+      maxUnavailable: 0
   template:
     metadata:
       labels:
         app: memes-api
         app.kubernetes.io/name: memes-api
         app.kubernetes.io/part-of: openmeme
+      annotations:
+        # Prometheus scrape annotations (fallback when ServiceMonitor not used)
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8080"
     spec:
-      terminationGracePeriodSeconds: 60   # > spring.lifecycle.timeout-per-shutdown-phase (30s)
+      serviceAccountName: memes-api
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      # Spread pods across nodes for HA
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: memes-api
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app: memes-api
       initContainers:
-        # Wait for Postgres to accept connections before the API starts Flyway migrations
         - name: wait-for-postgres
           image: postgres:16-alpine
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
           command:
             - sh
             - -c
             - |
-              until pg_isready -h postgres -U $(DB_USER) -d memesdb; do
+              until pg_isready -h postgres -U "$DB_USER" -d memesdb; do
                 echo "Waiting for postgres..."; sleep 2;
               done
           env:
@@ -41,9 +77,13 @@ spec:
                 secretKeyRef:
                   name: api-secret
                   key: DB_USER
-        # Wait for Redis to accept connections
         - name: wait-for-redis
           image: redis:7-alpine
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
           command:
             - sh
             - -c
@@ -53,9 +93,13 @@ spec:
               done
       containers:
         - name: memes-api
-          # Update this tag to match your CI/CD image push (e.g. ghcr.io/alphabet90/openmeme-api:sha-abc123)
           image: ghcr.io/alphabet90/openmeme-api:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
           ports:
             - containerPort: 8080
               name: http
@@ -63,6 +107,8 @@ spec:
             - configMapRef:
                 name: api-config
           env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "prod"
             - name: DB_USER
               valueFrom:
                 secretKeyRef:
@@ -87,46 +133,47 @@ spec:
             - name: memes
               mountPath: /memes
               readOnly: true
+            - name: tmp
+              mountPath: /tmp
           resources:
             requests:
               cpu: "250m"
               memory: "512Mi"
             limits:
               cpu: "1000m"
-              memory: "1Gi"          # MaxRAMPercentage=75% → JVM heap ≤ 768 Mi
+              memory: "1Gi"
           startupProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/readiness
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
-            failureThreshold: 12    # 30s + 12×10s = up to 150s for JVM startup + Flyway
+            failureThreshold: 12
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/readiness
               port: 8080
-            initialDelaySeconds: 0
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
           livenessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/liveness
               port: 8080
-            initialDelaySeconds: 0
             periodSeconds: 20
             timeoutSeconds: 5
             failureThreshold: 3
           lifecycle:
             preStop:
               exec:
-                # Give the load balancer time to drain before Spring begins shutdown
                 command: ["sh", "-c", "sleep 5"]
       volumes:
         - name: memes
           persistentVolumeClaim:
             claimName: memes-data
             readOnly: true
-      # Pull from GHCR if the image is private
+        - name: tmp
+          emptyDir:
+            sizeLimit: 256Mi
       # imagePullSecrets:
       #   - name: ghcr-credentials

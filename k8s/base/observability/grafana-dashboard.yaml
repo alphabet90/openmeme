@@ -1,0 +1,90 @@
+# ConfigMap auto-discovered by Grafana sidecar (label grafana_dashboard=1).
+# Compatible with kube-prometheus-stack and Rancher Monitoring.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: memes-api-dashboard
+  namespace: openmeme
+  labels:
+    grafana_dashboard: "1"
+    app.kubernetes.io/name: memes-api
+    app.kubernetes.io/part-of: openmeme
+data:
+  memes-api.json: |
+    {
+      "title": "OpenMeme API",
+      "uid": "openmeme-api",
+      "schemaVersion": 39,
+      "tags": ["openmeme", "api"],
+      "timezone": "browser",
+      "refresh": "30s",
+      "time": { "from": "now-6h", "to": "now" },
+      "templating": {
+        "list": [
+          {
+            "name": "instance",
+            "type": "query",
+            "datasource": "Prometheus",
+            "query": "label_values(up{job=\"memes-api\"}, instance)",
+            "includeAll": true,
+            "multi": true
+          }
+        ]
+      },
+      "panels": [
+        {
+          "type": "stat", "title": "Up replicas", "id": 1,
+          "gridPos": {"x":0,"y":0,"w":4,"h":4},
+          "targets": [{"expr": "sum(up{job=\"memes-api\"})"}]
+        },
+        {
+          "type": "timeseries", "title": "Request rate (req/s)", "id": 2,
+          "gridPos": {"x":4,"y":0,"w":10,"h":8},
+          "targets": [{
+            "expr": "sum(rate(http_server_requests_seconds_count{application=\"memes-api\"}[1m])) by (uri)",
+            "legendFormat": "{{uri}}"
+          }]
+        },
+        {
+          "type": "timeseries", "title": "Latency p95 / p99 (s)", "id": 3,
+          "gridPos": {"x":14,"y":0,"w":10,"h":8},
+          "targets": [
+            {"expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{application=\"memes-api\"}[5m])) by (le))", "legendFormat":"p95"},
+            {"expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{application=\"memes-api\"}[5m])) by (le))", "legendFormat":"p99"}
+          ]
+        },
+        {
+          "type": "timeseries", "title": "5xx error rate", "id": 4,
+          "gridPos": {"x":0,"y":8,"w":12,"h":8},
+          "targets": [{
+            "expr": "sum(rate(http_server_requests_seconds_count{application=\"memes-api\",status=~\"5..\"}[5m])) by (status)",
+            "legendFormat": "{{status}}"
+          }]
+        },
+        {
+          "type": "timeseries", "title": "JVM heap used", "id": 5,
+          "gridPos": {"x":12,"y":8,"w":12,"h":8},
+          "targets": [{
+            "expr": "sum(jvm_memory_used_bytes{application=\"memes-api\",area=\"heap\"}) by (instance)",
+            "legendFormat": "{{instance}}"
+          }]
+        },
+        {
+          "type": "timeseries", "title": "HikariCP connections", "id": 6,
+          "gridPos": {"x":0,"y":16,"w":12,"h":7},
+          "targets": [
+            {"expr": "hikaricp_connections_active{application=\"memes-api\"}", "legendFormat":"active"},
+            {"expr": "hikaricp_connections_idle{application=\"memes-api\"}",   "legendFormat":"idle"},
+            {"expr": "hikaricp_connections_pending{application=\"memes-api\"}","legendFormat":"pending"}
+          ]
+        },
+        {
+          "type": "timeseries", "title": "Cache hit ratio", "id": 7,
+          "gridPos": {"x":12,"y":16,"w":12,"h":7},
+          "targets": [{
+            "expr": "sum(rate(cache_gets_total{application=\"memes-api\",result=\"hit\"}[5m])) by (cache) / sum(rate(cache_gets_total{application=\"memes-api\"}[5m])) by (cache)",
+            "legendFormat": "{{cache}}"
+          }]
+        }
+      ]
+    }

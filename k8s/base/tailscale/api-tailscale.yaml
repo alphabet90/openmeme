@@ -1,0 +1,60 @@
+# Private (tailnet-only) access to the API for admin / debug.
+# The Tailscale Operator picks up the annotation and creates an egress proxy pod
+# that registers a tailnet device named "memes-api".
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: memes-api-tailnet
+  namespace: openmeme
+  annotations:
+    tailscale.com/expose: "true"
+    tailscale.com/hostname: "memes-api"
+    # Optional: enable HTTPS via MagicDNS + cert (tailscale serve)
+    tailscale.com/tailnet-fqdn: "memes-api.<your-tailnet>.ts.net"
+  labels:
+    app.kubernetes.io/name: memes-api
+    app.kubernetes.io/part-of: openmeme
+spec:
+  type: ClusterIP
+  selector:
+    app: memes-api
+  ports:
+    - port: 80
+      targetPort: 8080
+      name: http
+---
+# Operator routes from tailnet to the cluster Postgres for emergency access
+# (psql from a laptop on the tailnet). Remove if not needed.
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-tailnet
+  namespace: openmeme
+  annotations:
+    tailscale.com/expose: "true"
+    tailscale.com/hostname: "postgres-openmeme"
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+---
+# Grafana via tailnet — replace selector to match your Grafana Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-tailnet
+  namespace: cattle-monitoring-system
+  annotations:
+    tailscale.com/expose: "true"
+    tailscale.com/hostname: "grafana"
+spec:
+  type: ExternalName
+  externalName: rancher-monitoring-grafana.cattle-monitoring-system.svc.cluster.local
+  ports:
+    - port: 80
+      targetPort: 3000
