@@ -41,7 +41,7 @@ The memes feed currently displays 24 items per page on the web client (`PAGE_SIZ
 | API — delegate (searchMemes) | `apps/api/src/main/java/com/memes/api/controller/MemesApiDelegateImpl.java:81` | `orElse(20)` |
 | API — delegate (listCategories) | `apps/api/src/main/java/com/memes/api/controller/MemesApiDelegateImpl.java:35` | `orElse(20)` |
 | OpenAPI spec — all endpoints | `apps/api/src/main/resources/openapi.yaml` (lines 63, 99, 150, 243) | `default: 20` |
-| TypeScript API client | `apps/web/lib/api.ts:201` | `limit ?? 20` |
+| TypeScript API client | `apps/web/lib/data/memes.ts:201` | `limit ?? 20` |
 
 ---
 
@@ -72,7 +72,7 @@ Update `default: 20` → `default: 100` for the `limit` parameter on all four en
 
 ### 4. TypeScript API client — fallback default
 
-Update the fallback in `apps/web/lib/api.ts:201` from `limit ?? 20` to `limit ?? 100` to keep the client-side default consistent.
+Update the fallback in `apps/web/lib/data/memes.ts:201` from `limit ?? 20` to `limit ?? 100` to keep the client-side default consistent.
 
 ### 5. Tests — update assertions
 
