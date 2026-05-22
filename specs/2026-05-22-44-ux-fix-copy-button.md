@@ -75,6 +75,11 @@ export function useCopyImage(imageUrl: string): UseCopyImageResult;
 ### 3. Update `MemeActions.tsx`
 
 - Same changes as `CopyButton.tsx`: consume `useCopyImage`.
+- Map the hook's `state` to the existing UI, including the `'error'` state:
+  - `'idle'` → show `copyLabel`.
+  - `'copied'` → show `copiedLabel`.
+  - `'error'` → show `copyErrorLabel`.
+- Add a `copyErrorLabel` prop to `MemeActions`'s Props interface and pass `t("copy_error")` from `page.tsx`.
 - Ensure the download button is untouched.
 
 ### 4. i18n
@@ -89,9 +94,19 @@ export function useCopyImage(imageUrl: string): UseCopyImageResult;
   - `de`: `"Bild konnte nicht kopiert werden"`
   - `ar`: `"تعذر نسخ الصورة"`
 
-### 5. No changes to page.tsx
+### 5. Update `page.tsx`
 
-The detail page (`apps/web/app/[locale]/memes/[category]/[slug]/page.tsx`) does not need changes; `imageUrl` is already available in the components.
+Pass the new `copyErrorLabel` prop to `MemeActions` by translating the `copy_error` key:
+
+```tsx
+<MemeActions
+  imageUrl={meme.imageUrl}
+  downloadLabel={t("descargar")}
+  copyLabel={t("copiar")}
+  copiedLabel={t("copiado")}
+  copyErrorLabel={t("copy_error")}
+/>
+```
 
 ## Risks & Mitigations
 
