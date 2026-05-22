@@ -20,7 +20,7 @@ import styles from "./page.module.css";
 
 export const revalidate = 300;
 
-const PAGE_SIZE = 24;
+const PAGE_SIZE = 100;
 
 type SearchParams = { page?: string };
 type Props = {

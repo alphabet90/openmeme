@@ -198,7 +198,7 @@ export async function searchListing(args: {
   limit?: number;
   locale: LocaleCode;
 }): Promise<MemeListing> {
-  const limit = args.limit ?? 20;
+  const limit = args.limit ?? 100;
   const page = args.page ?? 0;
   const results = await searchMemes({ ...args, limit, page });
   const hasMore = results.length === limit;

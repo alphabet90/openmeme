@@ -15,7 +15,7 @@ import type { LocaleCode } from "@/lib/api";
 
 import styles from "./page.module.css";
 
-const PAGE_SIZE = 24;
+const PAGE_SIZE = 100;
 
 type SearchParams = { q?: string; page?: string };
 type Props = {
