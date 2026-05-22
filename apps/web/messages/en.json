@@ -115,6 +115,7 @@
     "ver_reddit": "View on Reddit",
     "copiar": "Copy",
     "copiado": "Copied",
+    "copy_error": "Could not copy image",
     "related_title": "More from {category}",
     "related_aria": "More {category} memes",
     "breadcrumb_inicio": "Home",
