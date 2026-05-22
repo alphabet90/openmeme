@@ -1,4 +1,4 @@
-# Spec: Create Missing Listing Pages /memes/new, /memes/top, /memes/classic, /memes/random
+# Spec: Create Missing Listing Pages /memes/nuevos, /memes/top, /memes/clasicos, /memes/aleatorio
 
 **Issue:** [alphabet90/openmeme#48](https://github.com/alphabet90/openmeme/issues/48)  
 **Branch:** `looper/planner/48-routing-create-missing-listing`  
@@ -41,9 +41,11 @@ Create the following pages under `apps/web/app/[locale]/memes/`:
 | Mode | New Route | Sort / Behavior |
 |------|-----------|-----------------|
 | Top | `/memes/top` | `sort=score` (highest score) |
-| New | `/memes/new` | `sort=created_at` (most recent) |
-| Classic | `/memes/classic` | Placeholder sort or defined backend contract (see Risks) |
-| Random | `/memes/random` | Random shuffle or redirect to random meme (see Risks) |
+| New | `/memes/nuevos` | `sort=created_at` (most recent) |
+| Classic | `/memes/clasicos` | `sort=score` with a `created_at` ceiling filter (older than N days, e.g. 90 days) — replace when a dedicated backend endpoint is available |
+| Random | `/memes/aleatorio` | Listing page that fetches a page of memes with `sort=score` and shuffles client-side; pagination is disabled because random ordering is inherently non-deterministic across pages |
+
+> **Naming rationale**: All listing routes under `/memes/` use Spanish slugs to match the existing `/memes/populares` convention and the Spanish nav/footer labels (`nuevos`, `clasicos`, `aleatorio`). `top` remains English because it is already the established label in both the UI and the `SortKey` type.
 
 Each page replicates the layout, metadata generation, pagination, sidebar, breadcrumbs, and JSON-LD structure from `/memes/populares`. If duplication becomes excessive, extract a shared `MemeListingPage` shell.
 
@@ -53,37 +55,39 @@ Update all hard-coded links in:
 
 - `components/nav/Nav.tsx`
 - `components/Footer.tsx`
+- `components/hero/Hero.tsx` (convert inert `role="tab"` buttons into links to the new listing pages)
 - `app/[locale]/page.tsx` (verify the "more" link still works)
 - Any other components or helpers referencing `/top`, `/nuevos`, `/clasicos`, `/aleatorio`, or `/categorias/random`
 
 ### 3. Legacy Route Redirects
 
-Add `next.config.js` `redirects` for:
+Add `next.config.ts` `redirects` for:
 
 - `/top` → `/memes/top`
-- `/nuevos` → `/memes/new`
-- `/clasicos` → `/memes/classic`
-- `/aleatorio` → `/memes/random`
+- `/nuevos` → `/memes/nuevos`
+- `/clasicos` → `/memes/clasicos`
+- `/aleatorio` → `/memes/aleatorio`
 
 This is declarative, testable, and preserves external link equity.
 
 ### 4. i18n Keys
 
-Add a new namespace for each page (`top`, `new`, `classic`, `random`) in `messages/*.json`, following the `populares` pattern. English base strings are sufficient for V1; missing translations fall back to English.
+Add a new namespace for each page (`top`, `nuevos`, `clasicos`, `aleatorio`) in `messages/*.json`, following the `populares` pattern. English base strings are sufficient for V1; missing translations fall back to English.
 
 ## Risks & Mitigations
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| `/memes/classic` and `/memes/random` may require backend endpoints that do not yet exist | Medium | Ship with sensible frontend fallbacks (e.g., classic = score + old date filter, random = client-side shuffle of a small fetched set) and coordinate a backend PR later. |
+| `/memes/clasicos` and `/memes/aleatorio` may require backend endpoints that do not yet exist | Medium | Ship with frontend fallbacks that use the existing `SortKey` type (`"score" \| "created_at" \| "title"`) in `apps/web/lib/api.ts:121`. For `/memes/clasicos`, fetch with `sort=score` and apply a `created_at` ceiling filter in the page component. For `/memes/aleatorio`, fetch with `sort=score` and shuffle the results client-side. Document that `SortKey` does not need to be extended for V1. |
 | Extracting a shared `MemeListingPage` shell could introduce regressions in `/memes/populares` | Low | Keep the extraction minimal; do not redesign `populares`. Test `/memes/populares` manually after extraction. |
-| Redirects in `next.config.js` may conflict with existing dynamic routes | Low | Place redirect entries before catch-all/dynamic routes; test with `next build`. |
+| Redirects in `next.config.ts` may conflict with existing dynamic routes | Low | Place redirect entries before catch-all/dynamic routes; test with `next build`. |
 | i18n namespaces increase bundle size slightly | Low | Only add English base strings for V1; lazy-load page namespaces if needed. |
 
 ## Validation
 
-- **Link integrity test**: Assert that `Nav.tsx` and `Footer.tsx` only emit hrefs resolving to existing App Router pages (snapshot or route-manifest test).
-- **Smoke test**: Visit `/memes/top`, `/memes/new`, `/memes/classic`, `/memes/random` and assert 200 status, presence of `MemeListingGrid`, and correct `<h1>` / metadata.
+- **Link integrity test**: Assert that `Nav.tsx`, `Footer.tsx`, and `Hero.tsx` only emit hrefs resolving to existing App Router pages (snapshot or route-manifest test).
+- **Smoke test**: Visit `/memes/top`, `/memes/nuevos`, `/memes/clasicos`, `/memes/aleatorio` and assert 200 status, presence of `MemeListingGrid`, and correct `<h1>` / metadata.
+- **Classic date ceiling test**: Assert that `/memes/clasicos` only renders memes with `created_at` older than the configured threshold (e.g. 90 days).
 - **Redirect test**: Assert that `/top`, `/nuevos`, `/clasicos`, `/aleatorio` return 308/307 to their `/memes/*` counterparts.
 - **Regression test**: Verify `/memes/populares`, `/memes/[category]/[slug]`, and `/buscar` remain untouched and functional.
 
@@ -94,11 +98,12 @@ Add a new namespace for each page (`top`, `new`, `classic`, `random`) in `messag
 - Back-filling a "classic" algorithm or "random" backend endpoint if they do not exist yet.
 - Creating actual `memes/classic` or `memes/random` filesystem categories (these are virtual browsing modes, not taxonomy folders).
 - Translation of the new pages into all 7 locales (English base strings are sufficient for V1).
+- Hero tab interactivity beyond basic navigation links (e.g. active-state synchronization, keyboard roving tabindex) is deferred to a future UX polish PR.
 
 ## Implementation Order
 
-1. Add new App Router pages (`app/[locale]/memes/new/page.tsx`, `.../top/...`, `.../classic/...`, `.../random/...`).
-2. Update `Nav.tsx`, `Footer.tsx`, and any other link sources.
-3. Add `next.config.js` redirects for legacy routes.
+1. Add new App Router pages (`app/[locale]/memes/nuevos/page.tsx`, `.../top/...`, `.../clasicos/...`, `.../aleatorio/...`).
+2. Update `Nav.tsx`, `Footer.tsx`, `Hero.tsx`, and any other link sources.
+3. Add `next.config.ts` redirects for legacy routes.
 4. Add base English i18n strings.
 5. Include smoke tests and link-integrity verification.
