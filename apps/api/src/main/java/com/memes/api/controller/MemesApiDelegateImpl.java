@@ -32,7 +32,7 @@ public class MemesApiDelegateImpl implements MemesApiDelegate {
         return ResponseEntity.ok(memeService.listCategories(
             localeValue(locale),
             Optional.ofNullable(page).orElse(0),
-            Optional.ofNullable(limit).orElse(20)
+            Optional.ofNullable(limit).orElse(100)
         ));
     }
 
@@ -43,7 +43,7 @@ public class MemesApiDelegateImpl implements MemesApiDelegate {
             LocaleCode locale) {
         return ResponseEntity.ok(memeService.listMemes(
             Optional.ofNullable(page).orElse(0),
-            Optional.ofNullable(limit).orElse(20),
+            Optional.ofNullable(limit).orElse(100),
             category,
             Optional.ofNullable(sort).orElse("score"),
             localeValue(locale)
@@ -55,7 +55,7 @@ public class MemesApiDelegateImpl implements MemesApiDelegate {
             String category, Integer page, Integer limit, String sort, LocaleCode locale) {
         MemePage result = memeService.listMemes(
             Optional.ofNullable(page).orElse(0),
-            Optional.ofNullable(limit).orElse(20),
+            Optional.ofNullable(limit).orElse(100),
             category,
             Optional.ofNullable(sort).orElse("score"),
             localeValue(locale)
@@ -78,7 +78,7 @@ public class MemesApiDelegateImpl implements MemesApiDelegate {
         return ResponseEntity.ok(memeService.search(
             q,
             Optional.ofNullable(page).orElse(0),
-            Optional.ofNullable(limit).orElse(20),
+            Optional.ofNullable(limit).orElse(100),
             localeValue(locale)
         ));
     }

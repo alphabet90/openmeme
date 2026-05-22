@@ -21,7 +21,7 @@ import styles from "./page.module.css";
 
 export const revalidate = 600;
 
-const PAGE_SIZE = 24;
+const PAGE_SIZE = 100;
 const SORT_VALUES = ["score", "created_at", "title"] as const;
 type SortValue = (typeof SORT_VALUES)[number];
 
