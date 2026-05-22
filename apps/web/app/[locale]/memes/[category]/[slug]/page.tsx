@@ -149,7 +149,7 @@ export default async function MemeDetailPage({ params }: Props) {
                 {meme.imageUrl ? (
                   <div className={styles.imageActions}>
                     <CopyButton
-                      text={meme.imageUrl}
+                      imageUrl={meme.imageUrl}
                       className={styles.imageActionBtn}
                       ariaLabel={t("copiar")}
                     />
@@ -231,6 +231,7 @@ export default async function MemeDetailPage({ params }: Props) {
                   downloadLabel={t("descargar")}
                   copyLabel={t("copiar")}
                   copiedLabel={t("copiado")}
+                  copyErrorLabel={t("copy_error")}
                 />
               </div>
             </article>

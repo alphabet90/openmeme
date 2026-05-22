@@ -115,6 +115,7 @@
     "ver_reddit": "Auf Reddit ansehen",
     "copiar": "Kopieren",
     "copiado": "Kopiert",
+    "copy_error": "Bild konnte nicht kopiert werden",
     "related_title": "Mehr von {category}",
     "related_aria": "Mehr {category} Memes",
     "breadcrumb_inicio": "Startseite",

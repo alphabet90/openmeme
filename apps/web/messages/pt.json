@@ -115,6 +115,7 @@
     "ver_reddit": "Ver no Reddit",
     "copiar": "Copiar",
     "copiado": "Copiado",
+    "copy_error": "Não foi possível copiar a imagem",
     "related_title": "Mais de {category}",
     "related_aria": "Mais memes de {category}",
     "breadcrumb_inicio": "Início",
