@@ -47,7 +47,7 @@ export default async function HomePage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: "home" });
 
   const [popularMemes, categories, trending] = await Promise.all([
-    getPopularMemes(25, apiLocale).catch(() => []),
+    getPopularMemes(100, apiLocale).catch(() => []),
     getCategories(apiLocale).then((c) => c.slice(0, 10)).catch(() => []),
     getTrending(5, apiLocale).catch(() => []),
   ]);

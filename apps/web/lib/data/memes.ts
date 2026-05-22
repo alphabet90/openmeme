@@ -156,7 +156,7 @@ export async function getTopMemes(limit = 5, locale: LocaleCode): Promise<Meme[]
 }
 
 export async function getPopularMemes(limit = 12, locale: LocaleCode): Promise<Meme[]> {
-  const page = await fetchMemes({ limit, sort: "score", page: 1, locale });
+  const page = await fetchMemes({ limit, sort: "score", page: 0, locale });
   return page.data.map((m) => toMemeFromListItem(m));
 }
 
