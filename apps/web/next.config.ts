@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  cacheHandler: require.resolve("./cache-handler"),
+  cacheHandler: require.resolve("./cache-handler.js"),
   cacheMaxMemorySize: 0,
   async headers() {
     return [
