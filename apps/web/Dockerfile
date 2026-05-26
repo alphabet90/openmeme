@@ -67,7 +67,7 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Copy standalone output (includes only runtime deps)
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
+#COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public* ./apps/web/public
 
 # Copy cache handler into standalone output so it resolves at runtime
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/cache-handler.js ./apps/web/cache-handler.js
