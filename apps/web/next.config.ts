@@ -4,8 +4,24 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   images: {
     unoptimized: true,
+  },
+  cacheHandler: require.resolve("./cache-handler"),
+  cacheMaxMemorySize: 0,
+  async headers() {
+    return [
+      {
+        source: "/:path*{/}?",
+        headers: [
+          {
+            key: "X-Accel-Buffering",
+            value: "no",
+          },
+        ],
+      },
+    ];
   },
 };
 
