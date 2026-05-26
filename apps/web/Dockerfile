@@ -87,4 +87,9 @@ ENV REDIS_PORT="6379"
 ENV REDIS_PASSWORD=""
 ENV MEMES_API_KEY=""
 
+# The @trieb.work/nextjs-turbo-redis-cache package expects REDISHOST / REDISPORT
+# (no underscore), so map the standard names to what the library reads.
+ENV REDISHOST=${REDIS_HOST}
+ENV REDISPORT=${REDIS_PORT}
+
 CMD ["node", "apps/web/server.js"]
