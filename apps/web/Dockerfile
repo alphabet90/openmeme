@@ -69,8 +69,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 #COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public* ./apps/web/public
 
-# Copy cache handler into standalone output so it resolves at runtime
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/cache-handler.js ./apps/web/cache-handler.js
 
 USER nextjs
 
@@ -82,14 +80,6 @@ HEALTHCHECK --interval=12s --timeout=12s --start-period=5s \
 
 # Runtime environment variables (must be provided at runtime)
 ENV NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=""
-ENV REDIS_HOST=""
-ENV REDIS_PORT="6379"
-ENV REDIS_PASSWORD=""
 ENV MEMES_API_KEY=""
-
-# The @trieb.work/nextjs-turbo-redis-cache package expects REDISHOST / REDISPORT
-# (no underscore), so map the standard names to what the library reads.
-ENV REDISHOST=${REDIS_HOST}
-ENV REDISPORT=${REDIS_PORT}
 
 CMD ["node", "apps/web/server.js"]
