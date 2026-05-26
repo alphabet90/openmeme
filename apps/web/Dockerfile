@@ -70,7 +70,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 
 # Copy cache handler into standalone output so it resolves at runtime
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/cache-handler.ts ./apps/web/cache-handler.ts
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/cache-handler.js ./apps/web/cache-handler.js
 
 USER nextjs
 
