@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@openmeme/ui": "workspace:*",
+    "@trieb.work/nextjs-turbo-redis-cache": "^1.0.0",
     "next": "16.2.4",
     "next-intl": "^4.11.0",
     "posthog-js": "^1.257.0",
