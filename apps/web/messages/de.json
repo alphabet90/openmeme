@@ -143,6 +143,57 @@
     "empty": "Keine Memes gefunden.",
     "pagination_label": "Seitennavigation"
   },
+  "top": {
+    "meta_title": "Top-Memes",
+    "meta_description": "Die besten Memes auf {siteName}, nach Community-Punktzahl sortiert.",
+    "og_title": "Top-Memes · {siteName}",
+    "breadcrumb_inicio": "Startseite",
+    "breadcrumb_top": "Top",
+    "eyebrow": "Am besten bewertet",
+    "title": "Top-Memes",
+    "sub": "Die am höchsten bewerteten Memes, sortiert nach Community-Punktzahl.",
+    "section_title": "Top-Memes",
+    "empty": "Keine Memes gefunden.",
+    "pagination_label": "Seitennavigation"
+  },
+  "nuevos": {
+    "meta_title": "Neue Memes",
+    "meta_description": "Die neuesten Memes auf {siteName}, frisch hinzugefügt.",
+    "og_title": "Neue Memes · {siteName}",
+    "breadcrumb_inicio": "Startseite",
+    "breadcrumb_nuevos": "Neu",
+    "eyebrow": "Neu",
+    "title": "Neue Memes",
+    "sub": "Die kürzlich hinzugefügten Memes.",
+    "section_title": "Neueste Memes",
+    "empty": "Keine Memes gefunden.",
+    "pagination_label": "Seitennavigation"
+  },
+  "clasicos": {
+    "meta_title": "Klassische Memes",
+    "meta_description": "Klassische Memes auf {siteName}, die zeitlosen Favoriten.",
+    "og_title": "Klassische Memes · {siteName}",
+    "breadcrumb_inicio": "Startseite",
+    "breadcrumb_clasicos": "Klassiker",
+    "eyebrow": "Zeitlos",
+    "title": "Klassische Memes",
+    "sub": "Die Memes, die nie alt werden — Klassiker aus dem Archiv.",
+    "section_title": "Klassische Memes",
+    "empty": "Keine Memes gefunden.",
+    "pagination_label": "Seitennavigation"
+  },
+  "aleatorio": {
+    "meta_title": "Zufällige Memes",
+    "meta_description": "Zufällige Memes von {siteName} — überraschen Sie sich.",
+    "og_title": "Zufällige Memes · {siteName}",
+    "breadcrumb_inicio": "Startseite",
+    "breadcrumb_aleatorio": "Zufällig",
+    "eyebrow": "Überrasch mich",
+    "title": "Zufällige Memes",
+    "sub": "Eine zufällige Auswahl an Memes. Aktualisieren Sie, um neue zu entdecken.",
+    "section_title": "Zufällige Memes",
+    "empty": "Keine Memes gefunden."
+  },
   "buscar": {
     "meta_title_empty": "Memes suchen",
     "meta_description_empty": "Memes auf {siteName} suchen.",

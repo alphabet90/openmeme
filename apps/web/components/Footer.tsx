@@ -11,10 +11,10 @@ export async function Footer() {
 
   const primaryLinks = [
     { href: localePath(locale, "/"),          label: t("inicio") },
-    { href: localePath(locale, "/top"),       label: t("top") },
-    { href: localePath(locale, "/nuevos"),    label: t("nuevos") },
-    { href: localePath(locale, "/clasicos"),  label: t("clasicos") },
-    { href: localePath(locale, "/aleatorio"), label: t("aleatorio") },
+    { href: localePath(locale, "/memes/top"),       label: t("top") },
+    { href: localePath(locale, "/memes/nuevos"),    label: t("nuevos") },
+    { href: localePath(locale, "/memes/clasicos"),  label: t("clasicos") },
+    { href: localePath(locale, "/memes/aleatorio"), label: t("aleatorio") },
     { href: localePath(locale, "/subir"),     label: t("subir") },
   ];
 
@@ -24,7 +24,6 @@ export async function Footer() {
     { href: localePath(locale, "/categorias/futbol"),     label: "Fútbol" },
     { href: localePath(locale, "/categorias/argentinos"), label: "Argentinos" },
     { href: localePath(locale, "/categorias/clasicos"),   label: "Clásicos" },
-    { href: localePath(locale, "/categorias/random"),     label: "Random" },
   ];
 
   const legalLinks = [

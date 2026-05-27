@@ -13,9 +13,9 @@ export async function Nav() {
   const links = [
     { href: localePath(locale, "/"),           label: t("memes"),     active: true  },
     { href: localePath(locale, "/categorias"), label: t("categorias"), active: false },
-    { href: localePath(locale, "/top"),        label: t("top"),       active: false },
-    { href: localePath(locale, "/nuevos"),     label: t("nuevos"),    active: false },
-    { href: localePath(locale, "/aleatorio"),  label: t("aleatorio"), active: false },
+    { href: localePath(locale, "/memes/top"),        label: t("top"),       active: false },
+    { href: localePath(locale, "/memes/nuevos"),     label: t("nuevos"),    active: false },
+    { href: localePath(locale, "/memes/aleatorio"),  label: t("aleatorio"), active: false },
   ];
 
   return (

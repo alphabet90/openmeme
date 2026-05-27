@@ -143,6 +143,57 @@
     "empty": "لم يتم العثور على ميمات.",
     "pagination_label": "التنقل بين الصفحات"
   },
+  "top": {
+    "meta_title": "أفضل الميمات",
+    "meta_description": "أفضل الميمات على {siteName}، مرتبة حسب نقاط المجتمع.",
+    "og_title": "أفضل الميمات · {siteName}",
+    "breadcrumb_inicio": "الرئيسية",
+    "breadcrumb_top": "الأفضل",
+    "eyebrow": "الأعلى تقييماً",
+    "title": "أفضل الميمات",
+    "sub": "الميمات الأعلى تقييماً، مرتبة حسب نقاط المجتمع.",
+    "section_title": "أفضل الميمات",
+    "empty": "لم يتم العثور على ميمات.",
+    "pagination_label": "التنقل بين الصفحات"
+  },
+  "nuevos": {
+    "meta_title": "ميمات جديدة",
+    "meta_description": "أحدث الميمات على {siteName}، المضافة حديثاً.",
+    "og_title": "ميمات جديدة · {siteName}",
+    "breadcrumb_inicio": "الرئيسية",
+    "breadcrumb_nuevos": "جديد",
+    "eyebrow": "جديد",
+    "title": "ميمات جديدة",
+    "sub": "الميمات المضافة مؤخراً.",
+    "section_title": "أحدث الميمات",
+    "empty": "لم يتم العثور على ميمات.",
+    "pagination_label": "التنقل بين الصفحات"
+  },
+  "clasicos": {
+    "meta_title": "ميمات كلاسيكية",
+    "meta_description": "ميمات كلاسيكية على {siteName}، المفضلة الخالدة.",
+    "og_title": "ميمات كلاسيكية · {siteName}",
+    "breadcrumb_inicio": "الرئيسية",
+    "breadcrumb_clasicos": "كلاسيك",
+    "eyebrow": "خالدة",
+    "title": "ميمات كلاسيكية",
+    "sub": "الميمات التي لا تشيخ أبداً — كلاسيكيات من الأرشيف.",
+    "section_title": "ميمات كلاسيكية",
+    "empty": "لم يتم العثور على ميمات.",
+    "pagination_label": "التنقل بين الصفحات"
+  },
+  "aleatorio": {
+    "meta_title": "ميمات عشوائية",
+    "meta_description": "ميمات عشوائية من {siteName} — فاجئ نفسك.",
+    "og_title": "ميمات عشوائية · {siteName}",
+    "breadcrumb_inicio": "الرئيسية",
+    "breadcrumb_aleatorio": "عشوائي",
+    "eyebrow": "فاجئني",
+    "title": "ميمات عشوائية",
+    "sub": "اختيار عشوائي من الميمات. حدّث لاكتشاف المزيد.",
+    "section_title": "ميمات عشوائية",
+    "empty": "لم يتم العثور على ميمات."
+  },
   "buscar": {
     "meta_title_empty": "البحث عن ميمات",
     "meta_description_empty": "ابحث عن ميمات على {siteName}.",

@@ -1,19 +1,20 @@
 import { getLocale, getTranslations } from "next-intl/server";
+import Link from "next/link";
 import { SearchIcon, StarIcon, BoltIcon, SmileIcon, ShuffleIcon } from "@openmeme/ui";
 import { localePath } from "@/lib/i18n-utils";
 import type { Locale } from "@/i18n/routing";
 import styles from "./Hero.module.css";
 
+const filterLinks = [
+  { id: "top",      href: "/memes/top",      Icon: StarIcon,    label: "filter_top" as const },
+  { id: "nuevos",   href: "/memes/nuevos",   Icon: BoltIcon,    label: "filter_nuevos" as const },
+  { id: "clasicos", href: "/memes/clasicos", Icon: SmileIcon,   label: "filter_clasicos" as const },
+  { id: "random",   href: "/memes/aleatorio", Icon: ShuffleIcon, label: "filter_random" as const },
+];
+
 export async function Hero() {
   const locale = (await getLocale()) as Locale;
   const t = await getTranslations("hero");
-
-  const filters = [
-    { id: "top",      label: t("filter_top"),      Icon: StarIcon,    active: true  },
-    { id: "nuevos",   label: t("filter_nuevos"),   Icon: BoltIcon,    active: false },
-    { id: "clasicos", label: t("filter_clasicos"), Icon: SmileIcon,   active: false },
-    { id: "random",   label: t("filter_random"),   Icon: ShuffleIcon, active: false },
-  ];
 
   return (
     <section className={styles.hero} aria-labelledby="hero-title">
@@ -58,22 +59,16 @@ export async function Hero() {
               </button>
             </form>
 
-            <div
-              className={styles.pills}
-              role="tablist"
-              aria-label={t("search_label")}
-            >
-              {filters.map(({ id, label, Icon, active }) => (
-                <button
+            <div className={styles.pills}>
+              {filterLinks.map(({ id, href, Icon, label }) => (
+                <Link
                   key={id}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  className={`${styles.pill} ${active ? styles.pillActive : ""}`.trim()}
+                  href={localePath(locale, href)}
+                  className={styles.pill}
                 >
                   <Icon size={12} />
-                  <span>{label.toUpperCase()}</span>
-                </button>
+                  <span>{t(label).toUpperCase()}</span>
+                </Link>
               ))}
             </div>
           </div>

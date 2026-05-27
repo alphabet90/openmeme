@@ -21,6 +21,30 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: "/top",
+        destination: "/memes/top",
+        permanent: true,
+      },
+      {
+        source: "/nuevos",
+        destination: "/memes/nuevos",
+        permanent: true,
+      },
+      {
+        source: "/clasicos",
+        destination: "/memes/clasicos",
+        permanent: true,
+      },
+      {
+        source: "/aleatorio",
+        destination: "/memes/aleatorio",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);
