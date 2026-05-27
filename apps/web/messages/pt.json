@@ -143,6 +143,57 @@
     "empty": "Nenhum meme encontrado.",
     "pagination_label": "Navegação de páginas"
   },
+  "top": {
+    "meta_title": "Top Memes",
+    "meta_description": "The top memes on {siteName}, ranked by community score.",
+    "og_title": "Top memes · {siteName}",
+    "breadcrumb_inicio": "Início",
+    "breadcrumb_top": "Top",
+    "eyebrow": "Top Rated",
+    "title": "Top Memes",
+    "sub": "The highest-rated memes, ranked by community score.",
+    "section_title": "Top memes",
+    "empty": "No memes found.",
+    "pagination_label": "Navegação de páginas"
+  },
+  "nuevos": {
+    "meta_title": "New Memes",
+    "meta_description": "The newest memes on {siteName}, freshly added.",
+    "og_title": "New memes · {siteName}",
+    "breadcrumb_inicio": "Início",
+    "breadcrumb_nuevos": "Novos",
+    "eyebrow": "Fresh",
+    "title": "New Memes",
+    "sub": "The most recently added memes.",
+    "section_title": "Latest memes",
+    "empty": "No memes found.",
+    "pagination_label": "Navegação de páginas"
+  },
+  "clasicos": {
+    "meta_title": "Classic Memes",
+    "meta_description": "Classic memes on {siteName}, the timeless favorites.",
+    "og_title": "Classic memes · {siteName}",
+    "breadcrumb_inicio": "Início",
+    "breadcrumb_clasicos": "Clássicos",
+    "eyebrow": "Timeless",
+    "title": "Classic Memes",
+    "sub": "The memes that never get old — classics from the archives.",
+    "section_title": "Classic memes",
+    "empty": "No memes found.",
+    "pagination_label": "Navegação de páginas"
+  },
+  "aleatorio": {
+    "meta_title": "Random Memes",
+    "meta_description": "Random memes from {siteName} — surprise yourself.",
+    "og_title": "Random memes · {siteName}",
+    "breadcrumb_inicio": "Início",
+    "breadcrumb_aleatorio": "Aleatório",
+    "eyebrow": "Surprise me",
+    "title": "Random Memes",
+    "sub": "A random selection of memes. Refresh to discover new ones.",
+    "section_title": "Random memes",
+    "empty": "No memes found."
+  },
   "buscar": {
     "meta_title_empty": "Pesquisar memes",
     "meta_description_empty": "Pesquise memes no {siteName}.",

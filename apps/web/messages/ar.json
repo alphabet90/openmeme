@@ -143,6 +143,57 @@
     "empty": "لم يتم العثور على ميمات.",
     "pagination_label": "التنقل بين الصفحات"
   },
+  "top": {
+    "meta_title": "Top Memes",
+    "meta_description": "The top memes on {siteName}, ranked by community score.",
+    "og_title": "Top memes · {siteName}",
+    "breadcrumb_inicio": "الرئيسية",
+    "breadcrumb_top": "الأفضل",
+    "eyebrow": "Top Rated",
+    "title": "Top Memes",
+    "sub": "The highest-rated memes, ranked by community score.",
+    "section_title": "Top memes",
+    "empty": "No memes found.",
+    "pagination_label": "التنقل بين الصفحات"
+  },
+  "nuevos": {
+    "meta_title": "New Memes",
+    "meta_description": "The newest memes on {siteName}, freshly added.",
+    "og_title": "New memes · {siteName}",
+    "breadcrumb_inicio": "الرئيسية",
+    "breadcrumb_nuevos": "جديد",
+    "eyebrow": "Fresh",
+    "title": "New Memes",
+    "sub": "The most recently added memes.",
+    "section_title": "Latest memes",
+    "empty": "No memes found.",
+    "pagination_label": "التنقل بين الصفحات"
+  },
+  "clasicos": {
+    "meta_title": "Classic Memes",
+    "meta_description": "Classic memes on {siteName}, the timeless favorites.",
+    "og_title": "Classic memes · {siteName}",
+    "breadcrumb_inicio": "الرئيسية",
+    "breadcrumb_clasicos": "كلاسيك",
+    "eyebrow": "Timeless",
+    "title": "Classic Memes",
+    "sub": "The memes that never get old — classics from the archives.",
+    "section_title": "Classic memes",
+    "empty": "No memes found.",
+    "pagination_label": "التنقل بين الصفحات"
+  },
+  "aleatorio": {
+    "meta_title": "Random Memes",
+    "meta_description": "Random memes from {siteName} — surprise yourself.",
+    "og_title": "Random memes · {siteName}",
+    "breadcrumb_inicio": "الرئيسية",
+    "breadcrumb_aleatorio": "عشوائي",
+    "eyebrow": "Surprise me",
+    "title": "Random Memes",
+    "sub": "A random selection of memes. Refresh to discover new ones.",
+    "section_title": "Random memes",
+    "empty": "No memes found."
+  },
   "buscar": {
     "meta_title_empty": "البحث عن ميمات",
     "meta_description_empty": "ابحث عن ميمات على {siteName}.",
