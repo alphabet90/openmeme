@@ -1,0 +1,101 @@
+.page {
+  padding-top: var(--nav-height);
+  min-height: 100vh;
+}
+
+.main {
+  padding: var(--space-8) 0 var(--space-12);
+}
+
+.header {
+  margin-bottom: var(--space-8);
+}
+
+.eyebrow {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent-primary);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.title {
+  font-family: var(--font-display), Impact, sans-serif;
+  font-size: clamp(2rem, 5vw, var(--text-5xl));
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg-primary);
+  margin-bottom: var(--space-2);
+}
+
+.meta {
+  font-size: 13px;
+  color: var(--fg-muted);
+  margin-bottom: var(--space-8);
+}
+
+.content {
+  max-width: 72ch;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--fg-secondary);
+}
+
+.content h2 {
+  font-family: var(--font-display), Impact, sans-serif;
+  font-size: var(--text-2xl);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg-primary);
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-3);
+}
+
+.content p {
+  margin-bottom: var(--space-4);
+}
+
+.content a {
+  color: var(--accent-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.content a:hover {
+  opacity: 0.8;
+}
+
+.contactBlock {
+  margin-top: var(--space-3);
+}
+
+.contactLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.contactEmail {
+  display: inline-block;
+  font-size: var(--text-xl);
+  color: var(--accent-primary);
+  margin-top: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+.responseTime {
+  font-size: 14px;
+  color: var(--fg-muted);
+  margin-bottom: var(--space-6);
+}
+
+.legalNote {
+  font-size: 14px;
+  color: var(--fg-muted);
+  border-top: 1px solid var(--border-color);
+  padding-top: var(--space-4);
+  margin-top: var(--space-4);
+}

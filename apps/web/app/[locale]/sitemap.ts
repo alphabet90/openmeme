@@ -24,6 +24,10 @@ export default async function sitemap(
     { url: `${base}/categorias`,  lastModified: now, changeFrequency: "weekly",  priority: 0.8 },
     { url: `${base}/buscar`,      lastModified: now, changeFrequency: "monthly", priority: 0.4 },
     { url: `${base}/memes/populares`, lastModified: now, changeFrequency: "daily", priority: 0.7 },
+    { url: `${base}/terminos`,    lastModified: now, changeFrequency: "monthly", priority: 0.3 },
+    { url: `${base}/privacidad`,  lastModified: now, changeFrequency: "monthly", priority: 0.3 },
+    { url: `${base}/dmca`,        lastModified: now, changeFrequency: "monthly", priority: 0.3 },
+    { url: `${base}/contacto`,    lastModified: now, changeFrequency: "monthly", priority: 0.4 },
   ];
 
   let categoryEntries: MetadataRoute.Sitemap = [];
