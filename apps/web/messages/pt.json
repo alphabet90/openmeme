@@ -164,5 +164,19 @@
     "no_results_title": "Sem resultados para \"{q}\"",
     "no_results_desc": "Tente palavras diferentes ou explore as categorias.",
     "cta_categories": "Explorar categorias"
+  },
+  "subir": {
+    "meta_title": "Enviar um Meme — OpenMeme",
+    "meta_description": "Compartilhe seus memes com o mundo. O recurso de envio estará disponível em breve no OpenMeme.",
+    "og_title": "Enviar um Meme — OpenMeme",
+    "og_description": "Compartilhe seus memes com o mundo. Em breve no OpenMeme.",
+    "title": "Enviar um Meme",
+    "description": "A possibilidade de enviar seus próprios memes estará disponível em breve. Fique ligado!",
+    "eyebrow": "Em Breve",
+    "notify_heading": "Quer ser notificado?",
+    "notify_text": "Deixe seu e-mail e avisaremos quando o envio estiver disponível.",
+    "notify_placeholder": "seu@email.com",
+    "notify_button": "Notificar-me",
+    "notify_success": "Você está na lista!"
   }
 }

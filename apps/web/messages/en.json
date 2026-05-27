@@ -164,5 +164,19 @@
     "no_results_title": "No results for \"{q}\"",
     "no_results_desc": "Try different keywords or browse categories.",
     "cta_categories": "Browse categories"
+  },
+  "subir": {
+    "meta_title": "Upload a Meme — OpenMeme",
+    "meta_description": "Share your memes with the world. The upload feature is coming soon to OpenMeme.",
+    "og_title": "Upload a Meme — OpenMeme",
+    "og_description": "Share your memes with the world. Coming soon to OpenMeme.",
+    "title": "Upload a Meme",
+    "description": "The ability to upload your own memes is coming soon. Stay tuned!",
+    "eyebrow": "Coming Soon",
+    "notify_heading": "Want to be notified?",
+    "notify_text": "Leave your email and we'll let you know when uploads go live.",
+    "notify_placeholder": "your@email.com",
+    "notify_button": "Notify Me",
+    "notify_success": "You're on the list!"
   }
 }

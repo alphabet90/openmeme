@@ -164,5 +164,19 @@
     "no_results_title": "Sin resultados para \"{q}\"",
     "no_results_desc": "Intentá con otras palabras o explorá las categorías.",
     "cta_categories": "Explorar categorías"
+  },
+  "subir": {
+    "meta_title": "Subir un meme — OpenMeme",
+    "meta_description": "Compartí tus memes con el mundo. La función de subida llega pronto a OpenMeme.",
+    "og_title": "Subir un meme — OpenMeme",
+    "og_description": "Compartí tus memes con el mundo. Próximamente en OpenMeme.",
+    "title": "Subir un meme",
+    "description": "La posibilidad de subir tus propios memes estará disponible pronto. ¡Mantenete atento!",
+    "eyebrow": "Próximamente",
+    "notify_heading": "¿Querés recibir notificaciones?",
+    "notify_text": "Dejanos tu email y te avisaremos cuando las subidas estén disponibles.",
+    "notify_placeholder": "tu@email.com",
+    "notify_button": "Notificarme",
+    "notify_success": "¡Estás en la lista!"
   }
 }

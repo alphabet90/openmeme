@@ -164,5 +164,19 @@
     "no_results_title": "Keine Ergebnisse für \"{q}\"",
     "no_results_desc": "Versuchen Sie andere Schlüsselwörter oder durchsuchen Sie die Kategorien.",
     "cta_categories": "Kategorien durchsuchen"
+  },
+  "subir": {
+    "meta_title": "Meme hochladen — OpenMeme",
+    "meta_description": "Teilen Sie Ihre Memes mit der Welt. Die Upload-Funktion kommt bald zu OpenMeme.",
+    "og_title": "Meme hochladen — OpenMeme",
+    "og_description": "Teilen Sie Ihre Memes mit der Welt. Bald auf OpenMeme.",
+    "title": "Meme hochladen",
+    "description": "Die Möglichkeit, eigene Memes hochzuladen, ist bald verfügbar. Bleiben Sie dran!",
+    "eyebrow": "Demnächst",
+    "notify_heading": "Möchten Sie benachrichtigt werden?",
+    "notify_text": "Hinterlassen Sie Ihre E-Mail und wir informieren Sie, wenn Uploads verfügbar sind.",
+    "notify_placeholder": "ihre@email.com",
+    "notify_button": "Benachrichtigen",
+    "notify_success": "Sie sind auf der Liste!"
   }
 }

@@ -1,0 +1,8 @@
+.page {
+  padding-top: var(--nav-height);
+  min-height: 100vh;
+}
+
+.main {
+  padding: var(--space-12) 0 var(--space-16);
+}

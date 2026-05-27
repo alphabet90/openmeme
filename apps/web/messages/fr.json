@@ -164,5 +164,19 @@
     "no_results_title": "Aucun résultat pour \"{q}\"",
     "no_results_desc": "Essayez d'autres mots-clés ou explorez les catégories.",
     "cta_categories": "Explorer les catégories"
+  },
+  "subir": {
+    "meta_title": "Partager un mème — OpenMeme",
+    "meta_description": "Partagez vos mèmes avec le monde. La fonction de partage arrive bientôt sur OpenMeme.",
+    "og_title": "Partager un mème — OpenMeme",
+    "og_description": "Partagez vos mèmes avec le monde. Bientôt sur OpenMeme.",
+    "title": "Partager un mème",
+    "description": "La possibilité de partager vos propres mèmes sera bientôt disponible. Restez à l'écoute !",
+    "eyebrow": "Bientôt",
+    "notify_heading": "Vous voulez être informé ?",
+    "notify_text": "Laissez votre e-mail et nous vous préviendrons quand le partage sera disponible.",
+    "notify_placeholder": "votre@email.com",
+    "notify_button": "M'informer",
+    "notify_success": "Vous êtes sur la liste !"
   }
 }

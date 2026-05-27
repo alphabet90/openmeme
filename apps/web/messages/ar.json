@@ -164,5 +164,19 @@
     "no_results_title": "لا نتائج لـ \"{q}\"",
     "no_results_desc": "جرب كلمات أخرى أو تصفح الفئات.",
     "cta_categories": "استكشاف الفئات"
+  },
+  "subir": {
+    "meta_title": "رفع ميم — OpenMeme",
+    "meta_description": "شارك ميماتك مع العالم. ميزة الرفع قادمة قريبًا إلى OpenMeme.",
+    "og_title": "رفع ميم — OpenMeme",
+    "og_description": "شارك ميماتك مع العالم. قريبًا على OpenMeme.",
+    "title": "رفع ميم",
+    "description": "إمكانية رفع ميماتك الخاصة ستكون متاحة قريبًا. ترقبوا!",
+    "eyebrow": "قريبًا",
+    "notify_heading": "هل تريد الإشعار؟",
+    "notify_text": "اترك بريدك الإلكتروني وسنخبرك عندما يصبح الرفع متاحًا.",
+    "notify_placeholder": "بريدك@email.com",
+    "notify_button": "إشعاري",
+    "notify_success": "أنت على القائمة!"
   }
 }
