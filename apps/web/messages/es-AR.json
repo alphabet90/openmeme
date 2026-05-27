@@ -143,6 +143,17 @@
     "empty": "No se encontraron memes.",
     "pagination_label": "Navegación de páginas"
   },
+  "subir": {
+    "meta_title": "Subir un meme",
+    "meta_description": "Subí tus propios memes a {siteName}. Próximamente.",
+    "og_title": "Subir un meme · {siteName}",
+    "og_description": "Subí tus propios memes a {siteName}. Próximamente.",
+    "eyebrow": "Próximamente",
+    "title": "Subir un meme",
+    "sub": "Compartí tus memes con la comunidad.",
+    "coming_soon": "Próximamente",
+    "coming_soon_desc": "La función de subida está en camino. Pronto vas a poder compartir tus propios memes con la comunidad."
+  },
   "buscar": {
     "meta_title_empty": "Buscar memes",
     "meta_description_empty": "Buscá memes en {siteName}.",

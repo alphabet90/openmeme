@@ -143,6 +143,17 @@
     "empty": "No memes found.",
     "pagination_label": "Page navigation"
   },
+  "subir": {
+    "meta_title": "Upload a meme",
+    "meta_description": "Upload your own memes to {siteName}. Coming soon.",
+    "og_title": "Upload a meme · {siteName}",
+    "og_description": "Upload your own memes to {siteName}. Coming soon.",
+    "eyebrow": "Coming soon",
+    "title": "Upload a meme",
+    "sub": "Share your memes with the community.",
+    "coming_soon": "Coming Soon",
+    "coming_soon_desc": "The upload feature is on its way. You will soon be able to share your own memes with the community."
+  },
   "buscar": {
     "meta_title_empty": "Search memes",
     "meta_description_empty": "Search for memes on {siteName}.",
