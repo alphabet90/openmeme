@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -383,4 +384,37 @@ public class MemeRepository {
                 img.imageType(), img.position(), img.isPrimary());
         }
     }
+
+    public List<Map<String, Object>> findAllCategoryIdsAndSlugs() {
+        return jdbc.queryForList("SELECT id, slug FROM categories");
+    }
+
+    @Transactional
+    public PurgeResult purgeCategories(Set<Long> categoryIds) {
+        if (categoryIds.isEmpty()) return new PurgeResult(0, 0, List.of());
+
+        String placeholders = categoryIds.stream().map(id -> "?").collect(Collectors.joining(","));
+        Object[] ids = categoryIds.toArray();
+
+        List<Map<String, Object>> cats = jdbc.queryForList(
+            "SELECT id, slug FROM categories WHERE id IN (" + placeholders + ")", ids);
+
+        int deletedMemes = 0;
+        List<String> purgedSlugs = new ArrayList<>();
+
+        for (Map<String, Object> cat : cats) {
+            long id = ((Number) cat.get("id")).longValue();
+            String slug = (String) cat.get("slug");
+
+            int memeCount = jdbc.update("DELETE FROM memes WHERE category_id = ?", id);
+            jdbc.update("DELETE FROM categories WHERE id = ?", id);
+
+            deletedMemes += memeCount;
+            purgedSlugs.add(slug);
+        }
+
+        return new PurgeResult(cats.size(), deletedMemes, purgedSlugs);
+    }
+
+    public record PurgeResult(int deletedCategories, int deletedMemes, List<String> purgedSlugs) {}
 }
