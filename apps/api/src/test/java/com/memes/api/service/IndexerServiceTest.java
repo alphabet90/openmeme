@@ -24,13 +24,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -487,6 +491,100 @@ class IndexerServiceTest {
         assertThatThrownBy(() -> indexerService.indexSingle(req))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("translations");
+    }
+
+    // ===== Orphan category purge ==============================================
+
+    @Test
+    void reindex_purgesOrphanCategories() throws IOException {
+        Path liveDir = tempDir.resolve("live-category");
+        Files.createDirectories(liveDir);
+        writeMinimalMdx(liveDir.resolve("meme1.mdx"), "live-category", "meme1");
+
+        Map<String, Object> liveCat = Map.of("id", 1L, "slug", "live-category");
+        Map<String, Object> orphanCat = Map.of("id", 2L, "slug", "deleted-category");
+        when(memeRepository.findAllCategoryIdsAndSlugs()).thenReturn(List.of(liveCat, orphanCat));
+        when(memeRepository.purgeCategories(Set.of(2L)))
+            .thenReturn(new MemeRepository.PurgeResult(1, 5, List.of("deleted-category")));
+        when(memeRepository.upsertAll(any())).thenReturn(1);
+
+        IndexResult result = indexerService.reindex();
+
+        assertThat(result.indexed()).isEqualTo(1);
+        assertThat(result.errors()).isEmpty();
+        verify(memeRepository).findAllCategoryIdsAndSlugs();
+        verify(memeRepository).purgeCategories(Set.of(2L));
+    }
+
+    @Test
+    void reindex_doesNotPurgeLiveCategories() throws IOException {
+        Path catDir = tempDir.resolve("live-category");
+        Files.createDirectories(catDir);
+        writeMinimalMdx(catDir.resolve("meme1.mdx"), "live-category", "meme1");
+
+        when(memeRepository.findAllCategoryIdsAndSlugs())
+            .thenReturn(List.of(Map.of("id", 1L, "slug", "live-category")));
+        when(memeRepository.upsertAll(any())).thenReturn(1);
+
+        IndexResult result = indexerService.reindex();
+
+        assertThat(result.indexed()).isEqualTo(1);
+        assertThat(result.errors()).isEmpty();
+        verify(memeRepository).findAllCategoryIdsAndSlugs();
+        verify(memeRepository, never()).purgeCategories(anySet());
+    }
+
+    @Test
+    void reindex_skipsPurgeWhenCategoriesDisabled() throws IOException {
+        Path catDir = tempDir.resolve("orphan-category");
+        Files.createDirectories(catDir);
+        writeMinimalMdx(catDir.resolve("meme1.mdx"), "orphan-category", "meme1");
+
+        when(memeRepository.upsertAll(any())).thenReturn(1);
+
+        indexerService.reindex(true, false);
+
+        verify(memeRepository, never()).findAllCategoryIdsAndSlugs();
+        verify(memeRepository, never()).purgeCategories(anySet());
+    }
+
+    @Test
+    void reindex_skipsPurgeWhenNoOrphans() throws IOException {
+        Path catDir = tempDir.resolve("only-category");
+        Files.createDirectories(catDir);
+        writeMinimalMdx(catDir.resolve("meme1.mdx"), "only-category", "meme1");
+
+        when(memeRepository.findAllCategoryIdsAndSlugs())
+            .thenReturn(List.of(Map.of("id", 1L, "slug", "only-category")));
+        when(memeRepository.upsertAll(any())).thenReturn(1);
+
+        IndexResult result = indexerService.reindex();
+
+        assertThat(result.indexed()).isEqualTo(1);
+        assertThat(result.errors()).isEmpty();
+        verify(memeRepository).findAllCategoryIdsAndSlugs();
+        verify(memeRepository, never()).purgeCategories(anySet());
+    }
+
+    @Test
+    void reindex_purgesMultipleOrphans() throws IOException {
+        Path liveDir = tempDir.resolve("live-category");
+        Files.createDirectories(liveDir);
+        writeMinimalMdx(liveDir.resolve("meme1.mdx"), "live-category", "meme1");
+
+        Map<String, Object> live = Map.of("id", 1L, "slug", "live-category");
+        Map<String, Object> orphan1 = Map.of("id", 2L, "slug", "deleted-1");
+        Map<String, Object> orphan2 = Map.of("id", 3L, "slug", "deleted-2");
+        when(memeRepository.findAllCategoryIdsAndSlugs()).thenReturn(List.of(live, orphan1, orphan2));
+        when(memeRepository.purgeCategories(Set.of(2L, 3L)))
+            .thenReturn(new MemeRepository.PurgeResult(2, 10, List.of("deleted-1", "deleted-2")));
+        when(memeRepository.upsertAll(any())).thenReturn(1);
+
+        IndexResult result = indexerService.reindex();
+
+        assertThat(result.indexed()).isEqualTo(1);
+        assertThat(result.errors()).isEmpty();
+        verify(memeRepository).purgeCategories(Set.of(2L, 3L));
     }
 
     // ===== helpers ============================================================

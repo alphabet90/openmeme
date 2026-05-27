@@ -34,6 +34,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Scans the {@code memes/} corpus and orchestrates upserts into the V2
@@ -122,6 +123,11 @@ public class IndexerService {
         if (indexMemes) {
             List<MemeUpsert> memes = scanMdxFiles(errors);
             memeCount = memeRepository.upsertAll(memes);
+        }
+
+        // Purge orphan categories (DB categories whose directory no longer exists on disk)
+        if (indexCategories) {
+            purgeOrphanCategories(errors);
         }
 
         memeRepository.refreshStats();
@@ -560,6 +566,54 @@ public class IndexerService {
         }
 
         return images;
+    }
+
+    // ===== Orphan category purge ==============================================
+
+    /**
+     * Purges categories from the database whose directory no longer exists on the
+     * filesystem. The {@code memes/} directory is the single source of truth for
+     * valid categories.
+     *
+     * <p>This runs after all upserts are committed so that live categories are
+     * never accidentally purged due to transient filesystem errors or race conditions.</p>
+     */
+    private void purgeOrphanCategories(List<String> errors) {
+        Path root = Paths.get(memesRoot);
+        if (!Files.isDirectory(root)) {
+            errors.add("Cannot purge: memes root not found: " + root.toAbsolutePath());
+            return;
+        }
+
+        Set<String> existingDirs;
+        try (var stream = Files.list(root)) {
+            existingDirs = stream
+                .filter(Files::isDirectory)
+                .map(p -> p.getFileName().toString())
+                .filter(name -> !name.startsWith("_"))
+                .collect(Collectors.toSet());
+        } catch (IOException e) {
+            errors.add("Failed to enumerate category directories for purge: " + e.getMessage());
+            return;
+        }
+
+        List<Map<String, Object>> dbCategories = memeRepository.findAllCategoryIdsAndSlugs();
+        Set<Long> orphanIds = new HashSet<>();
+        for (Map<String, Object> cat : dbCategories) {
+            String slug = (String) cat.get("slug");
+            if (!existingDirs.contains(slug)) {
+                orphanIds.add(((Number) cat.get("id")).longValue());
+            }
+        }
+
+        if (orphanIds.isEmpty()) {
+            log.debug("Purge: no orphan categories found");
+            return;
+        }
+
+        MemeRepository.PurgeResult result = memeRepository.purgeCategories(orphanIds);
+        log.info("Purge complete: {} orphan categories, {} memes deleted: {}",
+            result.deletedCategories(), result.deletedMemes(), result.purgedSlugs());
     }
 
     // ===== From admin API =====================================================
