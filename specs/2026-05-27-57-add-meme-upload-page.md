@@ -34,9 +34,22 @@ New directory: `apps/web/app/[locale]/subir/`
 export const revalidate = 3600;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  // title: t("meta_title"), description: t("meta_description")
-  // canonical: /{locale}/subir
-  // alternates via buildAlternates("/subir")
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "subir" });
+  return {
+    title: t("meta_title"),
+    description: t("meta_description"),
+    alternates: {
+      canonical: `/${locale}/subir`,
+      languages: buildAlternates("/subir"),
+    },
+    openGraph: {
+      title: t("og_title"),
+      description: t("og_description"),
+      url: `/${locale}/subir`,
+      locale: localeOgMap[locale],
+    },
+  };
 }
 
 export default async function SubirPage({ params }: Props) {
@@ -83,6 +96,8 @@ Add a `subir` namespace to all 7 locale files:
 |-----|----|-------|
 | `meta_title` | "Upload a Meme — OpenMeme" | "Subir un meme — OpenMeme" |
 | `meta_description` | "Share your memes with the world. The upload feature is coming soon to OpenMeme." | "Compartí tus memes con el mundo. La función de subida llega pronto a OpenMeme." |
+| `og_title` | "Upload a Meme — OpenMeme" | "Subir un meme — OpenMeme" |
+| `og_description` | "Share your memes with the world. Coming soon to OpenMeme." | "Compartí tus memes con el mundo. Próximamente en OpenMeme." |
 | `title` | "Upload a Meme" | "Subir un meme" |
 | `description` | "The ability to upload your own memes is coming soon. Stay tuned!" | "La posibilidad de subir tus propios memes estará disponible pronto. ¡Mantenete atento!" |
 | `eyebrow` | "Coming Soon" | "Próximamente" |
@@ -92,7 +107,77 @@ Add a `subir` namespace to all 7 locale files:
 | `notify_button` | "Notify Me" | "Notificarme" |
 | `notify_success` | "You're on the list!" | "¡Estás en la lista!" |
 
-Also update `es.json`, `pt.json`, `fr.json`, `de.json`, `ar.json` with appropriate translations per the established pattern (all previous specs added keys to all 7 files).
+Add the `subir` namespace to all 7 locale files. Provide translations for `es`, `pt`, `fr`, `de`, and `ar` following the established spec pattern:
+
+**es:**
+- `meta_title`: "Subir un meme — OpenMeme"
+- `meta_description`: "Comparte tus memes con el mundo. La función de subida llegará pronto a OpenMeme."
+- `og_title`: "Subir un meme — OpenMeme"
+- `og_description`: "Comparte tus memes con el mundo. Próximamente en OpenMeme."
+- `title`: "Subir un meme"
+- `description`: "La posibilidad de subir tus propios memes estará disponible pronto. ¡Mantente atento!"
+- `eyebrow`: "Próximamente"
+- `notify_heading`: "¿Quieres recibir notificaciones?"
+- `notify_text`: "Déjanos tu correo y te avisaremos cuando las subidas estén disponibles."
+- `notify_placeholder`: "tu@email.com"
+- `notify_button`: "Notificarme"
+- `notify_success`: "¡Estás en la lista!"
+
+**pt:**
+- `meta_title`: "Enviar um Meme — OpenMeme"
+- `meta_description`: "Compartilhe seus memes com o mundo. O recurso de envio estará disponível em breve no OpenMeme."
+- `og_title`: "Enviar um Meme — OpenMeme"
+- `og_description`: "Compartilhe seus memes com o mundo. Em breve no OpenMeme."
+- `title`: "Enviar um Meme"
+- `description`: "A possibilidade de enviar seus próprios memes estará disponível em breve. Fique ligado!"
+- `eyebrow`: "Em Breve"
+- `notify_heading`: "Quer ser notificado?"
+- `notify_text`: "Deixe seu e-mail e avisaremos quando o envio estiver disponível."
+- `notify_placeholder`: "seu@email.com"
+- `notify_button`: "Notificar-me"
+- `notify_success`: "Você está na lista!"
+
+**fr:**
+- `meta_title`: "Partager un mème — OpenMeme"
+- `meta_description`: "Partagez vos mèmes avec le monde. La fonction de partage arrive bientôt sur OpenMeme."
+- `og_title`: "Partager un mème — OpenMeme"
+- `og_description`: "Partagez vos mèmes avec le monde. Bientôt sur OpenMeme."
+- `title`: "Partager un mème"
+- `description`: "La possibilité de partager vos propres mèmes sera bientôt disponible. Restez à l'écoute !"
+- `eyebrow`: "Bientôt"
+- `notify_heading`: "Vous voulez être informé ?"
+- `notify_text`: "Laissez votre e-mail et nous vous préviendrons quand le partage sera disponible."
+- `notify_placeholder`: "votre@email.com"
+- `notify_button`: "M'informer"
+- `notify_success`: "Vous êtes sur la liste !"
+
+**de:**
+- `meta_title`: "Meme hochladen — OpenMeme"
+- `meta_description`: "Teilen Sie Ihre Memes mit der Welt. Die Upload-Funktion kommt bald zu OpenMeme."
+- `og_title`: "Meme hochladen — OpenMeme"
+- `og_description`: "Teilen Sie Ihre Memes mit der Welt. Bald auf OpenMeme."
+- `title`: "Meme hochladen"
+- `description`: "Die Möglichkeit, eigene Memes hochzuladen, ist bald verfügbar. Bleiben Sie dran!"
+- `eyebrow`: "Demnächst"
+- `notify_heading`: "Möchten Sie benachrichtigt werden?"
+- `notify_text`: "Hinterlassen Sie Ihre E-Mail und wir informieren Sie, wenn Uploads verfügbar sind."
+- `notify_placeholder`: "ihre@email.com"
+- `notify_button`: "Benachrichtigen"
+- `notify_success`: "Sie sind auf der Liste!"
+
+**ar:**
+- `meta_title`: "رفع ميم — OpenMeme"
+- `meta_description`: "شارك ميماتك مع العالم. ميزة الرفع قادمة قريبًا إلى OpenMeme."
+- `og_title`: "رفع ميم — OpenMeme"
+- `og_description`: "شارك ميماتك مع العالم. قريبًا على OpenMeme."
+- `title`: "رفع ميم"
+- `description`: "إمكانية رفع ميماتك الخاصة ستكون متاحة قريبًا. ترقبوا!"
+- `eyebrow`: "قريبًا"
+- `notify_heading`: "هل تريد الإشعار؟"
+- `notify_text`: "اترك بريدك الإلكتروني وسنخبرك عندما يصبح الرفع متاحًا."
+- `notify_placeholder`: "بريدك@email.com"
+- `notify_button`: "إشعاري"
+- `notify_success`: "أنت على القائمة!"
 
 ### 3. No navigation changes needed
 
@@ -110,7 +195,8 @@ The route just needs to exist for these links to stop 404ing.
 | Users expect a working upload form | The "Coming Soon" eyebrow and description text set clear expectations. No form fields are rendered. |
 | Missing i18n keys cause runtime errors | All existing locale files follow the same JSON structure; keys are added to all 7 files in the same PR. |
 | Route conflicts with future upload implementation | The route path (`/subir`) is the intended final path. The future implementation replaces the content of this page — no redirect needed. |
-| SEO impact of a placeholder page | `generateMetadata` returns descriptive `title` and `description`. `revalidate = 3600` keeps ISR fresh. The alternates/hreflang links are set correctly. |
+| SEO impact of a placeholder page | `generateMetadata` returns descriptive `title`, `description`, and `openGraph` fields. `revalidate = 3600` keeps ISR fresh. The alternates/hreflang links are set correctly. |
+| Missing OG keys for social previews | `og_title` and `og_description` are included in the i18n namespace and `generateMetadata` returns them as `openGraph` metadata, ensuring rich link previews on Discord, Telegram, and Twitter. |
 
 ## Validation
 
@@ -146,7 +232,7 @@ The route just needs to exist for these links to stop 404ing.
 
 - [ ] `/subir` route exists and renders a "Coming Soon" page.
 - [ ] Page includes `<Nav>`, `<Footer>`, and follows the established CSS Module pattern.
-- [ ] `generateMetadata` returns correct title, description, and alternate language links.
+- [ ] `generateMetadata` returns correct title, description, `openGraph` (with `og_title`/`og_description`), and alternate language links.
 - [ ] i18n keys added to all 7 locale JSON files under the `subir` namespace.
 - [ ] Nav CTA, Footer, and Sidebar links to `/subir` no longer 404.
 - [ ] No new lint / TypeScript errors.
