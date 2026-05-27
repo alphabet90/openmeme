@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { Nav } from "@/components/nav/Nav";
 import { Footer } from "@/components/Footer";
 import { Sidebar } from "@/components/sidebar/Sidebar";
-import { MemeListingGrid, Pagination, SectionTitle } from "@openmeme/ui";
+import { MemeListingGrid, SectionTitle } from "@openmeme/ui";
 
 import { getCategories } from "@/lib/data/categories";
 import { getMemeListing } from "@/lib/data/memes";
@@ -20,19 +20,12 @@ import styles from "./page.module.css";
 
 export const revalidate = 300;
 
-const PAGE_SIZE = 100;
+const CLASSIC_FETCH_LIMIT = 500;
 const CLASSIC_AGE_DAYS = 90;
 
-type SearchParams = { page?: string };
 type Props = {
   params: Promise<{ locale: Locale }>;
-  searchParams: Promise<SearchParams>;
 };
-
-function parsePage(raw: string | undefined): number {
-  const n = Number(raw ?? "0");
-  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0;
-}
 
 function isClassic(createdAt: string | undefined | null): boolean {
   if (!createdAt) return false;
@@ -40,38 +33,33 @@ function isClassic(createdAt: string | undefined | null): boolean {
   return new Date(createdAt).getTime() < cutoff;
 }
 
-export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
-  const { page: pageRaw } = await searchParams;
   const t = await getTranslations({ locale, namespace: "clasicos" });
-  const page = parsePage(pageRaw);
-  const canonical = `/${locale}/memes/clasicos${page > 0 ? `?page=${page}` : ""}`;
 
   return {
     title: t("meta_title"),
     description: t("meta_description", { siteName: site.name }),
     alternates: {
-      canonical,
-      languages: buildAlternates(`/memes/clasicos${page > 0 ? `?page=${page}` : ""}`),
+      canonical: `/${locale}/memes/clasicos`,
+      languages: buildAlternates("/memes/clasicos"),
     },
     openGraph: {
       title: t("og_title", { siteName: site.name }),
       description: t("meta_description", { siteName: site.name }),
-      url: canonical,
+      url: `/${locale}/memes/clasicos`,
       locale: localeOgMap[locale],
     },
   };
 }
 
-export default async function ClasicosMemesPage({ params, searchParams }: Props) {
+export default async function ClasicosMemesPage({ params }: Props) {
   const { locale } = await params;
-  const { page: pageRaw } = await searchParams;
-  const page = parsePage(pageRaw);
   const apiLocale = locale as LocaleCode;
   const t = await getTranslations({ locale, namespace: "clasicos" });
 
   const [apiListing, categories, trending] = await Promise.all([
-    getMemeListing({ sort: "score", page, limit: PAGE_SIZE, locale: apiLocale }).catch(() => null),
+    getMemeListing({ sort: "score", page: 0, limit: CLASSIC_FETCH_LIMIT, locale: apiLocale }).catch(() => null),
     getCategories(apiLocale).then((c) => c.slice(0, 10)).catch(() => []),
     getTrending(5, apiLocale).catch(() => []),
   ]);
@@ -94,11 +82,6 @@ export default async function ClasicosMemesPage({ params, searchParams }: Props)
         data: listing.data.map((m) => ({ ...m, href: localePath(locale, m.href) })),
       }
     : null;
-
-  const buildPageHref = (p: number) =>
-    p > 0
-      ? localePath(locale, `/memes/clasicos?page=${p}`)
-      : localePath(locale, "/memes/clasicos");
 
   return (
     <>
@@ -138,12 +121,6 @@ export default async function ClasicosMemesPage({ params, searchParams }: Props)
                       memes={listingWithHref.data}
                       ariaLabel={t("title")}
                       priorityCount={5}
-                    />
-                    <Pagination
-                      page={listingWithHref.pageInfo.page}
-                      totalPages={listingWithHref.pageInfo.totalPages}
-                      buildHref={buildPageHref}
-                      label={t("pagination_label")}
                     />
                   </>
                 ) : (
