@@ -16,7 +16,7 @@ The OpenMeme web client (`apps/web`) is missing four essential pages: Terms and 
 
 ## Goals
 
-1. Serve four static (SSG) legal/support pages under `apps/web/app/[locale]/` that match the existing site layout, SEO metadata, and i18n patterns.
+1. Serve four static (ISR with daily revalidation) legal/support pages under `apps/web/app/[locale]/` that match the existing site layout, SEO metadata, and i18n patterns.
 2. Each page must carry substantive legal or support content, not placeholder text.
 3. Add i18n translation namespaces for page content to all 7 locale files.
 4. Reachable from the footer — no additional navigation wiring needed (footer already points to the correct routes).
@@ -43,6 +43,8 @@ apps/web/app/[locale]/
     ├── page.module.css
     └── page.tsx
 ```
+
+Note: Route names are Spanish (`/terminos`, `/privacidad`, `/contacto`) to match the existing footer links, diverging from issue #56's stated `/terms`, `/privacy`, `/contact`.
 
 Each page follows the established pattern from `categorias/page.tsx`:
 - `export const revalidate = 86400` (ISR, revalidates daily since legal text changes infrequently)
@@ -127,7 +129,7 @@ Add a new top-level namespace to all 7 locale files (`en.json`, `es.json`, `es-A
 
 Each namespace contains strings for the page title, meta description, section headings, and body text (structured as sub-keys for each content block).
 
-**English content will be the authoritive source; other locales followed existing translation style.**
+**English content will be the authoritative source; other locales followed existing translation style.**
 
 ### 7. Sitemap
 
@@ -158,7 +160,7 @@ All four pages will share a single `legal.module.css` (or inline similar minimal
 ## Validation
 
 1. **Route accessibility:**
-   - Navigate to `/en/terms`, `/en/privacy`, `/en/dmca`, `/en/contact` (and Spanish equivalents) — each renders without 404.
+   - Navigate to `/en/terminos`, `/en/privacidad`, `/en/dmca`, `/en/contacto` — each renders without 404.
 2. **Layout consistency:**
    - Each page includes `<Nav />` and `<Footer />`, matches the visual style of other content pages.
 3. **i18n:**
