@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { MemeListingGrid, type Meme } from "@openmeme/ui";
 
 type Props = {
@@ -18,7 +18,15 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export function ShuffledMemeGrid({ memes, ariaLabel }: Props) {
-  const shuffled = useMemo(() => shuffle(memes), [memes]);
+  const [shuffled, setShuffled] = useState<Meme[] | null>(null);
+
+  useEffect(() => {
+    setShuffled(shuffle(memes));
+  }, [memes]);
+
+  if (!shuffled) {
+    return <MemeListingGrid memes={memes} ariaLabel={ariaLabel} priorityCount={5} />;
+  }
 
   return <MemeListingGrid memes={shuffled} ariaLabel={ariaLabel} priorityCount={5} />;
 }
