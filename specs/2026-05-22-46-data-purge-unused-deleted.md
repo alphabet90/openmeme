@@ -55,10 +55,10 @@ Scanned MDX frontmatter is the single source of truth. After all MDX files are p
 
 ### 4.2 Purge Pass
 
-Introduce a **category purge pass** that runs at the end of every indexing job (both full and incremental reindex workflows):
+Introduce a **category purge pass** that runs at the end of a comprehensive reindex (both full and incremental reindex workflows, but NOT single-meme admin API requests):
 
 1. **Timing**: Run after all MDX files are parsed and upserted so that live categories are never accidentally purged due to race conditions or transient filesystem errors.
-2. **Detection**: Collect the set of distinct `categorySlug` values from all scanned MDX frontmatter. Query `categories.slug` and mark for deletion any category whose slug is not in that set.
+2. **Detection**: Collect the union of distinct slug values from all scanned MDX sources — `MemeUpsert.categorySlug()` from `scanMdxFiles()` and `CategoryUpsert.slug()` from `scanCategoryMdxFiles()`. Query `categories.slug` and mark for deletion any category whose slug is not in that set.
 3. **Cascade deletion**: Deleting a category must cascade to:
    - All `memes` rows referencing that `category_id` — the FK `memes.category_id → categories.id` is `ON DELETE RESTRICT`, so memes must be explicitly deleted first inside the same transaction.
    - All dependent rows (`meme_images`, `meme_tags`, translations, etc.) cascade automatically on meme deletion via existing `ON DELETE CASCADE` rules.
@@ -71,11 +71,12 @@ Introduce a **category purge pass** that runs at the end of every indexing job (
 - **Purge runs after upserts**: This prevents a transient missing folder (e.g., due to a partially checked-out branch) from wiping legitimate data. The indexer must finish parsing all live files first, then evaluate deletions.
 - **Hard delete, not soft delete**: Orphan categories and memes have no value once the folder is gone. Soft-deleting would require adding `deleted_at` filters to every query path (search, category listing, related memes, sitemap, etc.) and complicates the unique constraints. Since the folder is gone forever, a hard delete is the simpler and correct model.
 - **Explicit meme deletion before category deletion**: The FK `memes.category_id → categories.id` is `ON DELETE RESTRICT`, not CASCADE. Memes referencing orphan categories must be deleted explicitly before deleting the category. The downstream FKs (`meme_images`, `meme_tags`, etc.) do cascade `ON DELETE CASCADE` on meme deletion, so deleting memes cleans up their dependents automatically.
+- **Purge runs before stats and cache invalidation**: Insert the purge pass in `reindex()` before `refreshStats()` and `invalidateCaches()`, so that materialized views (`category_counts`, `stats_snapshot`) and Redis caches never contain stale orphan counts.
 - **Logging/observability**: Emit structured logs (or return a summary payload) listing every deleted category and the count of memes removed. This makes the purge auditable.
 
 ### 4.4 Scope Boundary for V1
 
-Only purge categories whose slug is not referenced by any scanned MDX file. Do not attempt to merge memes across renamed categories or resolve slug conflicts manually; the indexer will naturally recreate memes under the new category name on the next run.
+Only purge categories whose slug is not referenced by any scanned MDX file. Single-meme reindex requests (`indexSingle()`) do not trigger the purge pass. Do not attempt to merge memes across renamed categories or resolve slug conflicts manually; the indexer will naturally recreate memes under the new category name on the next run.
 
 ---
 
@@ -88,6 +89,7 @@ Only purge categories whose slug is not referenced by any scanned MDX file. Do n
 | `apps/api/src/test/java/.../IndexerServiceTest.java` | Unit tests for purge logic |
 | `apps/api/src/test/java/.../MemeRepositoryTest.java` | Integration tests for cascade deletion |
 | `AGENTS.md` or `docs/` | Document cleanup behavior |
+| `apps/api/src/main/resources/db/migration/V12__grant_delete_permissions.sql` | New Flyway migration: `GRANT DELETE ON memes TO srv_memes; GRANT DELETE ON categories TO srv_memes;` |
 
 ---
 
@@ -95,7 +97,7 @@ Only purge categories whose slug is not referenced by any scanned MDX file. Do n
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|------------|--------|------------|
-| Accidental deletion of live categories due to filesystem race condition | Low | High | Run purge **after** all upserts; transient missing folders will be recreated during upsert phase. |
+| Accidental deletion of live categories due to MDX parse failures | Low | High | Run purge after all upserts; successfully parsed MDX files create their categories before deletion is evaluated. Transient parse errors affect only individual files. |
 | Partial cleanup due to transaction failure | Low | Medium | Wrap entire purge in a single DB transaction; all-or-nothing semantics. |
 | Operator anxiety about destructive phase | Medium | Low | Add `--dry-run` flag in fast-follow PR if needed; V1 relies on unambiguous authority model (MDX frontmatter within the same scan run). |
 | Existing orphan data in production | High | Medium | V1 prevents new orphans; one-off manual cleanup may still be needed for historical drift. |
