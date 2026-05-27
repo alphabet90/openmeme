@@ -406,11 +406,7 @@ public class MemeRepository {
             long id = ((Number) cat.get("id")).longValue();
             String slug = (String) cat.get("slug");
 
-            Long count = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM memes WHERE category_id = ?", Long.class, id);
-            int memeCount = Optional.ofNullable(count).orElse(0L).intValue();
-
-            jdbc.update("DELETE FROM memes WHERE category_id = ?", id);
+            int memeCount = jdbc.update("DELETE FROM memes WHERE category_id = ?", id);
             jdbc.update("DELETE FROM categories WHERE id = ?", id);
 
             deletedMemes += memeCount;

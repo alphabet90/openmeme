@@ -55,6 +55,7 @@ class IndexerServiceTest {
         ReflectionTestUtils.setField(indexerService, "memesRoot", tempDir.toString());
         when(cacheManager.getCache(anyString())).thenReturn(cache);
         when(memeRepository.upsertAll(any())).thenReturn(0);
+        when(memeRepository.findAllCategoryIdsAndSlugs()).thenReturn(List.of());
     }
 
     // ===== V2 format ==========================================================
