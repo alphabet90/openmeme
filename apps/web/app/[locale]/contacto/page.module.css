@@ -1,0 +1,74 @@
+.page {
+  padding-top: var(--nav-height);
+  min-height: 100vh;
+}
+
+.main {
+  padding: var(--space-8) 0 var(--space-12);
+}
+
+.article {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.eyebrow {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent-primary);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.title {
+  font-family: var(--font-display), Impact, sans-serif;
+  font-size: clamp(2rem, 5vw, var(--text-5xl));
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg-primary);
+  margin-bottom: var(--space-4);
+}
+
+.description {
+  font-size: 16px;
+  color: var(--fg-secondary);
+  line-height: var(--leading-relaxed);
+  margin-bottom: var(--space-8);
+}
+
+.contactCard {
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-8);
+}
+
+.contactHeading {
+  font-family: var(--font-display), Impact, sans-serif;
+  font-size: var(--text-xl);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg-primary);
+  margin-bottom: var(--space-3);
+}
+
+.emailLink {
+  display: inline-block;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent-primary);
+  text-decoration: none;
+  margin-bottom: var(--space-3);
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.emailLink:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.responseTime {
+  font-size: 14px;
+  color: var(--fg-muted);
+}
