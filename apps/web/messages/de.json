@@ -164,5 +164,15 @@
     "no_results_title": "Keine Ergebnisse für \"{q}\"",
     "no_results_desc": "Versuchen Sie andere Schlüsselwörter oder durchsuchen Sie die Kategorien.",
     "cta_categories": "Kategorien durchsuchen"
+  },
+  "subir": {
+    "meta_title": "Meme hochladen",
+    "meta_description": "Lade deine eigenen Memes auf {siteName} hoch. Bald verfügbar — sei der Erste, der deine Memes mit der Community teilt.",
+    "og_title": "Meme hochladen · {siteName}",
+    "og_description": "Lade deine eigenen Memes auf {siteName} hoch. Bald verfügbar.",
+    "breadcrumb_inicio": "Startseite",
+    "breadcrumb_subir": "Hochladen",
+    "coming_soon_title": "Bald Verfügbar",
+    "coming_soon_desc": "Die Möglichkeit, eigene Memes hochzuladen, wird bald auf {siteName} verfügbar sein. Bleib dran."
   }
 }

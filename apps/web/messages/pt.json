@@ -164,5 +164,15 @@
     "no_results_title": "Sem resultados para \"{q}\"",
     "no_results_desc": "Tente palavras diferentes ou explore as categorias.",
     "cta_categories": "Explorar categorias"
+  },
+  "subir": {
+    "meta_title": "Enviar um Meme",
+    "meta_description": "Envie seus próprios memes para o {siteName}. Em breve — seja o primeiro a compartilhar seus memes com a comunidade.",
+    "og_title": "Enviar um Meme · {siteName}",
+    "og_description": "Envie seus próprios memes para o {siteName}. Em breve.",
+    "breadcrumb_inicio": "Início",
+    "breadcrumb_subir": "Enviar",
+    "coming_soon_title": "Em Breve",
+    "coming_soon_desc": "A possibilidade de enviar seus próprios memes estará disponível em breve no {siteName}. Fique ligado nas novidades."
   }
 }

@@ -164,5 +164,15 @@
     "no_results_title": "لا نتائج لـ \"{q}\"",
     "no_results_desc": "جرب كلمات أخرى أو تصفح الفئات.",
     "cta_categories": "استكشاف الفئات"
+  },
+  "subir": {
+    "meta_title": "رفع ميم",
+    "meta_description": "ارفع الميمات الخاصة بك إلى {siteName}. قريبًا — كن أول من يشارك الميمات مع المجتمع.",
+    "og_title": "رفع ميم · {siteName}",
+    "og_description": "ارفع الميمات الخاصة بك إلى {siteName}. قريبًا.",
+    "breadcrumb_inicio": "الرئيسية",
+    "breadcrumb_subir": "رفع",
+    "coming_soon_title": "قريبًا",
+    "coming_soon_desc": "إمكانية رفع الميمات الخاصة بك ستكون متاحة قريبًا على {siteName}. ترقبوا التحديثات."
   }
 }

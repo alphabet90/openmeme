@@ -164,5 +164,15 @@
     "no_results_title": "Aucun résultat pour \"{q}\"",
     "no_results_desc": "Essayez d'autres mots-clés ou explorez les catégories.",
     "cta_categories": "Explorer les catégories"
+  },
+  "subir": {
+    "meta_title": "Partager un Mème",
+    "meta_description": "Partagez vos propres mèmes sur {siteName}. Bientôt disponible — soyez le premier à partager vos mèmes avec la communauté.",
+    "og_title": "Partager un Mème · {siteName}",
+    "og_description": "Partagez vos propres mèmes sur {siteName}. Bientôt disponible.",
+    "breadcrumb_inicio": "Accueil",
+    "breadcrumb_subir": "Partager",
+    "coming_soon_title": "Bientôt Disponible",
+    "coming_soon_desc": "La possibilité de partager vos propres mèmes arrive bientôt sur {siteName}. Restez à l'écoute."
   }
 }

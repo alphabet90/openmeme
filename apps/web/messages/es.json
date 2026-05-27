@@ -164,5 +164,15 @@
     "no_results_title": "Sin resultados para \"{q}\"",
     "no_results_desc": "Prueba con otras palabras o explora las categorías.",
     "cta_categories": "Explorar categorías"
+  },
+  "subir": {
+    "meta_title": "Subir un Meme",
+    "meta_description": "Sube tus propios memes a {siteName}. Próximamente — sé el primero en compartir tus memes con la comunidad.",
+    "og_title": "Subir un Meme · {siteName}",
+    "og_description": "Sube tus propios memes a {siteName}. Próximamente.",
+    "breadcrumb_inicio": "Inicio",
+    "breadcrumb_subir": "Subir",
+    "coming_soon_title": "Próximamente",
+    "coming_soon_desc": "La posibilidad de subir tus propios memes estará disponible pronto en {siteName}. Estate atento a las novedades."
   }
 }

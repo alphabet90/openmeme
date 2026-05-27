@@ -24,6 +24,7 @@ export default async function sitemap(
     { url: `${base}/categorias`,  lastModified: now, changeFrequency: "weekly",  priority: 0.8 },
     { url: `${base}/buscar`,      lastModified: now, changeFrequency: "monthly", priority: 0.4 },
     { url: `${base}/memes/populares`, lastModified: now, changeFrequency: "daily", priority: 0.7 },
+    { url: `${base}/subir`,         lastModified: now, changeFrequency: "monthly", priority: 0.5 },
   ];
 
   let categoryEntries: MetadataRoute.Sitemap = [];
