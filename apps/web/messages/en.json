@@ -164,5 +164,18 @@
     "no_results_title": "No results for \"{q}\"",
     "no_results_desc": "Try different keywords or browse categories.",
     "cta_categories": "Browse categories"
+  },
+  "upload": {
+    "meta_title": "Upload Memes — Coming Soon",
+    "meta_description": "The meme upload feature is coming soon to {siteName}. Be the first to know when you can share your own memes.",
+    "og_title": "Upload Memes · {siteName}",
+    "og_description": "The meme upload feature is coming soon.",
+    "breadcrumb_inicio": "Home",
+    "breadcrumb_subir": "Upload",
+    "eyebrow": "Coming Soon",
+    "title": "Upload Your Memes",
+    "description": "We are building something exciting. Soon you will be able to share your own memes with the community.",
+    "notified_label": "Want to be notified when uploads go live?",
+    "notified_cta": "Get notified"
   }
 }
