@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+      NEXT_PUBLIC_MEMES_API_URL: ${{ secrets.NEXT_PUBLIC_MEMES_API_URL }}
+      NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
