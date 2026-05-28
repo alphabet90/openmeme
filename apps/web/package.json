@@ -4,13 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "build": "opennext build",
+    "build:next": "next build",
+    "deploy": "wrangler deploy",
+    "preview": "opennext build && wrangler preview",
+    "lint": "eslint",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv"
   },
   "dependencies": {
     "@openmeme/ui": "workspace:*",
-    "@trieb.work/nextjs-turbo-redis-cache": "^1.0.0",
     "next": "16.2.4",
     "next-intl": "^4.11.0",
     "posthog-js": "^1.257.0",
@@ -18,6 +20,7 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.19.11",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -25,6 +28,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.95.0"
   }
 }
