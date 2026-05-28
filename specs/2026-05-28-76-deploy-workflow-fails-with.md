@@ -10,7 +10,7 @@
 
 ## 1. Problem
 
-The **Deploy Web** GitHub Actions workflow (`deploy-web.yml`) fails on `main` due to an infinite build recursion that exhausts the runner's memory and triggers the OOM killer (SIGTERM / exit code 137). This blocks all production deployments for the web app.
+The proposed **Deploy Web** GitHub Actions workflow (`deploy-web.yml`), introduced during the Cloudflare migration on a feature branch, fails due to an infinite build recursion that exhausts the runner's memory and triggers the OOM killer (SIGTERM / exit code 137). This blocks all production deployments for the web app.
 
 ### Root Cause
 
@@ -51,11 +51,16 @@ Error: Command failed: pnpm build
 1. Resolve the infinite build recursion so the Deploy Web workflow completes successfully.
 2. Ensure the Cloudflare Workers deploy step receives the correct build output.
 3. Keep the developer experience intact — local builds and other CI workflows must not break.
-4. Add a safeguard (timeout or recursive-call detection) to prevent recurrence if the team keeps using the `opennextjs-cloudflare` CLI.
 
 ---
 
-## 3. Non-Goals
+## 3. Fast-Follow / Future Work
+
+- **Recursion safeguard**: Add a timeout or recursive-call detection to prevent recurrence if the team keeps using the `opennextjs-cloudflare` CLI. This is tracked in Approach 5.3 as an optional fast-follow item.
+
+---
+
+## 4. Non-Goals
 
 - Migrating away from Cloudflare Workers as a deployment target.
 - Adding a full staging/preview environment (can be addressed separately).
@@ -64,9 +69,9 @@ Error: Command failed: pnpm build
 
 ---
 
-## 4. Approach
+## 5. Approach
 
-### 4.1 Fix `apps/web/package.json` — Break the Circular Dependency
+### 5.1 Fix `apps/web/package.json` — Break the Circular Dependency
 
 The `build` script must be changed to invoke `next build` directly, not the adapter CLI. The adapter wrapper is moved to a separate `build:cf` script for local testing:
 
@@ -77,7 +82,7 @@ The `build` script must be changed to invoke `next build` directly, not the adap
 
 This breaks the cycle because `next build` produces the standard Next.js output without re-invoking `pnpm build`.
 
-### 4.2 Create/Update `.github/workflows/deploy-web.yml`
+### 5.2 Create/Update `.github/workflows/deploy-web.yml`
 
 The deploy workflow must not call `pnpm build` (which would now be `next build`) and then call the adapter separately. Instead:
 
@@ -89,6 +94,7 @@ The deploy workflow must not call `pnpm build` (which would now be `next build`)
 name: Deploy Web
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -123,7 +129,7 @@ jobs:
         # Runs "next build" — no circular dependency.
 
       - name: Build Cloudflare adapter bundle
-        run: npx opennextjs-cloudflare build
+        run: pnpm exec opennextjs-cloudflare build
         # Transforms .next output into the Workers-compatible bundle.
 
       - name: Deploy to Cloudflare Workers
@@ -135,11 +141,11 @@ jobs:
 
 **Key design decisions:**
 
-- The adapter is invoked via `npx` (or as a dev dependency in `apps/web`) rather than as a `build` script, ensuring it runs exactly once.
+- The adapter is invoked via `pnpm exec` (which uses the locally installed devDependency `@opennextjs/cloudflare`) rather than as a `build` script, ensuring it runs exactly once with the pinned version.
 - The timeout is set to 15 minutes, well above the expected build time (~3 minutes), so the OOM scenario is prevented by recursion elimination rather than a timeout guard.
 - The working directory is `apps/web` so that `wrangler.toml` (if present) is found automatically.
 
-### 4.3 Add Recursion Safeguard (Fast-Follow)
+### 5.3 Add Recursion Safeguard (Fast-Follow)
 
 If the team wants to keep using `opennextjs-cloudflare build` as the primary build command, add a guard script that detects recursive invocation:
 
@@ -153,13 +159,13 @@ If the team wants to keep using `opennextjs-cloudflare build` as the primary bui
 
 This is a fast-follow item (Acceptance Criteria checkbox) and is optional for the main fix.
 
-### 4.4 Verify Build Output
+### 5.4 Verify Build Output
 
 The `next build` output goes to `.next/`. The `opennextjs-cloudflare build` step reads `.next/` and produces the Cloudflare Workers bundle. The `wrangler-action` deploy step reads that bundle. No additional configuration changes are needed if `wrangler.toml` exists and points to the correct output directory.
 
 ---
 
-## 5. Affected Components
+## 6. Affected Components
 
 | Component | Change |
 |-----------|--------|
@@ -170,7 +176,7 @@ The `next build` output goes to `.next/`. The `opennextjs-cloudflare build` step
 
 ---
 
-## 6. Risks & Mitigations
+## 7. Risks & Mitigations
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|------------|--------|------------|
@@ -181,9 +187,9 @@ The `next build` output goes to `.next/`. The `opennextjs-cloudflare build` step
 
 ---
 
-## 7. Validation
+## 8. Validation
 
-### 7.1 Local Build Verification
+### 8.1 Local Build Verification
 
 ```bash
 cd apps/web
@@ -191,7 +197,7 @@ pnpm build                  # Must run "next build" without recursion
 pnpm build:cf               # Must run "opennextjs-cloudflare build" successfully
 ```
 
-### 7.2 CI Simulation
+### 8.2 CI Simulation
 
 The workflow must be tested by pushing to a non-`main` branch and manually triggering the workflow (or using `workflow_dispatch`), verifying:
 
@@ -199,33 +205,39 @@ The workflow must be tested by pushing to a non-`main` branch and manually trigg
 - The `opennextjs-cloudflare build` step exits 0.
 - The full job completes within the 15-minute timeout.
 
-### 7.3 Dry-Run Deploy
+### 8.3 Dry-Run Deploy
 
 Use `wrangler-action` with `command: 'deploy --dry-run'` (or equivalent) to verify the deploy step would succeed without actually deploying.
 
-### 7.4 Regression Checks
+### 8.4 Regression Checks
 
 - `pnpm dev` still starts the Next.js dev server correctly.
 - `pnpm lint` still passes.
 - `pnpm test` in related packages (ui, design-system) still passes.
 
-### 7.5 What NOT to Test
+### 8.5 What NOT to Test
 
 - Do not test extreme memory pressure scenarios beyond standard CI limits (eliminating the recursion is sufficient).
 - Do not test the OpenNext adapter's internal build correctness (it is a third-party tool assumed to work correctly when invoked once).
 
 ---
 
-## 8. Further Notes
+## 9. Further Notes
 
 - **Why not use `opennextjs-cloudflare build` directly?** The adapter internally calls `pnpm build` which is the root cause of the recursion. The fix separates the Next.js build from the adapter transformation.
 - **Why run the adapter as a separate step?** This makes the CI pipeline explicit and debuggable. If the adapter fails, the `.next/` output is still available for inspection from the build step.
 - **Existing workflows unaffected**: The `index-memes.yml` workflow triggers only on `memes/**` changes and does not build the web app, so it is unaffected by this change.
-- **Cloudflare Workers configuration**: If `wrangler.toml` does not exist, it must be created with the appropriate `name`, `compatibility_date`, and `main` entry point pointing to the OpenNext output. This is a pre-requisite for the deploy step.
+- **Cloudflare Workers configuration**: If `wrangler.toml` does not exist, create one with the template below. This is a pre-requisite for the deploy step.
+
+```toml
+name = "openmeme-web"
+compatibility_date = "2026-05-15"
+main = ".opennext/worker"
+```
 
 ---
 
-## 9. User Stories
+## 10. User Stories
 
 1. As a **deploy engineer**, I want the Deploy Web workflow to exit successfully so that production deployments are unblocked.
 2. As a **developer**, I want `pnpm build` in `apps/web` to produce a standard Next.js build without triggering the adapter, so that local development and CI are predictable.
