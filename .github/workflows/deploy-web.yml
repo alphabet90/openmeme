@@ -22,7 +22,7 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @openmeme/web build
+      - run: pnpm --filter @openmeme/web build:worker
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
