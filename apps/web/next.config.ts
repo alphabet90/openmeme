@@ -4,7 +4,6 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig: NextConfig = {
-  output: "standalone",
   images: {
     unoptimized: true,
   },
@@ -48,3 +47,7 @@ const nextConfig: NextConfig = {
 };
 
 export default withNextIntl(nextConfig);
+
+import("@opennextjs/cloudflare")
+  .then(({ initOpenNextCloudflareForDev }) => initOpenNextCloudflareForDev())
+  .catch(() => {});
