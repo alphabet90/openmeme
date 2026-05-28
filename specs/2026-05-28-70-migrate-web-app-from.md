@@ -97,8 +97,8 @@ Key considerations:
 
 | Variable | Scope | Current usage | Cloudflare mapping |
 |----------|-------|---------------|--------------------|
-| `NEXT_PUBLIC_MEMES_API_URL` | Public | `lib/site.ts` -- API base URL | `wrangler secret put NEXT_PUBLIC_MEMES_API_URL` |
-| `NEXT_PUBLIC_POSTHOG_KEY` | Public | `app/providers.tsx` -- PostHog analytics | `wrangler secret put NEXT_PUBLIC_POSTHOG_KEY` |
+| `NEXT_PUBLIC_MEMES_API_URL` | Public | `lib/site.ts` -- API base URL | `wrangler.jsonc [vars]` (build-time inline) |
+| `NEXT_PUBLIC_POSTHOG_KEY` | Public | `app/providers.tsx` -- PostHog analytics | `wrangler.jsonc [vars]` (build-time inline) |
 | `MEMES_API_KEY` | Server | `lib/api.ts` -- API auth header | `wrangler secret put MEMES_API_KEY` |
 | `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` | Server | Server Actions encryption | `wrangler secret put NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` |
 
@@ -184,6 +184,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -199,9 +201,8 @@ jobs:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           workingDirectory: apps/web
           command: deploy
-      - name: Invalidate CDN cache
-        run: npx wrangler deploy --dry-run  # CDN purge handled by wrangler deploy
 ```
+
 
 **Secrets required in GitHub:**
 - `CF_API_TOKEN` -- Cloudflare API token with Workers Deploy permissions.
