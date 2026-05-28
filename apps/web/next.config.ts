@@ -1,25 +1,14 @@
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+
+initOpenNextCloudflareForDev();
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig: NextConfig = {
-  output: "standalone",
   images: {
     unoptimized: true,
-  },
-  async headers() {
-    return [
-      {
-        source: "/:path*{/}?",
-        headers: [
-          {
-            key: "X-Accel-Buffering",
-            value: "no",
-          },
-        ],
-      },
-    ];
   },
 };
 

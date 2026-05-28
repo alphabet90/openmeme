@@ -11,7 +11,7 @@ Single source of truth for AI coding agents working on this repository. OpenMeme
 5. **Design System** (`packages/design-system/`) — Color tokens, typography, components (Refero standard)
 6. **Shared UI** (`packages/ui/`) — React presentational components consumed by the web app
 7. **Java API** (`apps/api/`) — Spring Boot REST API + PostgreSQL + Redis + Flyway
-8. **Next.js Web Client** (`apps/web/`) — React/TypeScript frontend with next-intl i18n
+8. **Next.js Web Client** (`apps/web/`) — React/TypeScript frontend with next-intl i18n, deployed on Cloudflare Workers via @opennextjs/cloudflare
 9. **Meme Collection** (`memes/`) — Git-tracked meme images + MDX metadata
 10. **Skills** (`skills/`) — Reusable AI capabilities: i18n-localizer, meme-classifier, meme-curator
 
@@ -29,7 +29,7 @@ Single source of truth for AI coding agents working on this repository. OpenMeme
 | Shared UI | React 19, TypeScript 5, CSS Modules |
 | API | Java 21, Spring Boot 3.3.4, Maven, PostgreSQL 16, Redis 7, Flyway, Testcontainers |
 | Web | Next.js 16.2.4, React 19, TypeScript 5, Tailwind CSS 4, next-intl, PostHog |
-| DevOps | Docker Compose, GitHub Actions, TurboRepo |
+| DevOps | Docker Compose, GitHub Actions, TurboRepo, Wrangler |
 
 ---
 
@@ -43,12 +43,14 @@ Single source of truth for AI coding agents working on this repository. OpenMeme
 │   │   ├── src/main/resources/ # openapi.yaml, application.yml, Flyway migrations
 │   │   ├── src/test/java/      # JUnit 5 + Testcontainers tests
 │   │   └── Dockerfile          # Multi-stage build
-│   └── web/                    # Next.js frontend
+│   └── web/                    # Next.js frontend (Cloudflare Workers)
 │       ├── app/                # App Router with [locale] segment
 │       ├── components/         # App-specific components
 │       ├── lib/                # API client, data fetchers, SEO utilities
 │       ├── i18n/               # next-intl config
-│       └── messages/           # 7 JSON translation files
+│       ├── messages/           # 7 JSON translation files
+│       ├── wrangler.jsonc      # Cloudflare Workers config
+│       └── open-next.config.ts # OpenNext Cloudflare adapter config
 ├── packages/
 │   ├── scraper/                # Core scraper pipeline (TypeScript)
 │   │   ├── src/                # scraper, downloader, classifier, saver, pipeline, bloom, validator
@@ -179,6 +181,10 @@ pnpm dev                     # Next.js dev server
 pnpm build                   # Production build
 pnpm start                   # Production start
 pnpm lint                    # ESLint
+pnpm build:worker            # Build for Cloudflare Workers via OpenNext
+pnpm preview:worker          # Preview worker locally
+pnpm deploy                  # Build + deploy to Cloudflare Workers
+pnpm cf-typegen              # Generate Cloudflare env types
 ```
 
 ### Docker Compose (full stack)
@@ -245,7 +251,7 @@ docker-compose up            # Postgres 16 + Redis 7 + API
 | Component | Method |
 |-----------|--------|
 | API | Docker multi-stage → Railway/Render |
-| Web | Static export or Node.js → Vercel |
+| Web | Static export or Node.js → Cloudflare Workers |
 | CDN | Cloudflare Worker for meme images |
 | CI | GitHub Actions reindexes memes on push to `main` |
 
