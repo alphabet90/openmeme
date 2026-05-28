@@ -86,6 +86,14 @@ The exact invocation order must be confirmed by testing (see Risks section). The
 - `wrangler deploy` or `wrangler publish` step after the build.
 - Appropriate caching for `node_modules`, `.next`, and `.open-next`.
 
+**Cloudflare Workers configuration requirements:**
+
+The deploy workflow expects the following assets and secrets:
+
+- **`wrangler.toml`** — Located at `apps/web/wrangler.toml`. Should define `routes`, `zones`, `compatibility_flags`, and `compatibility_date`. Refer to the `@opennextjs/cloudflare` adapter docs for the specific `compatibility_date` and `compatibility_flags` required.
+- **Required secrets** — The workflow needs `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` set as GitHub Actions secrets (or repository variables). Follow the existing secrets convention documented in AGENTS.md and `.env.example`.
+- **Secret management** — Secrets are sourced from GitHub Actions secrets and passed to `wrangler deploy` via `--var` or environment injection. For local development, developers authenticate via `wrangler login`.
+
 ### 4.3 Platform-Specific Configuration
 
 Next.js configuration may diverge between platforms. Extract platform-specific overrides:
@@ -113,10 +121,16 @@ next.config.cloudflare.ts # Cloudflare overrides
 
 The workflow selects the right config via `NEXT_CONFIG_FILE` or by passing `--config` to the build command (if the adapter supports it). For V1, a single config with `process.env` branching is preferred for simplicity.
 
+**Concrete config items requiring platform awareness:**
+
+1. **`output: "standalone"`** — The current `next.config.ts` on `main` sets `output: "standalone"`, which produces a Node.js standalone server artifact. On Cloudflare Workers (workerd runtime), this output format is likely incompatible. The platform-aware branching should conditionally set `output: "standalone"` only on Vercel, drop it on Cloudflare, or rely on the adapter to handle the wrapping. Confirm with `@opennextjs/cloudflare` documentation.
+
+2. **`@trieb.work/nextjs-turbo-redis-cache`** — This package is in `apps/web/package.json` dependencies and is used for ISR caching. Cloudflare Workers cannot establish direct TCP connections to an external Redis instance, so this cache adapter would fail at runtime on Cloudflare. Mitigation options: conditionally exclude or replace with Cloudflare KV in the platform branch, or mark as Vercel-only and skip ISR caching on Cloudflare.
+
 ### 4.4 Exclude Platform-Specific Dependencies
 
 - **Vercel deps**: `@vercel/analytics`, `@vercel/speed-insights` — keep in `dependencies`; no issue if absent on Cloudflare.
-- **Cloudflare deps**: `wrangler`, `@opennextjs/cloudflare` — add to `devDependencies`; won't be installed on Vercel because Vercel only runs `pnpm install --prod` or uses its own build container with selective installs.
+- **Cloudflare deps**: `wrangler`, `@opennextjs/cloudflare` — add to `devDependencies`. Vercel's build container installs all dependencies including devDeps by default, so these packages will be present on Vercel but harmless. If build time is a concern, use `.npmrc` exclusions or conditional install as described below.
 
 If Vercel's build container installs all `devDependencies` by default, add an `.npmrc` or `pnpm-workspace.yaml` exclusion:
 
@@ -174,8 +188,8 @@ No custom `buildCommand` is needed if the monorepo root's `turbo.json` correctly
 |------|------------|--------|------------|
 | `@opennextjs/cloudflare` calls `pnpm build` internally, re-triggering recursion if not renamed to `build:cf` | Medium | High | Rename `build` to `next build`; keep `build:cf` as the adapter script; verify adapter does not invoke `pnpm build:cf`. |
 | Output directory conflict (`.next` vs `.open-next`) pollutes build cache | Low | Medium | Add `.open-next/` to `.gitignore`; configure CI cache keys to separate `.next` and `.open-next`. |
-| Vercel installs `@opennextjs/cloudflare` unnecessarily, increasing build time | Medium | Low | Move to `devDependencies`; Vercel skips devDeps in production installs. If still installed, use `.npmrc` exclusions or conditional install in workflow. |
-| Runtime behavior differs between Vercel (Node.js) and Cloudflare (Workers/Edge) | Medium | High | Add smoke tests that run against the deployed Cloudflare Worker; use feature flags to disable incompatible features on Cloudflare. |
+| Vercel installs `@opennextjs/cloudflare` unnecessarily, increasing build time | Medium | Low | Move to `devDependencies`; Vercel installs all deps including devDeps by default during build. If build time is a concern, use `.npmrc` exclusions or conditional install in workflow. |
+| `@trieb.work/nextjs-turbo-redis-cache` incompatible with Cloudflare Workers runtime (no direct TCP to Redis) | High | High | Add platform-aware branching to exclude or replace with Cloudflare KV when running on Cloudflare; mark as Vercel-only. |
 | `turbo.json` pipeline order causes unexpected `build:cf` execution | Low | Medium | Do not add `build:cf` to the `turbo.json` pipeline — only invoke it explicitly in the deploy workflow. |
 
 ### Open Question: Build Order
