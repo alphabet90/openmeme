@@ -12,5 +12,9 @@
   ],
   "observability": {
     "enabled": true
+  },
+  "vars": {
+    "NEXT_PUBLIC_MEMES_API_URL": "https://api.openmeme.io",
+    "NEXT_PUBLIC_POSTHOG_KEY": "your_posthog_key"
   }
 }
