@@ -178,7 +178,7 @@ mvn generate-sources         # Regenerate API stubs from openapi.yaml
 ```bash
 cd apps/web
 pnpm dev                     # Next.js dev server
-pnpm build                   # OpenNext Cloudflare build
+pnpm build                   # Next.js build (use build:worker for Cloudflare)
 pnpm start                   # wrangler dev (local worker simulator)
 pnpm deploy                  # wrangler deploy (Cloudflare Workers)
 pnpm lint                    # ESLint
