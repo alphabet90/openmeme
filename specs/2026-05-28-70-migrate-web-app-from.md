@@ -12,7 +12,7 @@
 
 ## Problem
 
-The OpenMeme web app (`apps/web/`) is a **Next.js 16.2.4** application currently deployed on **Vercel**. This incurs unnecessary hosting costs and does not leverage our existing Cloudflare edge infrastructure (memes are already served via Cloudflare). The packages `@opennextjs/cloudflare` (^1.19.11) and `wrangler` (^4.95.0) already exist in our devDependencies but are unused, indicating the migration was planned but never completed.
+The OpenMeme web app (`apps/web/`) is a **Next.js 16.2.4** application currently deployed on **Vercel**. This incurs unnecessary hosting costs and does not leverage our existing Cloudflare edge infrastructure (memes are already served via Cloudflare). The packages `@opennextjs/cloudflare` (^1.19.11) and `wrangler` (^4.95.0) must be added as devDependencies. These packages are not currently installed, indicating the migration was planned but never completed.
 
 ## Goals
 
@@ -43,6 +43,7 @@ Based on the [playground16 example](https://github.com/opennextjs/opennextjs-clo
 ```jsonc
 {
   "name": "openmeme-web",
+  "account_id": "$CLOUDFLARE_ACCOUNT_ID",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-05-28",
   "compatibility_flags": ["nodejs_compat"],
@@ -90,7 +91,7 @@ Key considerations:
 - `build` now uses the OpenNext Cloudflare adapter instead of raw `next build`.
 - `start` runs the local Workers simulator via `wrangler dev`.
 - `deploy` pushes to Cloudflare Workers.
-- Add `@opennextjs/cloudflare` and `wrangler` as devDependencies (or confirm they exist in the workspace root).
+- Add `@opennextjs/cloudflare` and `wrangler` as devDependencies (these packages are not currently installed).
 
 ### 4. Environment variables mapping
 
@@ -204,7 +205,7 @@ jobs:
 
 **Secrets required in GitHub:**
 - `CF_API_TOKEN` -- Cloudflare API token with Workers Deploy permissions.
-- `CF_ACCOUNT_ID` -- Cloudflare account ID (or read from `wrangler.jsonc`).
+- `CF_ACCOUNT_ID` -- Cloudflare account ID (injected via GitHub Actions `env` block; referenced as `$CLOUDFLARE_ACCOUNT_ID` in `wrangler.jsonc`).
 
 ### 10. Remove Vercel-specific files
 
@@ -265,7 +266,8 @@ jobs:
 - `apps/web/middleware.ts` -- Update matcher regex (remove `_vercel`)
 - `apps/web/Dockerfile` -- Keep or note as secondary deployment path
 - `.github/workflows/deploy-web.yml` -- New file (Cloudflare deployment workflow)
-- `apps/web/.env.example` -- Updated with notes on Cloudflare var mapping
+- `apps/web/.env.example` -- Created with notes on Cloudflare var mapping
+- `turbo.json` -- Update build outputs to include `.open-next/**`
 - `AGENTS.md` -- Updated build/deploy commands
 
 ## Definition of Done
@@ -274,6 +276,8 @@ jobs:
 - [ ] `wrangler.jsonc` exists and correctly configured.
 - [ ] All 4 env vars mapped and working as Cloudflare secrets/vars.
 - [ ] `@trieb.work/nextjs-turbo-redis-cache` removed, `cache-handler.js` deleted.
+- [ ] `next.config.ts` verified to have no `cacheHandler` reference.
+- [ ] `turbo.json` build outputs updated to include `.open-next/**`.
 - [ ] Middleware matcher updated (no `_vercel` references).
 - [ ] No Node.js built-in compatibility errors in build output.
 - [ ] Locale switching works for all 7 locales in worker environment.
