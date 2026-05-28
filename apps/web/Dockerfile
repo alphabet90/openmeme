@@ -56,9 +56,12 @@ RUN pnpm turbo run build --filter=@openmeme/web...
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+ENV NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=""
+ENV MEMES_API_KEY=""
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=8080
+EXPOSE 3000
+ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Create non-root user
@@ -68,19 +71,13 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Copy standalone output (includes only runtime deps)
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
-#COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public* ./apps/web/public
-
 
 USER nextjs
 
-EXPOSE 8080
+EXPOSE 3000
 
 # Health check for zero-downtime deployments
 HEALTHCHECK --interval=12s --timeout=12s --start-period=5s \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080 || exit 1
-
-# Runtime environment variables (must be provided at runtime)
-ENV NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=""
-ENV MEMES_API_KEY=""
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
 
 CMD ["node", "apps/web/server.js"]
