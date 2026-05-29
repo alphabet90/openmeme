@@ -88,7 +88,13 @@ Check all `.github/workflows/*.yml` files for any other usage of these four acti
 
 1. **Dry-run the workflow change:** Submit a PR with the version bumps and verify the `deploy-web` workflow runs without Node.js 20 deprecation warnings.
 2. **Verify deployment succeeds:** Confirm the workflow completes successfully and the web app is deployed to Cloudflare Workers.
-3. **Check for other workflows:** Run a grep for `@v4` (for the four action names) across `.github/workflows/` to catch any other files needing updates.
+3. **Check for other workflows:** Run a grep for the four action names directly (works regardless of current version tag):
+
+    ```bash
+    grep -E 'actions/(checkout|setup-node)|pnpm/action-setup|cloudflare/wrangler-action' .github/workflows/*.yml
+    ```
+
+    Also consider `grep -rn 'node20' .github/workflows/` as a more exhaustive check for any action running on the deprecated Node 20 runtime.
 4. **Check `index-memes.yml`:** Ensure it still runs successfully after the `checkout@v6` bump.
 
 ## Affected Files
