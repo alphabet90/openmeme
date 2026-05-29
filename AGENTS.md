@@ -178,7 +178,8 @@ mvn generate-sources         # Regenerate API stubs from openapi.yaml
 ```bash
 cd apps/web
 pnpm dev                     # Next.js dev server
-pnpm build                   # OpenNext Cloudflare build
+pnpm build                   # Standard Next.js build (Vercel, local)
+pnpm build:cf                # OpenNext Cloudflare build (production)
 pnpm start                   # wrangler dev (local worker simulator)
 pnpm deploy                  # wrangler deploy (Cloudflare Workers)
 pnpm lint                    # ESLint
@@ -248,7 +249,8 @@ docker-compose up            # Postgres 16 + Redis 7 + API
 | Component | Method |
 |-----------|--------|
 | API | Docker multi-stage → Railway/Render |
-| Web | @opennextjs/cloudflare → Cloudflare Workers (via wrangler) |
+| Web (production) | @opennextjs/cloudflare → Cloudflare Workers (via wrangler) |
+| Web (preview/staging) | Standard `next build` → Vercel |
 | CDN | Cloudflare Worker for meme images |
 | CI | GitHub Actions reindexes memes on push to `main` |
 
@@ -263,9 +265,11 @@ docker-compose up            # Postgres 16 + Redis 7 + API
 
 **.github/workflows/deploy-web.yml** — triggers on pushes to `main` that change `apps/web/**`, `packages/ui/**`, or `packages/design-system/**`:
 1. Installs dependencies with pnpm
-2. Builds the Next.js app with the OpenNext Cloudflare adapter
+2. Builds with `build:cf` (OpenNext Cloudflare adapter — wraps `next build`)
 3. Deploys to Cloudflare Workers via `wrangler deploy`
 4. Requires secrets: `CF_API_TOKEN`, `CF_ACCOUNT_ID`
+
+> **Dual-target build strategy:** `pnpm build` runs the standard `next build` for Vercel previews/staging. `pnpm build:cf` runs `opennextjs-cloudflare build` for Cloudflare production. No manual steps needed when switching contexts — Vercel auto-detects `build` as its script, and the GitHub Actions workflow calls `build:cf` explicitly.
 
 ---
 
