@@ -178,11 +178,14 @@ mvn generate-sources         # Regenerate API stubs from openapi.yaml
 ```bash
 cd apps/web
 pnpm dev                     # Next.js dev server
-pnpm build                   # OpenNext Cloudflare build
+pnpm build                   # Standard Next.js build (Vercel/local)
+pnpm build:cf                # @opennextjs/cloudflare build (Cloudflare Workers)
 pnpm start                   # wrangler dev (local worker simulator)
 pnpm deploy                  # wrangler deploy (Cloudflare Workers)
 pnpm lint                    # ESLint
 ```
+
+> **Dual-target build strategy:** The default `build` script runs `next build` (standard Next.js), suitable for Vercel deployments and local development. For Cloudflare Workers production builds, use `build:cf` which runs `opennextjs-cloudflare build` — this internally invokes `next build` then wraps the output for the Cloudflare Workers runtime. See CI/CD details below for how each platform invokes the correct build command.
 
 ### Docker Compose (full stack)
 ```bash
@@ -263,9 +266,11 @@ docker-compose up            # Postgres 16 + Redis 7 + API
 
 **.github/workflows/deploy-web.yml** — triggers on pushes to `main` that change `apps/web/**`, `packages/ui/**`, or `packages/design-system/**`:
 1. Installs dependencies with pnpm
-2. Builds the Next.js app with the OpenNext Cloudflare adapter
+2. Builds the Next.js app with the OpenNext Cloudflare adapter via `pnpm build:cf`
 3. Deploys to Cloudflare Workers via `wrangler deploy`
 4. Requires secrets: `CF_API_TOKEN`, `CF_ACCOUNT_ID`
+
+> **Dual-target note:** Vercel previews/staging use the default `pnpm build` (`next build`), while Cloudflare production builds use `pnpm build:cf` (`opennextjs-cloudflare build`). This avoids the recursive build trap that occurs when `opennextjs-cloudflare build` is aliased to `build` (it internally calls `pnpm build`, causing a loop).
 
 ---
 
