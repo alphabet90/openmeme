@@ -178,7 +178,8 @@ mvn generate-sources         # Regenerate API stubs from openapi.yaml
 ```bash
 cd apps/web
 pnpm dev                     # Next.js dev server
-pnpm build                   # OpenNext Cloudflare build
+pnpm build                   # Standard Next.js build (used by Vercel previews/staging)
+pnpm build:cf                # OpenNext Cloudflare build (used for Cloudflare Workers production)
 pnpm start                   # wrangler dev (local worker simulator)
 pnpm deploy                  # wrangler deploy (Cloudflare Workers)
 pnpm lint                    # ESLint
@@ -248,7 +249,7 @@ docker-compose up            # Postgres 16 + Redis 7 + API
 | Component | Method |
 |-----------|--------|
 | API | Docker multi-stage → Railway/Render |
-| Web | @opennextjs/cloudflare → Cloudflare Workers (via wrangler) |
+| Web | **Dual-target**: Vercel (previews/staging) + @opennextjs/cloudflare → Cloudflare Workers (production) |
 | CDN | Cloudflare Worker for meme images |
 | CI | GitHub Actions reindexes memes on push to `main` |
 
@@ -263,9 +264,28 @@ docker-compose up            # Postgres 16 + Redis 7 + API
 
 **.github/workflows/deploy-web.yml** — triggers on pushes to `main` that change `apps/web/**`, `packages/ui/**`, or `packages/design-system/**`:
 1. Installs dependencies with pnpm
-2. Builds the Next.js app with the OpenNext Cloudflare adapter
+2. Builds with `pnpm build:cf` (OpenNext Cloudflare adapter, which internally wraps `next build`)
 3. Deploys to Cloudflare Workers via `wrangler deploy`
 4. Requires secrets: `CF_API_TOKEN`, `CF_ACCOUNT_ID`
+
+### Dual-Target Build Strategy
+
+The web client supports two deployment targets:
+
+| Platform | Build Command | Purpose |
+|----------|--------------|---------|
+| **Vercel** | `pnpm build` → `next build` | Previews, staging, branch deployments |
+| **Cloudflare Workers** | `pnpm build:cf` → `opennextjs-cloudflare build` | Production (via GitHub Actions) |
+
+**Why two commands?** `@opennextjs/cloudflare build` internally shells out to execute the `build` script. If `build` is aliased to `opennextjs-cloudflare build`, it creates an infinite recursion. By separating them:
+- `build` runs `next build` directly (Vercel-native, no recursion).
+- `build:cf` explicitly invokes the Cloudflare adapter, which in turn runs `next build` internally to produce both `.next/` and `.open-next/` output directories.
+
+**Key points:**
+- Vercel automatically runs the package `build` script → gets standard `next build`.
+- GitHub Actions uses `build:cf` for Cloudflare Workers production deploys.
+- No manual code changes needed when switching between targets.
+- `turbo.json` outputs already include both `.next/**` and `.open-next/**` for cache compatibility.
 
 ---
 
