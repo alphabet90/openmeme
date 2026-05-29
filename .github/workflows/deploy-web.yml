@@ -22,7 +22,7 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @openmeme/web build
+      - run: pnpm --filter @openmeme/web build:cf
         env:
           NEXT_PUBLIC_MEMES_API_URL: ${{ secrets.NEXT_PUBLIC_MEMES_API_URL }}
           NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
