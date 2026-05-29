@@ -1,6 +1,5 @@
 {
   "name": "openmeme-web",
-  "account_id": "$CLOUDFLARE_ACCOUNT_ID",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-05-28",
   "compatibility_flags": ["nodejs_compat"],
@@ -13,8 +12,4 @@
   "observability": {
     "enabled": true
   },
-  "vars": {
-    "NEXT_PUBLIC_MEMES_API_URL": "https://api.openmeme.io",
-    "NEXT_PUBLIC_POSTHOG_KEY": "your_posthog_key"
-  }
 }
