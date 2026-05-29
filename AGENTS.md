@@ -28,8 +28,8 @@ Single source of truth for AI coding agents working on this repository. OpenMeme
 | Design System | CSS tokens, Anton + Space Grotesk fonts, Refero standard, Storybook |
 | Shared UI | React 19, TypeScript 5, CSS Modules |
 | API | Java 21, Spring Boot 3.3.4, Maven, PostgreSQL 16, Redis 7, Flyway, Testcontainers |
-| Web | Next.js 16.2.4, React 19, TypeScript 5, Tailwind CSS 4, next-intl, PostHog |
-| DevOps | Docker Compose, GitHub Actions, TurboRepo |
+| Web | Next.js 16.2.4, React 19, TypeScript 5, Tailwind CSS 4, next-intl, PostHog, @opennextjs/cloudflare |
+| DevOps | Docker Compose, GitHub Actions, TurboRepo, Cloudflare Workers |
 
 ---
 
@@ -175,10 +175,14 @@ mvn generate-sources         # Regenerate API stubs from openapi.yaml
 ### Web Client
 ```bash
 cd apps/web
-pnpm dev                     # Next.js dev server
-pnpm build                   # Production build
+pnpm dev                     # Next.js dev server (works on both Vercel and Cloudflare)
+pnpm build                   # Standard Next.js build (for Vercel previews/staging)
+pnpm build:cf                # OpenNext Cloudflare build (for Cloudflare Workers production)
 pnpm start                   # Production start
+pnpm deploy                  # Deploy to Cloudflare Workers via wrangler
+pnpm preview                 # Build + preview worker locally
 pnpm lint                    # ESLint
+pnpm cf-typegen              # Generate Cloudflare env types
 ```
 
 ### Docker Compose (full stack)
@@ -209,6 +213,24 @@ docker-compose up            # Postgres 16 + Redis 7 + API
 - `next-intl` for i18n (default: `es-AR`, supported: `en`, `es`, `es-AR`, `pt`, `fr`, `de`, `ar`)
 - Arabic (`ar`) renders RTL
 - ISR with `revalidate` (300s–3600s) and fetch cache tags
+- Deployed via `@opennextjs/cloudflare` adapter as a Cloudflare Worker (production) or standard Next.js on Vercel (previews/staging)
+
+### Dual-Target Build Strategy
+
+The web app uses a **dual-target build strategy** to support both Vercel (previews/staging) and Cloudflare Workers (production):
+
+| Target | Build Command | Platform | Purpose |
+|--------|--------------|----------|---------|
+| Vercel | `pnpm build` → `next build` | Vercel | Branch previews, staging environments |
+| Cloudflare | `pnpm build:cf` → `opennext build` | Cloudflare Workers | Production deployment |
+
+**How it prevents recursion:**
+- The default `build` script runs `next build` (standard Next.js), NOT the OpenNext Cloudflare adapter
+- The separate `build:cf` script runs `opennext build`, which internally calls `next build` via its own subprocess (NOT `pnpm build`), avoiding the infinite loop
+- Vercel automatically runs `turbo run build` (or the package's `build` script) — with `"build": "next build"` it works out of the box
+- Cloudflare CI/CD runs `pnpm --filter @openmeme/web build:cf` explicitly
+
+**Dev mode (`pnpm dev`):** Works identically on both platforms. The `next.config.ts` dynamically imports `initOpenNextCloudflareForDev()` which only activates when `@opennextjs/cloudflare` is available, making it safe for Vercel environments.
 
 ---
 
@@ -245,17 +267,25 @@ docker-compose up            # Postgres 16 + Redis 7 + API
 | Component | Method |
 |-----------|--------|
 | API | Docker multi-stage → Railway/Render |
-| Web | Static export or Node.js → Vercel |
+| Web | OpenNext Cloudflare adapter → Cloudflare Workers (production), Next.js on Vercel (previews/staging) |
 | CDN | Cloudflare Worker for meme images |
 | CI | GitHub Actions reindexes memes on push to `main` |
+| CD | GitHub Actions deploys web to Cloudflare Workers on push to `main` |
 
 ### CI/CD Details
-The workflow `.github/workflows/index-memes.yml` triggers on pushes to `main` that change `memes/**`:
+
+**Index memes workflow** (`.github/workflows/index-memes.yml`) — triggers on pushes to `main` that change `memes/**`:
 1. Detects changed `.mdx` files (including locale variants like `slug.es-AR.mdx`)
 2. Parses YAML frontmatter
 3. Deduplicates by base stem
 4. POSTs JSON payload to `/admin/reindex` with `X-Api-Key` header
 5. Requires secrets: `API_BASE_URL`, `ADMIN_API_KEY`
+
+**Deploy web workflow** (`.github/workflows/deploy-web.yml`) — triggers on pushes to `main` that change `apps/web/**`, `packages/ui/**`, `packages/design-system/**`, or `pnpm-lock.yaml`:
+1. Installs dependencies with `pnpm install --frozen-lockfile`
+2. Builds web app with `pnpm build:cf` (OpenNext Cloudflare adapter)
+3. Deploys to Cloudflare Workers via `wrangler deploy`
+4. Requires secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `NEXT_PUBLIC_MEMES_API_URL`, `MEMES_API_KEY`, `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`
 
 ---
 
@@ -307,3 +337,5 @@ Copy `.env.example` to `.env` and configure per subsystem:
 | Scripts | `BATCH_SIZE`, `DRY_RUN`, `PER_POST`, `FROM_FILE`, `POST_URL` |
 | Sync | `SYNC_SUBREDDITS`, `SYNC_LIMIT`, `SYNC_BATCH_SIZE`, `SYNC_CLASSIFIER`, `SYNC_CLASSIFY_WORKERS`, `SYNC_MIN_COMMENT_UPVOTES`, `SYNC_DRY_RUN`, `SYNC_TIME` |
 | Optimize | `OPTIMIZE_DRY_RUN`, `OPTIMIZE_RESIZE` |
+| Web | `NEXT_PUBLIC_MEMES_API_URL`, `MEMES_API_KEY`, `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` |
+| Cloudflare | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` |
