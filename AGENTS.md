@@ -174,11 +174,20 @@ mvn package                  # Build fat JAR
 mvn generate-sources         # Regenerate API stubs from openapi.yaml
 ```
 
-### Web Client
+### Web Client — Dual-Target Build Strategy
+
+This project supports two build targets:
+
+- **Vercel** (previews/staging): runs `pnpm build` → `next build`
+- **Cloudflare Workers** (production): runs `pnpm build:cf` → `opennextjs-cloudflare build`
+
+The Cloudflare adapter (`@opennextjs/cloudflare`) wraps `next build` internally, so `build:cf` handles both steps. No manual code changes are needed when switching targets — just use the appropriate script.
+
 ```bash
 cd apps/web
 pnpm dev                     # Next.js dev server
-pnpm build                   # OpenNext Cloudflare build
+pnpm build                   # Standard Next.js build (used by Vercel)
+pnpm build:cf                # OpenNext Cloudflare build (used by GitHub Actions for production)
 pnpm start                   # wrangler dev (local worker simulator)
 pnpm deploy                  # wrangler deploy (Cloudflare Workers)
 pnpm lint                    # ESLint
@@ -251,6 +260,7 @@ docker-compose up            # Postgres 16 + Redis 7 + API
 | Web | @opennextjs/cloudflare → Cloudflare Workers (via wrangler) |
 | CDN | Cloudflare Worker for meme images |
 | CI | GitHub Actions reindexes memes on push to `main` |
+| Previews | Vercel (branch/staging previews, `next build`) |
 
 ### CI/CD Details
 
@@ -263,7 +273,7 @@ docker-compose up            # Postgres 16 + Redis 7 + API
 
 **.github/workflows/deploy-web.yml** — triggers on pushes to `main` that change `apps/web/**`, `packages/ui/**`, or `packages/design-system/**`:
 1. Installs dependencies with pnpm
-2. Builds the Next.js app with the OpenNext Cloudflare adapter
+2. Builds with the OpenNext Cloudflare adapter (`pnpm build:cf`)
 3. Deploys to Cloudflare Workers via `wrangler deploy`
 4. Requires secrets: `CF_API_TOKEN`, `CF_ACCOUNT_ID`
 

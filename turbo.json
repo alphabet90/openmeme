@@ -10,6 +10,16 @@
       ],
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "build:cf": {
+      "env": [
+        "MEMES_API_KEY",
+        "NEXT_PUBLIC_MEMES_API_URL",
+        "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY"
+      ],
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", ".open-next/**", "!.next/cache/**", "dist/**"]
     },
     "lint": {
