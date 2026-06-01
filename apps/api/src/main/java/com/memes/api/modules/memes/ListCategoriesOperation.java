@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -44,10 +45,18 @@ public class ListCategoriesOperation implements Operation<ListCategoriesInput, C
 
     private List<CategoryView> aggregateCategories(List<Map<String, Object>> flatRows) {
         Map<Long, CategoryView> map = new LinkedHashMap<>();
+        List<Long> allIds = flatRows.stream()
+            .map(row -> ((Number) row.get("category_id")).longValue())
+            .distinct()
+            .toList();
+        Map<Long, List<Map<String, Object>>> imagesByCategory = categoryQueryMapper
+            .selectCategoryImagesByBatch(allIds)
+            .stream()
+            .collect(Collectors.groupingBy(img -> ((Number) img.get("category_id")).longValue()));
         for (Map<String, Object> row : flatRows) {
             long categoryId = ((Number) row.get("category_id")).longValue();
             CategoryView cv = map.computeIfAbsent(categoryId, id -> {
-                List<Map<String, Object>> images = categoryQueryMapper.selectCategoryImages(id);
+                List<Map<String, Object>> images = imagesByCategory.getOrDefault(id, List.of());
                 return new CategoryView(
                     id,
                     (String) row.get("category"),
