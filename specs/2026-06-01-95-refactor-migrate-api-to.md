@@ -44,9 +44,10 @@ src/main/java/com/memes/api/
 │   ├── exceptions/                  ← Custom exceptions + @ControllerAdvice migration
 │   │   ├── MemeNotFoundException.java
 │   │   ├── CategoryNotFoundException.java
-│   │   └── InvalidApiKeyException.java
+│   │   ├── InvalidApiKeyException.java
+│   │   └── OperationException.java
 │   ├── operation/                   ← Core abstraction
-│   │   └── Operation.java           ← public interface Operation<I, O> { O execute(I input); }
+│   │   └── Operation.java           ← public interface Operation<I, O> { O execute(I input) throws OperationException; }
 │   └── security/                    ← Auth & authorization components
 │       ├── ApiKeyAuthenticationFilter.java
 │       ├── ApiKeyAuthenticationToken.java
@@ -102,7 +103,7 @@ src/main/java/com/memes/api/
 package com.memes.api.common.operation;
 
 public interface Operation<I, O> {
-    O execute(I input);
+    O execute(I input) throws OperationException;
 }
 ```
 
@@ -112,6 +113,7 @@ public interface Operation<I, O> {
 2. **No GOD MODE services.** `IndexerService` must be decomposed into focused operations (see Phase 3).
 3. **Spring resolves by generic type.** Because `Operation<I, O>` uses distinct generic parameters, `@Autowired` (or constructor injection) works without `@Qualifier` via Spring's `ResolvableType` support.
 4. **Operations are `@Component` (or `@Service`).** They participate in Spring's transaction boundaries and caching annotations.
+5. **Operations declare failure modes via OperationException subtypes.** Every Operation must declare checked `OperationException` subtypes such as `NotFoundException` or `ValidationException`. Generic `RuntimeException` should not cross the Operation boundary.
 
 ### 3.3 Example Refactored Flow
 
@@ -142,9 +144,13 @@ public class GetStatsOperation implements Operation<GetStatsInput, Stats> {
     @Override
     public Stats execute(GetStatsInput input) {
         return statsMapper.selectStatsSnapshot();
-    }
 }
 ```
+```
+
+### 3.4 DB-to-API Mapping Convention
+
+Use **MapStruct** with `@Mapper(componentModel = "spring")` for compile-time-safe, declarative mappings between `models/*` POJOs and `common/dto/*` API DTOs. Each module may define its own mapper interface (e.g., `MemeMapper` in `modules/memes/`). Operations must never return DB models directly; they always return API DTOs.
 
 ---
 
@@ -213,6 +219,13 @@ Generator configuration must:
 - Extract orphan purge into `PurgeOrphanCategoriesOperation`
 - Extract cache invalidation into `InvalidateCachesOperation`
 - Create `TriggerIndexOperation` as a lightweight orchestrator that delegates to the above operations
+
+  **Transaction & Composition Semantics:**
+  1. All write sub-operations (UpsertMemeOperation, UpsertCategoryOperation, PurgeOrphanCategoriesOperation) execute within a single `@Transactional` boundary on TriggerIndexOperation.
+  2. Cache invalidation (InvalidateCachesOperation) runs after the transaction commits, using `@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)`.
+  3. Read sub-operations (ScanMdxFilesOperation, ParseMdxFrontmatterOperation) execute before the transaction begins.
+  4. TriggerIndexOperation collects errors from all sub-operations rather than failing fast, and reports them as a composite result so partial failures are observable and auditable.
+
 - Implement `ListApiKeysOperation`, `CreateApiKeyOperation`, `RevokeApiKeyOperation`
 - Rewrite `AdminController.java` to inject admin operations
 - Delete `IndexerService.java`, `ApiKeyService.java`, and all `repository/*` classes
@@ -250,7 +263,7 @@ Generator configuration must:
 |---|---|
 | MyBatis learning curve for team | Provide generator resources; start with read-only `memes` operations before touching `admin` writes. |
 | Large-bang refactor breaks tests | Migrate tag-by-tag (`memes` first, `admin` second). Keep old classes until the new path is green. |
-| Generated models clash with OpenAPI generated models | Use distinct package names: `com.memes.api.models` (DB) vs `com.memes.api.generated.model` (API). Map between them in Operations. |
+| Generated models clash with OpenAPI generated models | Use distinct package names: `com.memes.api.models` (DB) vs `com.memes.api.generated.model` (API). Map between them using MapStruct (see Section 3.4). |
 | Complex PostgreSQL JSON aggregations | Keep `MemeSearchMapper.java` as a custom MyBatis mapper with XML containing the existing SQL functions (`list_memes_flat`, `search_memes`, etc.). |
 
 ---
@@ -267,4 +280,4 @@ Generator configuration must:
 | `controller/MemesApiDelegateImpl.java` | `controllers/MemesController.java` |
 | `controller/AdminApiDelegateImpl.java` | `controllers/AdminController.java` |
 | `config/ApiKeyBootstrap.java` | `common/security/ApiKeyBootstrap.java` or `config/ApiKeyBootstrapConfig.java` |
-| `filter/*` | Keep in `filter/` or move to `common/security/` depending on scope. |
+| `filter/*` | All filters move to `common/security/` since every current filter is security-related. |
