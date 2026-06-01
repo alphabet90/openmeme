@@ -39,7 +39,7 @@ Single source of truth for AI coding agents working on this repository. OpenMeme
 ├── apps/
 │   ├── api/                    # Java Spring Boot REST API (Maven project)
 │   │   ├── pom.xml
-│   │   ├── src/main/java/      # Controllers, services, repositories, config
+│   │   ├── src/main/java/      # Controllers, operations, mappers, models, config
 │   │   ├── src/main/resources/ # openapi.yaml, application.yml, Flyway migrations
 │   │   ├── src/test/java/      # JUnit 5 + Testcontainers tests
 │   │   └── Dockerfile          # Multi-stage build
@@ -203,9 +203,11 @@ docker-compose up            # Postgres 16 + Redis 7 + API
 ### Java (API)
 - Lombok required: `@Data`, `@Value`, `@Builder`, `@Slf4j`
 - No ternary operators — use `Optional<T>`
-- Controllers delegate only; services own business logic
+- Controllers delegate only; Operations (`Operation<I, O>`) own business logic
 - OpenAPI spec (`src/main/resources/openapi.yaml`) is source of truth
-- Repository layer uses raw `JdbcTemplate` (no ORM)
+- Persistence layer uses MyBatis mappers (`@Mapper` interfaces + XML) — no raw `JdbcTemplate`
+- MyBatis Generator: run `mvn mybatis-generator:generate` to regenerate models/mappers from schema
+- Custom mappers live in `mappers/custom/` to avoid overwrite on regeneration
 
 ### TypeScript / Next.js (Web)
 - App Router, Server Components by default
@@ -226,11 +228,10 @@ docker-compose up            # Postgres 16 + Redis 7 + API
 | Web | `cd apps/web && pnpm lint` | ESLint (build + lint validation) |
 
 ### API Test Coverage
-- `MemesControllerTest` — Mocked service layer; locale param resolution, 404s, pagination
-- `AdminControllerTest` — Auth filter (401/200)
-- `MemeRepositoryTest` — Real PostgreSQL container; upserts, idempotency, search, pagination
+- `MemesControllerTest` — Mocked operations; locale param resolution, 404s, pagination
+- `AdminControllerTest` — Auth filter (401/200), role-based access
 - `SchemaSmokeTest` — Validates extensions, enums, domains, materialized views, SQL functions
-- `IndexerServiceTest` — MDX parsing (V2 & flat), locale grouping, normalization, async dispatch
+- `RequestLoggingFilterTest` — Request/response header logging, actuator exclusion
 
 ---
 
