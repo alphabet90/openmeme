@@ -45,6 +45,7 @@ src/main/java/com/memes/api/
 │   │   ├── MemeNotFoundException.java
 │   │   ├── CategoryNotFoundException.java
 │   │   ├── InvalidApiKeyException.java
+│   │   ├── GlobalExceptionHandler.java
 │   │   └── OperationException.java
 │   ├── operation/                   ← Core abstraction
 │   │   └── Operation.java           ← public interface Operation<I, O> { O execute(I input) throws OperationException; }
@@ -237,6 +238,7 @@ Generator configuration must:
 - Migrate `ApiKeyRateLimiter` to `common/security/` or keep as a cross-cutting component
 - Run full test suite: `mvn verify` (including Testcontainers)
 - Verify no raw `JdbcTemplate` SQL remains in business logic
+- Add an `ArchUnit` test (`@ArchTest`) asserting that no classes in `com.memes.api.modules` import `org.springframework.jdbc.core.JdbcTemplate`, preventing accidental reintroduction of raw SQL strings
 - **Delete deprecated classes** — once `mvn verify` passes with zero regressions, remove `MemeService.java`, `MemeRepository.java`, `IndexerService.java`, `ApiKeyService.java`, and all `repository/*` classes
 
 ### Phase 5 — Documentation & Rollout
