@@ -107,6 +107,13 @@
       <version>8.14.0</version>
     </dependency>
 
+    <!-- MyBatis persistence framework -->
+    <dependency>
+      <groupId>org.mybatis.spring.boot</groupId>
+      <artifactId>mybatis-spring-boot-starter</artifactId>
+      <version>3.0.3</version>
+    </dependency>
+
     <!-- In-memory cache for API key lookups -->
     <dependency>
       <groupId>com.github.ben-manes.caffeine</groupId>
@@ -189,6 +196,24 @@
             </path>
           </annotationProcessorPaths>
         </configuration>
+      </plugin>
+
+      <!-- MyBatis Generator: schema → mappers + models -->
+      <plugin>
+        <groupId>org.mybatis.generator</groupId>
+        <artifactId>mybatis-generator-maven-plugin</artifactId>
+        <version>1.4.2</version>
+        <configuration>
+          <configurationFile>${project.basedir}/src/main/resources/generatorConfig.xml</configurationFile>
+          <overwrite>true</overwrite>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgresql.version}</version>
+          </dependency>
+        </dependencies>
       </plugin>
 
       <!-- OpenAPI Generator: spec → server stubs (delegate pattern) -->
