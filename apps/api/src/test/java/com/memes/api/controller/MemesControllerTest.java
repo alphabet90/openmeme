@@ -82,6 +82,7 @@ class MemesControllerTest {
         key.setActive(true);
         when(apiKeyMapper.selectByKeyHash(anyString())).thenReturn(Optional.empty());
         when(apiKeyMapper.selectByKeyHash(ApiKeyHasher.hash(READ_KEY))).thenReturn(Optional.of(key));
+        when(apiKeyMapper.existsActiveById(1L)).thenReturn(true);
         when(apiKeyRateLimiter.isAllowed(any(), anyString())).thenReturn(true);
     }
 

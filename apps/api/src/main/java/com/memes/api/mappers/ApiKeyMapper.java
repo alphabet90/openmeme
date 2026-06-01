@@ -15,8 +15,13 @@ import java.util.Optional;
 public interface ApiKeyMapper {
 
     @Select("SELECT id, key_hash, client_name, role, active, expires_at, created_at, last_used_at "
-          + "FROM api_keys WHERE key_hash = #{keyHash}")
+          + "FROM api_keys WHERE key_hash = #{keyHash} AND active = true "
+          + "AND (expires_at IS NULL OR expires_at > NOW())")
     Optional<ApiKey> selectByKeyHash(String keyHash);
+
+    @Select("SELECT EXISTS (SELECT 1 FROM api_keys WHERE id = #{id} AND active = true "
+          + "AND (expires_at IS NULL OR expires_at > NOW()))")
+    boolean existsActiveById(Long id);
 
     @Select("SELECT id, key_hash, client_name, role, active, expires_at, created_at, last_used_at "
           + "FROM api_keys WHERE active = true ORDER BY created_at DESC")
