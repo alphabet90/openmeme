@@ -3,7 +3,6 @@ package com.memes.api.common.security;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.memes.api.mappers.ApiKeyMapper;
-import com.memes.api.models.ApiKey;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -25,9 +23,11 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
+    private record CachedKeyIdentity(Long id, String role, String clientName) {}
+
     private final ApiKeyMapper apiKeyMapper;
 
-    private final Cache<String, ApiKey> apiKeyCache = Caffeine.newBuilder()
+    private final Cache<String, CachedKeyIdentity> apiKeyCache = Caffeine.newBuilder()
         .expireAfterWrite(5, TimeUnit.MINUTES)
         .maximumSize(1000)
         .build();
@@ -43,28 +43,27 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String hash = com.memes.api.util.ApiKeyHasher.hash(apiKey);
-        Optional<ApiKey> cached = Optional.ofNullable(apiKeyCache.getIfPresent(hash));
-        Optional<ApiKey> result = cached.or(() -> {
-            Optional<ApiKey> fetched = apiKeyMapper.selectByKeyHash(hash);
-            fetched.ifPresent(k -> apiKeyCache.put(hash, k));
-            return fetched;
-        });
+        Optional<CachedKeyIdentity> cached = Optional.ofNullable(apiKeyCache.getIfPresent(hash));
 
-        result.ifPresentOrElse(row -> {
-            if (!Boolean.TRUE.equals(row.getActive())) {
-                log.debug("API key rejected: inactive");
+        Optional<CachedKeyIdentity> identity = cached.or(() ->
+            apiKeyMapper.selectByKeyHash(hash).map(k -> {
+                var id = new CachedKeyIdentity(k.getId(), k.getRole(), k.getClientName());
+                apiKeyCache.put(hash, id);
+                return id;
+            })
+        );
+
+        identity.ifPresentOrElse(id -> {
+            if (!apiKeyMapper.existsActiveById(id.id())) {
+                apiKeyCache.invalidate(hash);
+                log.debug("API key rejected: inactive or expired");
                 return;
             }
-            if (row.getExpiresAt() != null && row.getExpiresAt().isBefore(OffsetDateTime.now())) {
-                log.debug("API key rejected: expired");
-                return;
-            }
-            var token = new ApiKeyAuthenticationToken(
-                row.getId(), row.getRole(), row.getClientName(), apiKey);
+            var token = new ApiKeyAuthenticationToken(id.id(), id.role(), id.clientName(), apiKey);
             SecurityContextHolder.getContext().setAuthentication(token);
             CompletableFuture.runAsync(() -> {
-                try { apiKeyMapper.updateLastUsed(row.getId()); }
-                catch (Exception e) { log.warn("Failed to update last_used_at for keyId={}", row.getId(), e); }
+                try { apiKeyMapper.updateLastUsed(id.id()); }
+                catch (Exception e) { log.warn("Failed to update last_used_at for keyId={}", id.id(), e); }
             });
         }, () -> log.debug("API key rejected: unknown hash"));
 
