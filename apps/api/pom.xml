@@ -146,6 +146,13 @@
       <version>8.0</version>
     </dependency>
 
+    <!-- MyBatis -->
+    <dependency>
+      <groupId>org.mybatis.spring.boot</groupId>
+      <artifactId>mybatis-spring-boot-starter</artifactId>
+      <version>3.0.3</version>
+    </dependency>
+
     <!-- Lombok -->
     <dependency>
       <groupId>org.projectlombok</groupId>
@@ -192,6 +199,25 @@
       </plugin>
 
       <!-- OpenAPI Generator: spec → server stubs (delegate pattern) -->
+      <!-- MyBatis Generator: run `mvn mybatis-generator:generate` to regenerate mappers -->
+      <plugin>
+        <groupId>org.mybatis.generator</groupId>
+        <artifactId>mybatis-generator-maven-plugin</artifactId>
+        <version>1.4.2</version>
+        <configuration>
+          <configurationFile>${project.basedir}/src/main/resources/generatorConfig.xml</configurationFile>
+          <overwrite>false</overwrite>
+          <verbose>true</verbose>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.4</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+
       <plugin>
         <groupId>org.openapitools</groupId>
         <artifactId>openapi-generator-maven-plugin</artifactId>

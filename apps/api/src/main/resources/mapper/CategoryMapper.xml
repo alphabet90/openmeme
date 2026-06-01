@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.memes.api.mappers.CategoryMapper">
+    <resultMap id="CategoryResultMap" type="com.memes.api.models.Category">
+        <id property="id" column="id"/>
+        <result property="slug" column="slug"/>
+    </resultMap>
+
+    <insert id="upsert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO categories (slug) VALUES (#{slug})
+        ON CONFLICT (slug) DO UPDATE SET slug = EXCLUDED.slug
+    </insert>
+</mapper>

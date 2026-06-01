@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.memes.api.mappers.ApiKeyMapper">
+    <resultMap id="ApiKeyResultMap" type="com.memes.api.models.ApiKey">
+        <id property="id" column="id"/>
+        <result property="clientName" column="client_name"/>
+        <result property="keyHash" column="key_hash"/>
+        <result property="keySalt" column="key_salt"/>
+        <result property="role" column="role"/>
+        <result property="active" column="active"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="lastUsedAt" column="last_used_at"/>
+    </resultMap>
+
+    <select id="findByKeyHash" resultMap="ApiKeyResultMap">
+        SELECT * FROM api_keys WHERE key_hash = #{hash} AND active = true
+        AND (expires_at IS NULL OR expires_at > now())
+    </select>
+
+    <select id="findAllActive" resultMap="ApiKeyResultMap">
+        SELECT * FROM api_keys WHERE active = true ORDER BY created_at DESC
+    </select>
+
+    <select id="countActiveAdminKeys" resultType="int">
+        SELECT COUNT(*) FROM api_keys WHERE active = true AND role = 'ADMIN'
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO api_keys (client_name, key_hash, key_salt, role, expires_at)
+        VALUES (#{clientName}, #{keyHash}, #{keySalt}, #{role}, #{expiresAt})
+    </insert>
+
+    <update id="deactivate">
+        UPDATE api_keys SET active = false WHERE id = #{id}
+    </update>
+
+    <update id="updateLastUsed">
+        UPDATE api_keys SET last_used_at = now() WHERE id = #{id}
+    </update>
+</mapper>

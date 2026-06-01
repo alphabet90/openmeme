@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.memes.api.mappers.MemeMapper">
+    <resultMap id="MemeResultMap" type="com.memes.api.models.Meme">
+        <id property="id" column="id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="slug" column="slug"/>
+        <result property="subredditId" column="subreddit_id"/>
+        <result property="authorId" column="author_id"/>
+        <result property="defaultLocale" column="default_locale"/>
+        <result property="score" column="score"/>
+        <result property="sourceUrl" column="source_url"/>
+        <result property="postUrl" column="post_url"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="indexedAt" column="indexed_at"/>
+        <result property="deletedAt" column="deleted_at"/>
+    </resultMap>
+
+    <insert id="upsert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO memes (category_id, slug, subreddit_id, author_id, default_locale, score, source_url, post_url, created_at)
+        VALUES (#{categoryId}, #{slug}, #{subredditId}, #{authorId}, #{defaultLocale}::locale_code, #{score}, #{sourceUrl}, #{postUrl}, #{createdAt})
+        ON CONFLICT (category_id, slug) DO UPDATE SET
+            subreddit_id = EXCLUDED.subreddit_id,
+            author_id = EXCLUDED.author_id,
+            default_locale = EXCLUDED.default_locale,
+            score = EXCLUDED.score,
+            source_url = EXCLUDED.source_url,
+            post_url = EXCLUDED.post_url,
+            created_at = EXCLUDED.created_at,
+            indexed_at = now(),
+            deleted_at = NULL
+    </insert>
+
+    <select id="findBySlugAndCategory" resultMap="MemeResultMap">
+        SELECT m.* FROM memes m
+        JOIN categories c ON c.id = m.category_id
+        WHERE m.deleted_at IS NULL AND c.slug = #{category} AND m.slug = #{slug}
+        LIMIT 1
+    </select>
+
+    <select id="findById" resultMap="MemeResultMap">
+        SELECT * FROM memes WHERE id = #{id}
+    </select>
+</mapper>

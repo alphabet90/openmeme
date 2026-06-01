@@ -1,7 +1,7 @@
 package com.memes.api.filter;
 
-import com.memes.api.repository.ApiKeyRepository;
-import com.memes.api.repository.ApiKeyRow;
+import com.memes.api.mappers.ApiKeyMapper;
+import com.memes.api.models.ApiKey;
 import com.memes.api.security.ApiKeyAuthenticationToken;
 import com.memes.api.util.ApiKeyHasher;
 import jakarta.servlet.FilterChain;
@@ -29,7 +29,7 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String HEADER = "X-Api-Key";
 
-    private final ApiKeyRepository apiKeyRepository;
+    private final ApiKeyMapper apiKeyMapper;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -42,7 +42,8 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        Optional<ApiKeyRow> keyOpt = apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(providedKey));
+        String hash = ApiKeyHasher.hash(providedKey);
+        Optional<ApiKey> keyOpt = apiKeyMapper.findByKeyHash(hash);
 
         if (keyOpt.isEmpty() || !isValid(keyOpt.get())) {
             SecurityContextHolder.clearContext();
@@ -50,29 +51,30 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        ApiKeyRow key = keyOpt.get();
+        ApiKey key = keyOpt.get();
+        long keyId = Optional.ofNullable(key.getId()).orElse(0L);
         ApiKeyAuthenticationToken auth = new ApiKeyAuthenticationToken(
-            key.id(), key.role(), key.clientName(), providedKey);
+            keyId, key.getRole(), key.getClientName(), providedKey);
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         CompletableFuture.runAsync(() -> {
             try {
-                apiKeyRepository.updateLastUsed(key.id());
+                apiKeyMapper.updateLastUsed(keyId);
             } catch (Exception ex) {
-                log.warn("Failed to update last_used_at for keyId={}", key.id(), ex);
+                log.warn("Failed to update last_used_at for keyId={}", keyId, ex);
             }
         });
 
         filterChain.doFilter(request, response);
     }
 
-    private boolean isValid(ApiKeyRow key) {
-        if (!key.active()) {
+    private boolean isValid(ApiKey key) {
+        if (!Boolean.TRUE.equals(key.getActive())) {
             return false;
         }
-        if (key.expiresAt() == null) {
+        if (key.getExpiresAt() == null) {
             return true;
         }
-        return key.expiresAt().isAfter(OffsetDateTime.now());
+        return key.getExpiresAt().isAfter(OffsetDateTime.now());
     }
 }

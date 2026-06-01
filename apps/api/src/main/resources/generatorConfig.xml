@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration PUBLIC
+    "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+    "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+    <context id="postgres" targetRuntime="MyBatis3" defaultModelType="flat">
+
+        <commentGenerator>
+            <property name="suppressAllComments" value="true"/>
+            <property name="suppressDate" value="true"/>
+        </commentGenerator>
+
+        <jdbcConnection driverClass="org.postgresql.Driver"
+                        connectionURL="${mybatis.generator.jdbc.url}"
+                        userId="${mybatis.generator.jdbc.user}"
+                        password="${mybatis.generator.jdbc.password}"/>
+
+        <javaModelGenerator targetPackage="com.memes.api.models"
+                            targetProject="src/main/java"/>
+
+        <sqlMapGenerator targetPackage="mapper"
+                         targetProject="src/main/resources"/>
+
+        <javaClientGenerator type="ANNOTATEDMAPPER"
+                             targetPackage="com.memes.api.mappers"
+                             targetProject="src/main/java"/>
+
+        <table tableName="memes" domainObjectName="Meme">
+            <property name="useActualColumnNames" value="false"/>
+        </table>
+        <table tableName="categories" domainObjectName="Category">
+            <property name="useActualColumnNames" value="false"/>
+        </table>
+        <table tableName="api_keys" domainObjectName="ApiKey">
+            <property name="useActualColumnNames" value="false"/>
+        </table>
+        <table tableName="meme_translations" domainObjectName="MemeTranslation">
+            <property name="useActualColumnNames" value="false"/>
+        </table>
+        <table tableName="meme_images" domainObjectName="MemeImage">
+            <property name="useActualColumnNames" value="false"/>
+        </table>
+        <table tableName="category_translations" domainObjectName="CategoryTranslation">
+            <property name="useActualColumnNames" value="false"/>
+        </table>
+        <table tableName="category_images" domainObjectName="CategoryImage">
+            <property name="useActualColumnNames" value="false"/>
+        </table>
+        <table tableName="tags" domainObjectName="Tag">
+            <property name="useActualColumnNames" value="false"/>
+        </table>
+        <table tableName="subreddits" domainObjectName="Subreddit">
+            <property name="useActualColumnNames" value="false"/>
+        </table>
+        <table tableName="authors" domainObjectName="Author">
+            <property name="useActualColumnNames" value="false"/>
+        </table>
+        <table tableName="meme_tags" domainObjectName="MemeTag">
+            <property name="useActualColumnNames" value="false"/>
+        </table>
+
+    </context>
+</generatorConfiguration>

@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.memes.api.mappers.custom.MemeSearchMapper">
+
+    <resultMap id="StatsSnapshotResultMap" type="com.memes.api.models.StatsSnapshot">
+        <result property="totalMemes" column="total_memes"/>
+        <result property="totalCategories" column="total_categories"/>
+        <result property="totalSubreddits" column="total_subreddits"/>
+        <result property="topCategory" column="top_category"/>
+        <result property="indexedAt" column="indexed_at"/>
+    </resultMap>
+
+    <resultMap id="CategoryDetailResultMap" type="com.memes.api.models.CategoryDetail">
+        <id property="id" column="category_id"/>
+        <result property="slug" column="slug"/>
+        <result property="count" column="cnt"/>
+        <result property="topScore" column="top_score"/>
+        <collection property="translations" ofType="com.memes.api.models.CategoryTranslation">
+            <result property="locale" column="locale"/>
+            <result property="name" column="name"/>
+            <result property="description" column="description"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="MemeListItemResultMap" type="com.memes.api.models.MemeListItem">
+        <id property="id" column="id"/>
+        <result property="slug" column="slug"/>
+        <result property="score" column="score"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="categorySlug" column="category_slug"/>
+        <result property="authorUsername" column="author_username"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="imagePath" column="image_path"/>
+        <collection property="tagSlugs" ofType="string" javaType="list">
+            <result column="tags"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="SearchHitResultMap" type="com.memes.api.models.SearchHit">
+        <result property="memeId" column="meme_id"/>
+        <result property="slug" column="slug"/>
+        <result property="category" column="category"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="score" column="score"/>
+        <result property="rank" column="rank"/>
+        <result property="totalCount" column="total_count"/>
+    </resultMap>
+
+    <resultMap id="MemeDetailResultMap" type="com.memes.api.models.MemeDetail">
+        <id property="id" column="id"/>
+        <result property="slug" column="slug"/>
+        <result property="categorySlug" column="category_slug"/>
+        <result property="defaultLocale" column="default_locale"/>
+        <result property="subredditName" column="subreddit_name"/>
+        <result property="authorUsername" column="author_username"/>
+        <result property="score" column="score"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="indexedAt" column="indexed_at"/>
+        <result property="sourceUrl" column="source_url"/>
+        <result property="postUrl" column="post_url"/>
+        <collection property="translations" ofType="com.memes.api.models.MemeTranslation">
+            <result property="locale" column="mt_locale"/>
+            <result property="title" column="mt_title"/>
+            <result property="description" column="mt_description"/>
+        </collection>
+        <collection property="images" ofType="com.memes.api.models.MemeImage">
+            <result property="path" column="mi_path"/>
+            <result property="width" column="mi_width"/>
+            <result property="height" column="mi_height"/>
+            <result property="bytes" column="mi_bytes"/>
+            <result property="mimeType" column="mi_mime_type"/>
+            <result property="position" column="mi_position"/>
+            <result property="isPrimary" column="mi_is_primary"/>
+        </collection>
+        <collection property="tagSlugs" ofType="string" javaType="list">
+            <result column="tag_slugs"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectStatsSnapshot" resultMap="StatsSnapshotResultMap">
+        SELECT total_memes, total_categories, total_subreddits, top_category, indexed_at
+        FROM stats_snapshot WHERE singleton = 1
+    </select>
+
+    <select id="countCategories" resultType="int">
+        SELECT COUNT(*) FROM category_counts
+    </select>
+
+    <select id="selectCategories" resultMap="CategoryDetailResultMap">
+        SELECT cc.category_id, cc.category AS slug, cc.count AS cnt, cc.top_score,
+               ct.locale, ct.name, ct.description
+        FROM category_counts cc
+        INNER JOIN category_translations ct ON ct.category_id = cc.category_id AND ct.locale = #{locale}::locale_code
+        ORDER BY cc.count DESC, cc.category ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="selectCategoryImages" resultType="com.memes.api.models.CategoryImage">
+        SELECT * FROM category_images WHERE category_id = #{categoryId} ORDER BY position ASC
+    </select>
+
+    <select id="selectMemesFlat" resultMap="MemeListItemResultMap">
+        SELECT id, slug, score, created_at, category_slug, author_username,
+               title, description, image_path, tags
+        FROM list_memes_flat(#{locale}::locale_code)
+        WHERE 1=1
+        <if test="category != null and !category.isEmpty()">
+            AND category_slug = #{category}
+        </if>
+        ORDER BY
+        <choose>
+            <when test="sort == 'title'">title ASC NULLS LAST, id DESC</when>
+            <when test="sort == 'created_at'">created_at DESC NULLS LAST, id DESC</when>
+            <otherwise>score DESC, id DESC</otherwise>
+        </choose>
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countMemes" resultType="int">
+        SELECT COUNT(*) FROM list_memes_flat(#{locale}::locale_code)
+        WHERE 1=1
+        <if test="category != null and !category.isEmpty()">
+            AND category_slug = #{category}
+        </if>
+    </select>
+
+    <select id="selectMemeDetail" resultMap="MemeDetailResultMap">
+        SELECT m.id, m.slug, m.score, m.default_locale,
+               m.created_at, m.indexed_at, m.source_url, m.post_url,
+               c.slug AS category_slug, s.name AS subreddit_name, a.username AS author_username,
+               mt.locale AS mt_locale, mt.title AS mt_title, mt.description AS mt_description,
+               mi.path AS mi_path, mi.width AS mi_width, mi.height AS mi_height,
+               mi.bytes AS mi_bytes, mi.mime_type AS mi_mime_type, mi.position AS mi_position, mi.is_primary AS mi_is_primary,
+               t.slug AS tag_slugs
+        FROM memes m
+        JOIN categories c ON c.id = m.category_id
+        LEFT JOIN subreddits s ON s.id = m.subreddit_id
+        LEFT JOIN authors a ON a.id = m.author_id
+        LEFT JOIN meme_translations mt ON mt.meme_id = m.id
+        LEFT JOIN meme_images mi ON mi.meme_id = m.id
+        LEFT JOIN meme_tags mtg ON mtg.meme_id = m.id
+        LEFT JOIN tags t ON t.id = mtg.tag_id
+        WHERE m.deleted_at IS NULL AND c.slug = #{category} AND m.slug = #{slug}
+    </select>
+
+    <select id="searchMemes" resultMap="SearchHitResultMap">
+        SELECT meme_id, slug, category, title, description, score, rank, total_count
+        FROM search_memes(#{query}, #{locale}::locale_code, #{limit}, #{offset})
+    </select>
+
+    <select id="findAllCategoryIdsAndSlugs" resultType="java.util.LinkedHashMap">
+        SELECT id, slug FROM categories
+    </select>
+
+    <insert id="upsertSubreddit" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO subreddits (name) VALUES (#{name})
+        ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+    </insert>
+
+    <insert id="upsertAuthor" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO authors (username) VALUES (#{username})
+        ON CONFLICT (username) DO UPDATE SET username = EXCLUDED.username
+    </insert>
+
+    <insert id="upsertTag" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO tags (slug) VALUES (#{slug})
+        ON CONFLICT (slug) DO UPDATE SET slug = EXCLUDED.slug
+    </insert>
+
+    <insert id="upsertMemeTranslation">
+        INSERT INTO meme_translations (meme_id, locale, title, description) VALUES (#{memeId}, #{locale}::locale_code, #{title}, #{description})
+        ON CONFLICT (meme_id, locale) DO UPDATE SET title = EXCLUDED.title, description = EXCLUDED.description
+    </insert>
+
+    <delete id="deleteMemeImages">
+        DELETE FROM meme_images WHERE meme_id = #{memeId}
+    </delete>
+
+    <insert id="insertMemeImage">
+        INSERT INTO meme_images (meme_id, path, width, height, bytes, mime_type, position, is_primary)
+        VALUES (#{memeId}, #{path}, #{width}, #{height}, #{bytes}, #{mimeType}, #{position}, #{isPrimary})
+    </insert>
+
+    <delete id="deleteMemeTags">
+        DELETE FROM meme_tags WHERE meme_id = #{memeId}
+    </delete>
+
+    <insert id="insertMemeTag">
+        INSERT INTO meme_tags (meme_id, tag_id) VALUES (#{memeId}, #{tagId}) ON CONFLICT DO NOTHING
+    </insert>
+
+    <insert id="upsertCategoryTranslation">
+        INSERT INTO category_translations (category_id, locale, name, description) VALUES (#{categoryId}, #{locale}::locale_code, #{name}, #{description})
+        ON CONFLICT (category_id, locale) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description
+    </insert>
+
+    <delete id="deleteCategoryImages">
+        DELETE FROM category_images WHERE category_id = #{categoryId}
+    </delete>
+
+    <insert id="insertCategoryImage">
+        INSERT INTO category_images (category_id, path, width, height, bytes, mime_type, image_type, position, is_primary)
+        VALUES (#{categoryId}, #{path}, #{width}, #{height}, #{bytes}, #{mimeType}, #{imageType}, #{position}, #{isPrimary})
+    </insert>
+
+    <select id="refreshStats" statementType="CALLABLE">
+        SELECT refresh_stats()
+    </select>
+
+    <delete id="purgeCategory">
+        DELETE FROM memes WHERE category_id = #{categoryId};
+        DELETE FROM categories WHERE id = #{categoryId}
+    </delete>
+
+    <select id="countCategoryMemes" resultType="int">
+        SELECT COUNT(*) FROM memes WHERE category_id = #{categoryId}
+    </select>
+</mapper>

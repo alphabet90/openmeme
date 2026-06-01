@@ -42,6 +42,13 @@ server:
   port: ${PORT:8080}
   shutdown: graceful
 
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.memes.api.models
+  configuration:
+    map-underscore-to-camel-case: true
+    use-generated-keys: true
+
 memes:
   root: ${MEMES_ROOT:../memes}
   cdn-url: ${CDN_URL:}

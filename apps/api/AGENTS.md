@@ -4,7 +4,7 @@ This file applies to all code inside `api/`. Rules here override any conflicting
 
 ## Stack
 
-- **Java 21**, Spring Boot 3.3.4, Spring JDBC (no ORM), PostgreSQL 16, Redis
+- **Java 21**, Spring Boot 3.3.4, MyBatis Spring Boot Starter 3.0.3, PostgreSQL 16, Redis
 - **Build**: Maven — run `mvn verify` to compile, generate OpenAPI stubs, and run tests
 - **Code generation**: OpenAPI Generator runs at `generate-sources`; never edit files under `target/generated-sources/`
 
@@ -53,12 +53,6 @@ Lombok is a required dependency for all new and modified Java code in this modul
 1. **Method may return null → return `Optional<T>`**
 
    ```java
-   // WRONG
-   public String getTitle() {
-       return title != null ? title : "";
-   }
-
-   // RIGHT
    public Optional<String> getTitle() {
        return Optional.ofNullable(title);
    }
@@ -67,58 +61,71 @@ Lombok is a required dependency for all new and modified Java code in this modul
 2. **Providing a default when value may be absent → use `Optional.ofNullable(...).orElse(...)`**
 
    ```java
-   // WRONG
-   String label = name != null ? name : "unknown";
-
-   // RIGHT
    String label = Optional.ofNullable(name).orElse("unknown");
    ```
 
 3. **Nullable parameter or field → annotate with `@lombok.NonNull` (throws) or `@org.springframework.lang.Nullable` (documents intent)**
 
    ```java
-   // Fields that may legitimately be null
    @Nullable private String description;
-
-   // Parameters that must never be null — Lombok generates the null-check
    public void process(@NonNull String slug) { ... }
    ```
 
 4. **Chained transformations on a value that may be absent → use `Optional.map` / `Optional.flatMap`**
 
    ```java
-   // WRONG
-   String upper = value != null ? value.toUpperCase() : null;
-
-   // RIGHT
    Optional<String> upper = Optional.ofNullable(value).map(String::toUpperCase);
    ```
 
 5. **Conditional execution → use `Optional.ifPresent` or `Optional.ifPresentOrElse`**
 
    ```java
-   // WRONG
-   if (result != null) save(result);
-
-   // RIGHT
    Optional.ofNullable(result).ifPresent(this::save);
    ```
 
 ## Architecture Conventions
 
-- **Controllers** only delegate — no business logic, no null-checks, no branching
-- **Services** own all business logic; they return `Optional<T>` or throw typed exceptions
-- **Repository** returns `Optional<T>` for single-row lookups, `List<T>` (never `null`) for multi-row
-- **`IndexerService`**: full reindex via `reindex()`, single-meme upsert via `indexSingle(MemeIndexRequest)`
-- All Redis cache invalidation goes through `invalidateCaches()` in `IndexerService`
-- All admin endpoints are protected by Spring Security (`SecurityConfig`) with `ApiKeyAuthenticationFilter` + `RateLimitingFilter` — never bypass it
+### Package Structure
+
+```
+com.memes.api/
+├── config/                          ← @Configuration classes
+├── common/
+│   ├── constants/                   ← Global constants (cache names, regex patterns, defaults)
+│   ├── dto/                         ← Shared input/output DTOs used by Operations
+│   ├── exceptions/                  ← Custom exceptions + @ControllerAdvice
+│   ├── operation/                   ← Core Operation<I, O> interface
+│   └── security/                    ← Auth & authorization components
+├── controllers/                     ← Thin delegates implementing generated OpenAPI interfaces
+├── modules/
+│   ├── memes/                       ← tag: memes operations
+│   └── admin/                       ← tag: admin operations
+├── mappers/                         ← MyBatis generated mappers
+│   └── custom/                      ← Hand-written custom mappers for complex SQL
+└── models/                          ← MyBatis DB model POJOs
+```
+
+### Operation Pattern
+
+- Every `operationId` in `openapi.yaml` maps 1:1 to a class implementing `Operation<I, O>`
+- Operations are `@Component` with `@RequiredArgsConstructor`
+- One operation per endpoint — no GOD MODE services
+- Controllers only delegate to operations, no business logic
+
+### MyBatis
+
+- Run `mvn mybatis-generator:generate` to regenerate mappers from the PostgreSQL schema
+- Generated files go to `mappers/` and `models/` packages
+- Hand-written custom mappers go in `mappers/custom/` and are preserved on regeneration
+- All Redis cache invalidation goes through `InvalidateCachesOperation`
+- All admin endpoints are protected by Spring Security (`SecurityConfig`) with `ApiKeyAuthenticationFilter` + `RateLimitingFilter`
 
 ## OpenAPI Contract
 
 - The source of truth is `src/main/resources/openapi.yaml`
 - Every new endpoint or request/response field must be defined there first
 - Run `mvn generate-sources` after editing the spec to regenerate stubs
-- Delegate implementations live in `src/main/java/com/memes/api/controller/`
+- Delegate implementations live in `src/main/java/com/memes/api/controllers/`
 
 ## Logging
 
