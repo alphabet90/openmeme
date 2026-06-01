@@ -15,7 +15,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -49,10 +51,21 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         });
 
         result.ifPresentOrElse(row -> {
+            if (!Boolean.TRUE.equals(row.getActive())) {
+                log.debug("API key rejected: inactive");
+                return;
+            }
+            if (row.getExpiresAt() != null && row.getExpiresAt().isBefore(OffsetDateTime.now())) {
+                log.debug("API key rejected: expired");
+                return;
+            }
             var token = new ApiKeyAuthenticationToken(
                 row.getId(), row.getRole(), row.getClientName(), apiKey);
             SecurityContextHolder.getContext().setAuthentication(token);
-            apiKeyMapper.updateLastUsed(row.getId());
+            CompletableFuture.runAsync(() -> {
+                try { apiKeyMapper.updateLastUsed(row.getId()); }
+                catch (Exception e) { log.warn("Failed to update last_used_at for keyId={}", row.getId(), e); }
+            });
         }, () -> log.debug("API key rejected: unknown hash"));
 
         filterChain.doFilter(request, response);

@@ -53,4 +53,6 @@ public interface MemeSearchMapper {
 
     Map<String, Object> selectMemeDetail(@Param("category") String category,
                                           @Param("slug") String slug);
+
+    List<Map<String, Object>> selectMemeDetailsBatch(@Param("entries") List<Map<String, String>> entries);
 }

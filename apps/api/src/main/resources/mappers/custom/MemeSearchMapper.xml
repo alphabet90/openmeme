@@ -53,4 +53,34 @@
         FROM search_memes(#{query}, #{locale}::locale_code, #{limit}, #{offset})
     </select>
 
+    <select id="selectMemeDetailsBatch" resultMap="memeDetailMap">
+        SELECT m.id, m.slug, m.score, m.default_locale,
+               m.created_at, m.indexed_at, m.source_url, m.post_url,
+               c.slug AS category_slug,
+               s.name AS subreddit_name,
+               a.username AS author_username,
+               COALESCE((SELECT jsonb_agg(jsonb_build_object(
+                   'locale', mt.locale, 'title', mt.title, 'description', mt.description
+               ) ORDER BY mt.locale)
+               FROM meme_translations mt WHERE mt.meme_id = m.id), '[]'::jsonb) AS translations_json,
+               COALESCE((SELECT jsonb_agg(jsonb_build_object(
+                   'path', mi.path, 'width', mi.width, 'height', mi.height,
+                   'bytes', mi.bytes, 'mime_type', mi.mime_type,
+                   'position', mi.position, 'is_primary', mi.is_primary
+               ) ORDER BY mi.position)
+               FROM meme_images mi WHERE mi.meme_id = m.id), '[]'::jsonb) AS images_json,
+               COALESCE((SELECT array_agg(t.slug::text ORDER BY t.slug)
+                   FROM meme_tags mtg JOIN tags t ON t.id = mtg.tag_id
+                   WHERE mtg.meme_id = m.id), ARRAY[]::text[]) AS tag_slugs
+        FROM memes m
+        JOIN categories c ON c.id = m.category_id
+        LEFT JOIN subreddits s ON s.id = m.subreddit_id
+        LEFT JOIN authors a ON a.id = m.author_id
+        WHERE m.deleted_at IS NULL
+          AND (c.slug, m.slug) IN
+          <foreach collection="entries" item="entry" open="(" separator="," close=")">
+              (#{entry.category}::text, #{entry.slug}::text)
+          </foreach>
+    </select>
+
 </mapper>
