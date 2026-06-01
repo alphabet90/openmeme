@@ -31,11 +31,11 @@ public class ListMemesOperation implements Operation<ListMemesInput, MemePage> {
     @Cacheable(value = CacheNames.MEME_LIST,
                key = "#input.page + '-' + #input.limit + '-' + #input.category + '-' + #input.sort + '-' + #input.locale")
     public MemePage execute(ListMemesInput input) {
-        int offset = input.page() * input.limit();
+        int offset = input.getPage() * input.getLimit();
         List<Map<String, Object>> rows = memeSearchMapper.selectMemesFlat(
-            input.locale(), input.category(), input.sort(), input.limit(), offset);
-        int total = memeSearchMapper.countMemesFlat(input.locale(), input.category());
-        return toMemePage(rows, input.page(), input.limit(), total);
+            input.getLocale(), input.getCategory(), input.getSort(), input.getLimit(), offset);
+        int total = memeSearchMapper.countMemesFlat(input.getLocale(), input.getCategory());
+        return toMemePage(rows, input.getPage(), input.getLimit(), total);
     }
 
     private MemePage toMemePage(List<Map<String, Object>> rows, int page, int limit, int total) {

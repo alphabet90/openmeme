@@ -1,11 +1,19 @@
 package com.memes.api.common.dto;
 
-import org.springframework.lang.Nullable;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
-public record ListMemesInput(
-    int page,
-    int limit,
-    @Nullable String category,
-    String sort,
-    String locale
-) {}
+@Data
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class ListMemesInput extends PaginationDto {
+    private final String category;
+    private final String sort;
+
+    public ListMemesInput(int page, int limit, String category, String sort, String locale) {
+        super(page, limit, locale);
+        this.category = category;
+        this.sort = sort;
+    }
+}

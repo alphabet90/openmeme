@@ -33,9 +33,9 @@ public class SearchMemesOperation implements Operation<SearchMemesInput, List<Se
     @Cacheable(value = CacheNames.SEARCH,
                key = "#input.query + '-' + #input.page + '-' + #input.limit + '-' + #input.locale")
     public List<SearchResult> execute(SearchMemesInput input) {
-        int offset = input.page() * input.limit();
+        int offset = input.getPage() * input.getLimit();
         List<Map<String, Object>> hits = memeSearchMapper.searchMemes(
-            input.query(), input.locale(), input.limit(), offset);
+            input.getQuery(), input.getLocale(), input.getLimit(), offset);
         if (hits.isEmpty()) {
             return List.of();
         }
@@ -59,7 +59,7 @@ public class SearchMemesOperation implements Operation<SearchMemesInput, List<Se
                 if (detail == null || detail.isEmpty()) {
                     return toSearchResultFromHit(h);
                 }
-                return toSearchResult(detail, input.locale());
+                return toSearchResult(detail, input.getLocale());
             })
             .toList();
     }

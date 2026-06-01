@@ -1,3 +1,17 @@
 package com.memes.api.common.dto;
 
-public record SearchMemesInput(String query, int page, int limit, String locale) {}
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class SearchMemesInput extends PaginationDto {
+    private final String query;
+
+    public SearchMemesInput(String query, int page, int limit, String locale) {
+        super(page, limit, locale);
+        this.query = query;
+    }
+}
