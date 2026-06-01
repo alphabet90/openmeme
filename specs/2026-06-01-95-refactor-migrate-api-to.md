@@ -111,7 +111,7 @@ public interface Operation<I, O> {
 
 1. **One operation per endpoint.** Every `operationId` in `openapi.yaml` maps 1:1 to a class implementing `Operation<I, O>`.
 2. **No GOD MODE services.** `IndexerService` must be decomposed into focused operations (see Phase 3).
-3. **Spring resolves by generic type.** Because `Operation<I, O>` uses distinct generic parameters, `@Autowired` (or constructor injection) works without `@Qualifier` via Spring's `ResolvableType` support.
+3. **Inject concrete Operation types directly.** This avoids generic resolution ambiguity when multiple `Operation<I, O>` beans share the same signature, and keeps wiring explicit and debuggable.
 4. **Operations are `@Component` (or `@Service`).** They participate in Spring's transaction boundaries and caching annotations.
 5. **Operations declare failure modes via OperationException subtypes.** Every Operation must declare checked `OperationException` subtypes such as `NotFoundException` or `ValidationException`. Generic `RuntimeException` should not cross the Operation boundary.
 
@@ -207,7 +207,7 @@ Generator configuration must:
   - `GetMemeOperation`
   - `SearchMemesOperation`
 - Rewrite `MemesController.java` (formerly `MemesApiDelegateImpl`) to inject operations and call `execute(...)`
-- Delete `MemeService.java` and `MemeRepository.java` once all `memes` operations are migrated
+- Deprecate `MemeService.java` and `MemeRepository.java` once all `memes` operations are migrated
 - Update / add tests (`MemesControllerTest`, mapper integration tests)
 
 ### Phase 3 — Decompose `IndexerService` (`admin` Tag)
@@ -228,7 +228,7 @@ Generator configuration must:
 
 - Implement `ListApiKeysOperation`, `CreateApiKeyOperation`, `RevokeApiKeyOperation`
 - Rewrite `AdminController.java` to inject admin operations
-- Delete `IndexerService.java`, `ApiKeyService.java`, and all `repository/*` classes
+- Deprecate `IndexerService.java`, `ApiKeyService.java`, and all `repository/*` classes
 
 ### Phase 4 — Repository Cleanup & Validation
 
@@ -237,6 +237,7 @@ Generator configuration must:
 - Migrate `ApiKeyRateLimiter` to `common/security/` or keep as a cross-cutting component
 - Run full test suite: `mvn verify` (including Testcontainers)
 - Verify no raw `JdbcTemplate` SQL remains in business logic
+- **Delete deprecated classes** — once `mvn verify` passes with zero regressions, remove `MemeService.java`, `MemeRepository.java`, `IndexerService.java`, `ApiKeyService.java`, and all `repository/*` classes
 
 ### Phase 5 — Documentation & Rollout
 
