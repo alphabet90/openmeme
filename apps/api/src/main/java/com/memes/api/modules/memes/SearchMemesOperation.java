@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -35,11 +36,26 @@ public class SearchMemesOperation implements Operation<SearchMemesInput, List<Se
         int offset = input.page() * input.limit();
         List<Map<String, Object>> hits = memeSearchMapper.searchMemes(
             input.query(), input.locale(), input.limit(), offset);
+        if (hits.isEmpty()) {
+            return List.of();
+        }
+        List<Map<String, String>> entries = hits.stream()
+            .map(h -> Map.of(
+                "category", (String) h.get("category"),
+                "slug", (String) h.get("slug")))
+            .toList();
+        List<Map<String, Object>> details = memeSearchMapper.selectMemeDetailsBatch(entries);
+        Map<String, Map<String, Object>> detailsByKey = details.stream()
+            .filter(d -> d.get("category_slug") != null && d.get("slug") != null)
+            .collect(Collectors.toMap(
+                d -> d.get("category_slug") + ":" + d.get("slug"),
+                d -> d,
+                (a, b) -> a));
         return hits.stream()
             .map(h -> {
                 String slug = (String) h.get("slug");
                 String category = (String) h.get("category");
-                Map<String, Object> detail = memeSearchMapper.selectMemeDetail(category, slug);
+                Map<String, Object> detail = detailsByKey.get(category + ":" + slug);
                 if (detail == null || detail.isEmpty()) {
                     return toSearchResultFromHit(h);
                 }
