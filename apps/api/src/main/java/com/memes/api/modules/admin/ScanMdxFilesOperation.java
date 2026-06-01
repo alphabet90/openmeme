@@ -1,7 +1,7 @@
 package com.memes.api.modules.admin;
 
 import com.memes.api.common.operation.Operation;
-import com.memes.api.repository.MemeUpsert;
+import com.memes.api.modules.admin.MemeUpsert;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

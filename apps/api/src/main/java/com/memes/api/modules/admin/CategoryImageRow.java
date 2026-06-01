@@ -1,4 +1,4 @@
-package com.memes.api.repository;
+package com.memes.api.modules.admin;
 
 public record CategoryImageRow(
     long id,

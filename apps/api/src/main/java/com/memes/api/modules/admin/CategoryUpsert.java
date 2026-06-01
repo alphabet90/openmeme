@@ -1,6 +1,6 @@
 package com.memes.api.modules.admin;
 
-import com.memes.api.repository.CategoryImageRow;
+import com.memes.api.modules.admin.CategoryImageRow;
 
 import java.util.List;
 import java.util.Map;

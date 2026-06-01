@@ -1,4 +1,4 @@
-package com.memes.api.repository;
+package com.memes.api.modules.admin;
 
 import lombok.Builder;
 import org.springframework.lang.Nullable;
@@ -6,11 +6,6 @@ import org.springframework.lang.Nullable;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-/**
- * Input shape for {@link MemeRepository#upsertMeme} — mirrors the V2 normalized
- * tables but identifies lookups by name/slug so the caller doesn't have to
- * pre-resolve foreign keys.
- */
 @Builder
 public record MemeUpsert(
     String slug,

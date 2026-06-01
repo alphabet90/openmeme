@@ -1,9 +1,9 @@
 package com.memes.api.modules.admin;
 
 import com.memes.api.common.operation.Operation;
-import com.memes.api.repository.MemeImageRow;
-import com.memes.api.repository.MemeTranslationRow;
-import com.memes.api.repository.MemeUpsert;
+import com.memes.api.modules.admin.MemeImageRow;
+import com.memes.api.modules.admin.MemeTranslationRow;
+import com.memes.api.modules.admin.MemeUpsert;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.yaml.snakeyaml.Yaml;

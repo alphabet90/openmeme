@@ -1,4 +1,4 @@
-package com.memes.api.repository;
+package com.memes.api.modules.admin;
 
 import lombok.Builder;
 import org.springframework.lang.Nullable;

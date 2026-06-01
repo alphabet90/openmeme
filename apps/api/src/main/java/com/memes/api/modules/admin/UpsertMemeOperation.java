@@ -6,7 +6,9 @@ import com.memes.api.mappers.MemeMapper;
 import com.memes.api.mappers.custom.MemeSearchMapper;
 import com.memes.api.models.Category;
 import com.memes.api.models.Meme;
-import com.memes.api.repository.MemeUpsert;
+import com.memes.api.modules.admin.MemeImageRow;
+import com.memes.api.modules.admin.MemeTranslationRow;
+import com.memes.api.modules.admin.MemeUpsert;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -81,14 +83,14 @@ public class UpsertMemeOperation implements Operation<MemeUpsert, Long> {
             .orElseThrow(() -> new IllegalStateException("Category upsert returned null id for " + slug));
     }
 
-    private void upsertTranslations(long memeId, java.util.List<com.memes.api.repository.MemeTranslationRow> translations) {
+    private void upsertTranslations(long memeId, java.util.List<MemeTranslationRow> translations) {
         if (translations == null || translations.isEmpty()) return;
         for (var t : translations) {
             memeSearchMapper.upsertMemeTranslation(memeId, t.locale(), t.title(), t.description());
         }
     }
 
-    private void replaceImages(long memeId, java.util.List<com.memes.api.repository.MemeImageRow> images) {
+    private void replaceImages(long memeId, java.util.List<MemeImageRow> images) {
         memeSearchMapper.deleteMemeImages(memeId);
         if (images == null || images.isEmpty()) return;
         for (var img : images) {

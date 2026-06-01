@@ -2,8 +2,9 @@ package com.memes.api.modules.admin;
 
 import com.memes.api.common.operation.Operation;
 import com.memes.api.generated.model.MemeIndexRequest;
-import com.memes.api.repository.MemeTranslationRow;
-import com.memes.api.repository.MemeUpsert;
+import com.memes.api.modules.admin.MemeImageRow;
+import com.memes.api.modules.admin.MemeTranslationRow;
+import com.memes.api.modules.admin.MemeUpsert;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -51,7 +52,7 @@ public class ValidateMemeOperation implements Operation<MemeIndexRequest, MemeUp
 
         var images = Optional.ofNullable(req.getImages())
             .filter(l -> !l.isEmpty())
-            .map(list -> list.stream().map(img -> com.memes.api.repository.MemeImageRow.builder()
+            .map(list -> list.stream().map(img -> MemeImageRow.builder()
                 .path(img.getPath())
                 .width(img.getWidth())
                 .height(img.getHeight())
@@ -61,7 +62,7 @@ public class ValidateMemeOperation implements Operation<MemeIndexRequest, MemeUp
                 .isPrimary(Boolean.TRUE.equals(img.getIsPrimary()))
                 .build())
                 .toList())
-            .orElseGet(() -> List.of(com.memes.api.repository.MemeImageRow.builder()
+            .orElseGet(() -> List.of(MemeImageRow.builder()
                 .path("memes/" + category + "/" + slug + ".jpg")
                 .position(0)
                 .isPrimary(true)
