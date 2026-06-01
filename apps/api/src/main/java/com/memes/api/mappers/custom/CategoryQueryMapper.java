@@ -31,5 +31,13 @@ public interface CategoryQueryMapper {
     @Select("SELECT id, category_id, path, width, height, bytes, mime_type, image_type, position, is_primary "
           + "FROM category_images WHERE category_id = #{categoryId} AND image_type = #{imageType} ORDER BY position ASC")
     List<Map<String, Object>> selectCategoryImagesByType(@Param("categoryId") long categoryId,
-                                                          @Param("imageType") String imageType);
+                                                           @Param("imageType") String imageType);
+
+    @Select("<script>"
+          + "SELECT id, category_id, path, width, height, bytes, mime_type, image_type, position, is_primary "
+          + "FROM category_images WHERE category_id IN "
+          + "<foreach item='id' collection='ids' open='(' separator=',' close=')'>#{id}</foreach> "
+          + "ORDER BY position ASC"
+          + "</script>")
+    List<Map<String, Object>> selectCategoryImagesByBatch(@Param("ids") List<Long> ids);
 }

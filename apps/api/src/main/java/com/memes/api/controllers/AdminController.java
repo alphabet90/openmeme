@@ -1,8 +1,8 @@
 package com.memes.api.controllers;
 
 import com.memes.api.common.dto.CreateApiKeyInput;
-import com.memes.api.common.dto.GetStatsInput;
 import com.memes.api.common.dto.IndexMemeInput;
+import com.memes.api.common.dto.ListApiKeysInput;
 import com.memes.api.common.dto.RevokeApiKeyInput;
 import com.memes.api.generated.api.AdminApiDelegate;
 import com.memes.api.generated.model.ApiKey;
@@ -44,7 +44,7 @@ public class AdminController implements AdminApiDelegate {
 
     @Override
     public ResponseEntity<List<ApiKey>> listApiKeys() {
-        List<ApiKey> keys = listApiKeysOperation.execute(GetStatsInput.INSTANCE).stream()
+        List<ApiKey> keys = listApiKeysOperation.execute(ListApiKeysInput.INSTANCE).stream()
             .map(this::toGenerated)
             .toList();
         return ResponseEntity.ok(keys);
