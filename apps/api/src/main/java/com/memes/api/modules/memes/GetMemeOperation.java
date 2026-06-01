@@ -36,9 +36,9 @@ public class GetMemeOperation implements Operation<GetMemeInput, Optional<Meme>>
     @Override
     @Cacheable(value = CacheNames.MEME, key = "#input.category + '/' + #input.slug + '-' + #input.locale")
     public Optional<Meme> execute(GetMemeInput input) {
-        Map<String, Object> detail = memeSearchMapper.selectMemeDetail(input.category(), input.slug());
+        Map<String, Object> detail = memeSearchMapper.selectMemeDetail(input.getCategory(), input.getSlug());
         if (detail == null || detail.isEmpty()) return Optional.empty();
-        return Optional.of(toMeme(detail, input.locale()));
+        return Optional.of(toMeme(detail, input.getLocale()));
     }
 
     @SuppressWarnings("unchecked")

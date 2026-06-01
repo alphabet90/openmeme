@@ -30,16 +30,16 @@ public class ListCategoriesOperation implements Operation<ListCategoriesInput, C
     @Override
     @Cacheable(value = CacheNames.CATEGORIES, key = "#input.locale + '-' + #input.page + '-' + #input.limit")
     public CategoryPage execute(ListCategoriesInput input) {
-        int offset = input.page() * input.limit();
+        int offset = input.getPage() * input.getLimit();
         List<Map<String, Object>> flatRows = categoryQueryMapper.selectCategoriesWithTranslations(
-            input.locale(), input.limit(), offset);
+            input.getLocale(), input.getLimit(), offset);
         int total = categoryQueryMapper.countCategories();
         CategoryPage cp = new CategoryPage();
         cp.setData(aggregateCategories(flatRows).stream().map(this::toCategorySummary).toList());
-        cp.setPage(input.page());
-        cp.setLimit(input.limit());
+        cp.setPage(input.getPage());
+        cp.setLimit(input.getLimit());
         cp.setTotal(total);
-        cp.setTotalPages(input.limit() > 0 ? (int) Math.ceil((double) total / input.limit()) : 0);
+        cp.setTotalPages(input.getLimit() > 0 ? (int) Math.ceil((double) total / input.getLimit()) : 0);
         return cp;
     }
 

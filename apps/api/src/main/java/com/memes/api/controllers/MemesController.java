@@ -44,9 +44,9 @@ public class MemesController implements MemesApiDelegate {
     public ResponseEntity<CategoryPage> listCategories(Integer page, Integer limit, LocaleCode locale) {
         return ResponseEntity.ok(listCategoriesOperation.execute(
             new ListCategoriesInput(
-                localeValue(locale),
                 Optional.ofNullable(page).orElse(0),
-                Optional.ofNullable(limit).orElse(100))));
+                Optional.ofNullable(limit).orElse(100),
+                localeValue(locale))));
     }
 
     @Override
