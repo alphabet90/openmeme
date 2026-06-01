@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration PUBLIC
+    "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+    "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<generatorConfiguration>
+    <!-- Requires DB_URL, DB_USER, DB_PASSWORD environment variables -->
+    <properties url="file:///${user.home}/.env.generator.properties" />
+
+    <context id="postgres" targetRuntime="MyBatis3" defaultModelType="flat">
+
+        <!-- Suppress generation date comments so diffs stay clean -->
+        <commentGenerator>
+            <property name="suppressDate" value="true" />
+            <property name="suppressAllComments" value="true" />
+        </commentGenerator>
+
+        <jdbcConnection driverClass="org.postgresql.Driver"
+                        connectionURL="${DB_URL}"
+                        userId="${DB_USER}"
+                        password="${DB_PASSWORD}" />
+
+        <javaTypeResolver>
+            <property name="useJSR310Types" value="true" />
+        </javaTypeResolver>
+
+        <!-- Model POJOs -->
+        <javaModelGenerator targetPackage="com.memes.api.models"
+                            targetProject="src/main/java">
+            <property name="enableSubPackages" value="false" />
+            <property name="trimStrings" value="true" />
+            <property name="lombok" value="true" />
+        </javaModelGenerator>
+
+        <!-- SQL XML Mappers -->
+        <sqlMapGenerator targetPackage="mappers"
+                         targetProject="src/main/resources">
+            <property name="enableSubPackages" value="false" />
+        </sqlMapGenerator>
+
+        <!-- Mapper interfaces (annotated) -->
+        <javaClientGenerator type="ANNOTATEDMAPPER"
+                             targetPackage="com.memes.api.mappers"
+                             targetProject="src/main/java">
+            <property name="enableSubPackages" value="false" />
+        </javaClientGenerator>
+
+        <!-- Tables to generate -->
+        <table tableName="categories" domainObjectName="Category">
+            <generatedKey column="id" sqlStatement="JDBC" identity="true" />
+        </table>
+        <table tableName="category_translations" domainObjectName="CategoryTranslation">
+            <generatedKey column="id" sqlStatement="JDBC" identity="true" />
+        </table>
+        <table tableName="category_images" domainObjectName="CategoryImage">
+            <generatedKey column="id" sqlStatement="JDBC" identity="true" />
+        </table>
+        <table tableName="subreddits" domainObjectName="Subreddit">
+            <generatedKey column="id" sqlStatement="JDBC" identity="true" />
+        </table>
+        <table tableName="authors" domainObjectName="Author">
+            <generatedKey column="id" sqlStatement="JDBC" identity="true" />
+        </table>
+        <table tableName="tags" domainObjectName="Tag">
+            <generatedKey column="id" sqlStatement="JDBC" identity="true" />
+        </table>
+        <table tableName="memes" domainObjectName="Meme">
+            <generatedKey column="id" sqlStatement="JDBC" identity="true" />
+        </table>
+        <table tableName="meme_translations" domainObjectName="MemeTranslation">
+            <generatedKey column="id" sqlStatement="JDBC" identity="true" />
+        </table>
+        <table tableName="meme_images" domainObjectName="MemeImage">
+            <generatedKey column="id" sqlStatement="JDBC" identity="true" />
+        </table>
+        <table tableName="meme_tags" domainObjectName="MemeTag">
+            <generatedKey column="id" sqlStatement="JDBC" identity="true" />
+        </table>
+        <table tableName="api_keys" domainObjectName="ApiKey">
+            <generatedKey column="id" sqlStatement="JDBC" identity="true" />
+        </table>
+
+    </context>
+</generatorConfiguration>

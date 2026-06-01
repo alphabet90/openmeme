@@ -1,7 +1,7 @@
 package com.memes.api.filter;
 
-import com.memes.api.security.ApiKeyAuthenticationToken;
-import com.memes.api.service.ApiKeyRateLimiter;
+import com.memes.api.common.security.ApiKeyAuthenticationToken;
+import com.memes.api.common.security.ApiKeyRateLimiter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

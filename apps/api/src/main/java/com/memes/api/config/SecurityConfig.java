@@ -1,6 +1,6 @@
 package com.memes.api.config;
 
-import com.memes.api.filter.ApiKeyAuthenticationFilter;
+import com.memes.api.common.security.ApiKeyAuthenticationFilter;
 import com.memes.api.filter.RateLimitingFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;

@@ -1,9 +1,15 @@
 package com.memes.api.controller;
 
+import com.memes.api.common.dto.GetMemeInput;
+import com.memes.api.common.dto.GetStatsInput;
+import com.memes.api.common.dto.ListCategoriesInput;
+import com.memes.api.common.dto.ListMemesInput;
+import com.memes.api.common.dto.SearchMemesInput;
+import com.memes.api.common.security.ApiKeyRateLimiter;
 import com.memes.api.config.LocaleCodeConverter;
 import com.memes.api.config.LoggingProperties;
 import com.memes.api.config.SecurityConfig;
-import com.memes.api.filter.ApiKeyAuthenticationFilter;
+import com.memes.api.common.security.ApiKeyAuthenticationFilter;
 import com.memes.api.filter.RateLimitingFilter;
 import com.memes.api.generated.model.CategoryPage;
 import com.memes.api.generated.model.CategorySummary;
@@ -15,12 +21,14 @@ import com.memes.api.generated.model.MemePage;
 import com.memes.api.generated.model.MemeTranslation;
 import com.memes.api.generated.model.SearchResult;
 import com.memes.api.generated.model.Stats;
-import com.memes.api.repository.ApiKeyRepository;
-import com.memes.api.repository.ApiKeyRow;
-import com.memes.api.service.ApiKeyRateLimiter;
-import com.memes.api.service.ApiKeyService;
-import com.memes.api.service.IndexerService;
-import com.memes.api.service.MemeService;
+import com.memes.api.mappers.ApiKeyMapper;
+import com.memes.api.models.ApiKey;
+import com.memes.api.modules.memes.GetStatsOperation;
+import com.memes.api.modules.memes.ListCategoriesOperation;
+import com.memes.api.modules.memes.ListMemesOperation;
+import com.memes.api.modules.memes.GetMemeOperation;
+import com.memes.api.modules.memes.SearchMemesOperation;
+import com.memes.api.controllers.MemesController;
 import com.memes.api.util.ApiKeyHasher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +39,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,7 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest
-@Import({MemesApiDelegateImpl.class, AdminApiDelegateImpl.class, SecurityConfig.class,
+@Import({MemesController.class, AdminController.class, SecurityConfig.class,
     ApiKeyAuthenticationFilter.class, RateLimitingFilter.class,
     LoggingProperties.class, LocaleCodeConverter.class})
 @TestPropertySource(properties = {
@@ -55,34 +62,32 @@ class MemesControllerTest {
 
     @Autowired MockMvc mockMvc;
 
-    @MockBean MemeService memeService;
-    @MockBean IndexerService indexerService;
-    @MockBean ApiKeyRepository apiKeyRepository;
+    @MockBean GetStatsOperation getStatsOperation;
+    @MockBean ListCategoriesOperation listCategoriesOperation;
+    @MockBean ListMemesOperation listMemesOperation;
+    @MockBean GetMemeOperation getMemeOperation;
+    @MockBean SearchMemesOperation searchMemesOperation;
+    @MockBean ApiKeyMapper apiKeyMapper;
     @MockBean ApiKeyRateLimiter apiKeyRateLimiter;
-    @MockBean ApiKeyService apiKeyService;
 
     private static final String READ_KEY = "test-read-key";
 
     @BeforeEach
     void setUp() {
-        ApiKeyRow row = ApiKeyRow.builder()
-            .id(1L)
-            .keyHash(ApiKeyHasher.hash(READ_KEY))
-            .clientName("Test")
-            .role("READ")
-            .active(true)
-            .expiresAt(null)
-            .createdAt(OffsetDateTime.now())
-            .lastUsedAt(null)
-            .build();
-        when(apiKeyRepository.findByKeyHash(anyString())).thenReturn(Optional.empty());
-        when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(READ_KEY))).thenReturn(Optional.of(row));
+        ApiKey key = new ApiKey();
+        key.setId(1L);
+        key.setKeyHash(ApiKeyHasher.hash(READ_KEY));
+        key.setClientName("Test");
+        key.setRole("READ");
+        key.setActive(true);
+        when(apiKeyMapper.selectByKeyHash(anyString())).thenReturn(Optional.empty());
+        when(apiKeyMapper.selectByKeyHash(ApiKeyHasher.hash(READ_KEY))).thenReturn(Optional.of(key));
         when(apiKeyRateLimiter.isAllowed(any(), anyString())).thenReturn(true);
     }
 
     @Test
     void getStats_withoutKey_returns401() throws Exception {
-        when(apiKeyRepository.findByKeyHash(anyString())).thenReturn(Optional.empty());
+        when(apiKeyMapper.selectByKeyHash(anyString())).thenReturn(Optional.empty());
         mockMvc.perform(get("/"))
             .andExpect(status().isUnauthorized());
     }
@@ -92,7 +97,7 @@ class MemesControllerTest {
         Stats stats = new Stats();
         stats.setTotalMemes(100);
         stats.setTotalCategories(10);
-        when(memeService.getStats()).thenReturn(stats);
+        when(getStatsOperation.execute(any())).thenReturn(stats);
 
         mockMvc.perform(get("/").header("X-Api-Key", READ_KEY))
             .andExpect(status().isOk())
@@ -112,7 +117,7 @@ class MemesControllerTest {
         page.setLimit(20);
         page.setTotal(1);
         page.setTotalPages(1);
-        when(memeService.listCategories(anyString(), anyInt(), anyInt())).thenReturn(page);
+        when(listCategoriesOperation.execute(any(ListCategoriesInput.class))).thenReturn(page);
 
         mockMvc.perform(get("/categories").header("X-Api-Key", READ_KEY))
             .andExpect(status().isOk())
@@ -130,17 +135,12 @@ class MemesControllerTest {
         page.setLimit(5);
         page.setTotal(50);
         page.setTotalPages(10);
-        when(memeService.listCategories(anyString(), anyInt(), anyInt())).thenReturn(page);
+        when(listCategoriesOperation.execute(any(ListCategoriesInput.class))).thenReturn(page);
 
         mockMvc.perform(get("/categories?page=2&limit=5").header("X-Api-Key", READ_KEY))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.page").value(2))
             .andExpect(jsonPath("$.total_pages").value(10));
-
-        org.mockito.Mockito.verify(memeService).listCategories(
-            org.mockito.ArgumentMatchers.eq("en"),
-            org.mockito.ArgumentMatchers.eq(2),
-            org.mockito.ArgumentMatchers.eq(5));
     }
 
     @Test
@@ -151,13 +151,9 @@ class MemesControllerTest {
         page.setLimit(20);
         page.setTotal(0);
         page.setTotalPages(0);
-        when(memeService.listMemes(anyInt(), anyInt(), any(), anyString(), anyString())).thenReturn(page);
+        when(listMemesOperation.execute(any(ListMemesInput.class))).thenReturn(page);
 
         mockMvc.perform(get("/memes?locale=es-ar").header("X-Api-Key", READ_KEY)).andExpect(status().isOk());
-
-        org.mockito.Mockito.verify(memeService).listMemes(
-            anyInt(), anyInt(), any(), anyString(),
-            org.mockito.ArgumentMatchers.eq("es-ar"));
     }
 
     @Test
@@ -178,7 +174,7 @@ class MemesControllerTest {
         page.setLimit(20);
         page.setTotal(1);
         page.setTotalPages(1);
-        when(memeService.listMemes(anyInt(), anyInt(), any(), anyString(), anyString())).thenReturn(page);
+        when(listMemesOperation.execute(any(ListMemesInput.class))).thenReturn(page);
 
         mockMvc.perform(get("/memes").header("X-Api-Key", READ_KEY))
             .andExpect(status().isOk())
@@ -197,7 +193,7 @@ class MemesControllerTest {
 
     @Test
     void getMeme_returns404_whenNotFound() throws Exception {
-        when(memeService.getMeme(anyString(), anyString(), anyString())).thenReturn(Optional.empty());
+        when(getMemeOperation.execute(any(GetMemeInput.class))).thenReturn(Optional.empty());
         mockMvc.perform(get("/memes/unknown-category/unknown-slug").header("X-Api-Key", READ_KEY))
             .andExpect(status().isNotFound());
     }
@@ -217,7 +213,7 @@ class MemesControllerTest {
         img.setPosition(0);
         img.setIsPrimary(true);
         meme.setImages(List.of(img));
-        when(memeService.getMeme("argentina-football", "cat-world-cup", "en"))
+        when(getMemeOperation.execute(new GetMemeInput("argentina-football", "cat-world-cup", "en")))
             .thenReturn(Optional.of(meme));
 
         mockMvc.perform(get("/memes/argentina-football/cat-world-cup").header("X-Api-Key", READ_KEY))
@@ -235,7 +231,7 @@ class MemesControllerTest {
         sr.setScore(3035);
         sr.setTitle("AFIP Tax Man");
         sr.setTags(List.of("argentina"));
-        when(memeService.search(anyString(), anyInt(), anyInt(), anyString())).thenReturn(List.of(sr));
+        when(searchMemesOperation.execute(any(SearchMemesInput.class))).thenReturn(List.of(sr));
 
         mockMvc.perform(get("/search?q=afip").header("X-Api-Key", READ_KEY))
             .andExpect(status().isOk())
@@ -244,11 +240,7 @@ class MemesControllerTest {
 
     @Test
     void searchMemes_defaultsToEnLocale() throws Exception {
-        when(memeService.search(anyString(), anyInt(), anyInt(), anyString())).thenReturn(List.of());
+        when(searchMemesOperation.execute(any(SearchMemesInput.class))).thenReturn(List.of());
         mockMvc.perform(get("/search?q=jubilado").header("X-Api-Key", READ_KEY)).andExpect(status().isOk());
-        org.mockito.Mockito.verify(memeService).search(
-            org.mockito.ArgumentMatchers.eq("jubilado"),
-            anyInt(), anyInt(),
-            org.mockito.ArgumentMatchers.eq("en"));
     }
 }

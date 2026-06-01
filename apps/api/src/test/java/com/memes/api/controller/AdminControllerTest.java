@@ -1,16 +1,18 @@
 package com.memes.api.controller;
 
+import com.memes.api.common.security.ApiKeyRateLimiter;
 import com.memes.api.config.LocaleCodeConverter;
 import com.memes.api.config.LoggingProperties;
 import com.memes.api.config.SecurityConfig;
-import com.memes.api.filter.ApiKeyAuthenticationFilter;
+import com.memes.api.common.security.ApiKeyAuthenticationFilter;
 import com.memes.api.filter.RateLimitingFilter;
-import com.memes.api.repository.ApiKeyRepository;
-import com.memes.api.repository.ApiKeyRow;
-import com.memes.api.service.ApiKeyRateLimiter;
-import com.memes.api.service.ApiKeyService;
-import com.memes.api.service.IndexerService;
-import com.memes.api.service.MemeService;
+import com.memes.api.mappers.ApiKeyMapper;
+import com.memes.api.models.ApiKey;
+import com.memes.api.modules.admin.TriggerIndexOperation;
+import com.memes.api.modules.admin.ListApiKeysOperation;
+import com.memes.api.modules.admin.CreateApiKeyOperation;
+import com.memes.api.modules.admin.RevokeApiKeyOperation;
+import com.memes.api.controllers.AdminController;
 import com.memes.api.util.ApiKeyHasher;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,18 +22,16 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.OffsetDateTime;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest
-@Import({MemesApiDelegateImpl.class, AdminApiDelegateImpl.class, SecurityConfig.class,
+@Import({AdminController.class, com.memes.api.controllers.MemesController.class, SecurityConfig.class,
     ApiKeyAuthenticationFilter.class, RateLimitingFilter.class,
     LoggingProperties.class, LocaleCodeConverter.class})
 @TestPropertySource(properties = {
@@ -41,57 +41,50 @@ class AdminControllerTest {
 
     @Autowired MockMvc mockMvc;
 
-    @MockBean IndexerService indexerService;
-    @MockBean MemeService memeService;
-    @MockBean ApiKeyRepository apiKeyRepository;
+    @MockBean TriggerIndexOperation triggerIndexOperation;
+    @MockBean ListApiKeysOperation listApiKeysOperation;
+    @MockBean CreateApiKeyOperation createApiKeyOperation;
+    @MockBean RevokeApiKeyOperation revokeApiKeyOperation;
+    @MockBean ApiKeyMapper apiKeyMapper;
     @MockBean ApiKeyRateLimiter apiKeyRateLimiter;
-    @MockBean ApiKeyService apiKeyService;
 
     private static final String ADMIN_KEY = "test-admin-key";
     private static final String READ_KEY = "test-read-key";
 
     private void givenAdminKey() {
-        ApiKeyRow row = ApiKeyRow.builder()
-            .id(1L)
-            .keyHash(ApiKeyHasher.hash(ADMIN_KEY))
-            .clientName("Admin")
-            .role("ADMIN")
-            .active(true)
-            .expiresAt(null)
-            .createdAt(OffsetDateTime.now())
-            .lastUsedAt(null)
-            .build();
-        when(apiKeyRepository.findByKeyHash(anyString())).thenReturn(Optional.empty());
-        when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(ADMIN_KEY))).thenReturn(Optional.of(row));
+        ApiKey key = new ApiKey();
+        key.setId(1L);
+        key.setKeyHash(ApiKeyHasher.hash(ADMIN_KEY));
+        key.setClientName("Admin");
+        key.setRole("ADMIN");
+        key.setActive(true);
+        when(apiKeyMapper.selectByKeyHash(anyString())).thenReturn(Optional.empty());
+        when(apiKeyMapper.selectByKeyHash(ApiKeyHasher.hash(ADMIN_KEY))).thenReturn(Optional.of(key));
         when(apiKeyRateLimiter.isAllowed(any(), anyString())).thenReturn(true);
     }
 
     private void givenReadKey() {
-        ApiKeyRow row = ApiKeyRow.builder()
-            .id(2L)
-            .keyHash(ApiKeyHasher.hash(READ_KEY))
-            .clientName("Read")
-            .role("READ")
-            .active(true)
-            .expiresAt(null)
-            .createdAt(OffsetDateTime.now())
-            .lastUsedAt(null)
-            .build();
-        when(apiKeyRepository.findByKeyHash(anyString())).thenReturn(Optional.empty());
-        when(apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(READ_KEY))).thenReturn(Optional.of(row));
+        ApiKey key = new ApiKey();
+        key.setId(2L);
+        key.setKeyHash(ApiKeyHasher.hash(READ_KEY));
+        key.setClientName("Read");
+        key.setRole("READ");
+        key.setActive(true);
+        when(apiKeyMapper.selectByKeyHash(anyString())).thenReturn(Optional.empty());
+        when(apiKeyMapper.selectByKeyHash(ApiKeyHasher.hash(READ_KEY))).thenReturn(Optional.of(key));
         when(apiKeyRateLimiter.isAllowed(any(), anyString())).thenReturn(true);
     }
 
     @Test
     void reindex_withoutKey_returns401() throws Exception {
-        when(apiKeyRepository.findByKeyHash(anyString())).thenReturn(Optional.empty());
+        when(apiKeyMapper.selectByKeyHash(anyString())).thenReturn(Optional.empty());
         mockMvc.perform(post("/admin/reindex"))
             .andExpect(status().isUnauthorized());
     }
 
     @Test
     void reindex_withWrongKey_returns401() throws Exception {
-        when(apiKeyRepository.findByKeyHash(anyString())).thenReturn(Optional.empty());
+        when(apiKeyMapper.selectByKeyHash(anyString())).thenReturn(Optional.empty());
         mockMvc.perform(post("/admin/reindex")
                 .header("X-Api-Key", "wrong-key"))
             .andExpect(status().isUnauthorized());
@@ -108,8 +101,6 @@ class AdminControllerTest {
     @Test
     void reindex_withAdminKey_returns200WithAccepted() throws Exception {
         givenAdminKey();
-        doNothing().when(indexerService).reindexAsync(any());
-
         mockMvc.perform(post("/admin/reindex")
                 .header("X-Api-Key", ADMIN_KEY))
             .andExpect(status().isOk())
