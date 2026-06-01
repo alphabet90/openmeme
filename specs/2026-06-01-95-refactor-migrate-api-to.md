@@ -145,8 +145,8 @@ public class GetStatsOperation implements Operation<GetStatsInput, Stats> {
     @Override
     public Stats execute(GetStatsInput input) {
         return statsMapper.selectStatsSnapshot();
+    }
 }
-```
 ```
 
 ### 3.4 DB-to-API Mapping Convention
