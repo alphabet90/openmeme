@@ -1,6 +1,6 @@
 package com.memes.api.modules.admin;
 
-import com.memes.api.common.dto.CreateApiKeyInput;
+import com.memes.api.common.dto.CreateApiKeyInputDto;
 import com.memes.api.common.operation.Operation;
 import com.memes.api.models.ApiKey;
 import com.memes.api.mappers.ApiKeyMapper;
@@ -11,12 +11,12 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class CreateApiKeyOperation implements Operation<CreateApiKeyInput, CreateApiKeyOperation.Result> {
+public class CreateApiKeyOperation implements Operation<CreateApiKeyInputDto, CreateApiKeyOperation.Result> {
 
     private final ApiKeyMapper apiKeyMapper;
 
     @Override
-    public Result execute(CreateApiKeyInput input) {
+    public Result execute(CreateApiKeyInputDto input) {
         String plain = ApiKeyGenerator.generate();
         String hash = ApiKeyHasher.hash(plain);
         ApiKey entity = new ApiKey();
