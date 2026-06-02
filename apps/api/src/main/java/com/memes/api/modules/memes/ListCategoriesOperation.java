@@ -93,15 +93,16 @@ public class ListCategoriesOperation implements Operation<ListCategoriesInput, C
     }
 
     private CategoryImage toCategoryImage(Map<String, Object> row) {
-        return new CategoryImage()
-            .path((String) row.get("path"))
-            .width(row.get("width") instanceof Number n ? n.intValue() : null)
-            .height(row.get("height") instanceof Number n ? n.intValue() : null)
-            .bytes(row.get("bytes") instanceof Number n ? n.longValue() : null)
-            .mimeType((String) row.get("mime_type"))
-            .imageType(CategoryImage.ImageTypeEnum.fromValue((String) row.get("image_type")))
-            .position(row.get("position") instanceof Number n ? n.intValue() : 0)
-            .isPrimary(row.get("is_primary") instanceof Boolean b ? b : false);
+        CategoryImage img = new CategoryImage();
+        img.setPath((String) row.get("path"));
+        img.setWidth(row.get("width") instanceof Number n ? n.intValue() : null);
+        img.setHeight(row.get("height") instanceof Number n ? n.intValue() : null);
+        img.setBytes(row.get("bytes") instanceof Number n ? n.longValue() : null);
+        img.setMimeType((String) row.get("mime_type"));
+        img.setImageType(CategoryImage.ImageTypeEnum.fromValue((String) row.get("image_type")));
+        img.setPosition(row.get("position") instanceof Number n ? n.intValue() : 0);
+        img.setIsPrimary(row.get("is_primary") instanceof Boolean b ? b : false);
+        return img;
     }
 
     private static LocaleCode toLocaleCode(@Nullable String value) {

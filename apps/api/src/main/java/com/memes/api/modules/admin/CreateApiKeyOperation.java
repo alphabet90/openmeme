@@ -21,13 +21,22 @@ public class CreateApiKeyOperation implements Operation<CreateApiKeyInputDto, Cr
         String hash = ApiKeyHasher.hash(plain);
         ApiKey entity = new ApiKey();
         entity.setKeyHash(hash);
-        entity.setClientName(input.clientName());
-        entity.setRole(input.role());
+        entity.setClientName(input.getClientName());
+        entity.setRole(input.getRole());
         entity.setActive(true);
-        entity.setExpiresAt(input.expiresAt());
+        entity.setExpiresAt(input.getExpiresAt());
         apiKeyMapper.insert(entity);
         return new Result(entity.getId(), plain);
     }
 
-    public record Result(long id, String plainKey) {}
+    @Data
+    public static class Result {
+        private final long id;
+        private final String plainKey;
+
+        public Result(long id, String plainKey) {
+            this.id = id;
+            this.plainKey = plainKey;
+        }
+    }
 }

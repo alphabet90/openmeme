@@ -1,3 +1,8 @@
 package com.memes.api.common.dto;
 
-public record RevokeApiKeyInput(Long id) {}
+import lombok.Data;
+
+@Data
+public class RevokeApiKeyInput {
+    private final Long id;
+}
