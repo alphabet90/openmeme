@@ -4,6 +4,7 @@ import com.memes.api.common.dto.GetMemeInput;
 import com.memes.api.common.dto.GetStatsInput;
 import com.memes.api.common.dto.ListCategoriesInput;
 import com.memes.api.common.dto.ListMemesInput;
+import com.memes.api.common.dto.PaginationDto;
 import com.memes.api.common.dto.SearchMemesInput;
 import com.memes.api.generated.api.MemesApiDelegate;
 import com.memes.api.generated.model.CategoryPage;
@@ -43,10 +44,11 @@ public class MemesController implements MemesApiDelegate {
     @Override
     public ResponseEntity<CategoryPage> listCategories(Integer page, Integer limit, LocaleCode locale) {
         return ResponseEntity.ok(listCategoriesOperation.execute(
-            new ListCategoriesInput(
-                Optional.ofNullable(page).orElse(0),
-                Optional.ofNullable(limit).orElse(100),
-                localeValue(locale))));
+            ListCategoriesInput.builder()
+                .page(Optional.ofNullable(page).orElse(0))
+                .limit(Optional.ofNullable(limit).orElse(100))
+                .locale(localeValue(locale))
+                .build()));
     }
 
     @Override
@@ -54,25 +56,37 @@ public class MemesController implements MemesApiDelegate {
             Integer page, Integer limit,
             String category, String sort,
             LocaleCode locale) {
+        PaginationDto pagination = PaginationDto.builder()
+            .page(Optional.ofNullable(page).orElse(0))
+            .limit(Optional.ofNullable(limit).orElse(100))
+            .locale(localeValue(locale))
+            .build();
         return ResponseEntity.ok(listMemesOperation.execute(
-            new ListMemesInput(
-                Optional.ofNullable(page).orElse(0),
-                Optional.ofNullable(limit).orElse(100),
-                category,
-                Optional.ofNullable(sort).orElse("score"),
-                localeValue(locale))));
+            ListMemesInput.builder()
+                .page(pagination.getPage())
+                .limit(pagination.getLimit())
+                .locale(pagination.getLocale())
+                .category(category)
+                .sort(Optional.ofNullable(sort).orElse("score"))
+                .build()));
     }
 
     @Override
     public ResponseEntity<MemePage> listMemesByCategory(
             String category, Integer page, Integer limit, String sort, LocaleCode locale) {
+        PaginationDto pagination = PaginationDto.builder()
+            .page(Optional.ofNullable(page).orElse(0))
+            .limit(Optional.ofNullable(limit).orElse(100))
+            .locale(localeValue(locale))
+            .build();
         MemePage result = listMemesOperation.execute(
-            new ListMemesInput(
-                Optional.ofNullable(page).orElse(0),
-                Optional.ofNullable(limit).orElse(100),
-                category,
-                Optional.ofNullable(sort).orElse("score"),
-                localeValue(locale)));
+            ListMemesInput.builder()
+                .page(pagination.getPage())
+                .limit(pagination.getLimit())
+                .locale(pagination.getLocale())
+                .category(category)
+                .sort(Optional.ofNullable(sort).orElse("score"))
+                .build());
         return Optional.of(result)
             .filter(r -> r.getTotal() != null && r.getTotal() > 0)
             .map(ResponseEntity::ok)
@@ -88,12 +102,18 @@ public class MemesController implements MemesApiDelegate {
 
     @Override
     public ResponseEntity<List<SearchResult>> searchMemes(String q, Integer page, Integer limit, LocaleCode locale) {
+        PaginationDto pagination = PaginationDto.builder()
+            .page(Optional.ofNullable(page).orElse(0))
+            .limit(Optional.ofNullable(limit).orElse(100))
+            .locale(localeValue(locale))
+            .build();
         return ResponseEntity.ok(searchMemesOperation.execute(
-            new SearchMemesInput(
-                q,
-                Optional.ofNullable(page).orElse(0),
-                Optional.ofNullable(limit).orElse(100),
-                localeValue(locale))));
+            SearchMemesInput.builder()
+                .page(pagination.getPage())
+                .limit(pagination.getLimit())
+                .locale(pagination.getLocale())
+                .query(q)
+                .build()));
     }
 
     private static String localeValue(@Nullable LocaleCode locale) {
