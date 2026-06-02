@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -34,8 +35,8 @@ public class AdminController implements AdminApiDelegate {
         Boolean indexMemes,
         Boolean indexCategories,
         MemeIndexRequest body) {
-        boolean memes = indexMemes != null ? indexMemes : true;
-        boolean categories = indexCategories != null ? indexCategories : true;
+        boolean memes = Optional.ofNullable(indexMemes).orElse(true);
+        boolean categories = Optional.ofNullable(indexCategories).orElse(true);
         triggerIndexOperation.executeAsync(new IndexMemeInput(body, memes, categories));
         ReindexAccepted accepted = new ReindexAccepted();
         accepted.setStatus(ReindexAccepted.StatusEnum.ACCEPTED);
