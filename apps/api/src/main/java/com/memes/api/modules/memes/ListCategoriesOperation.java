@@ -81,13 +81,10 @@ public class ListCategoriesOperation implements Operation<ListCategoriesInput, C
         cs.setCount(cv.count());
         cs.setTopScore(cv.topScore());
         cs.setTranslations(cv.translations().stream()
-            .map(t -> {
-                CategoryTranslation ct = new CategoryTranslation();
-                ct.setLocale(toLocaleCode((String) t.get("locale")));
-                ct.setName((String) t.get("name"));
-                ct.setDescription((String) t.get("description"));
-                return ct;
-            })
+            .map(t -> new CategoryTranslation()
+                .locale(toLocaleCode((String) t.get("locale")))
+                .name((String) t.get("name"))
+                .description((String) t.get("description")))
             .toList());
         if (cv.images() != null && !cv.images().isEmpty()) {
             cs.setImages(cv.images().stream().map(this::toCategoryImage).toList());
@@ -96,16 +93,15 @@ public class ListCategoriesOperation implements Operation<ListCategoriesInput, C
     }
 
     private CategoryImage toCategoryImage(Map<String, Object> row) {
-        CategoryImage img = new CategoryImage();
-        img.setPath((String) row.get("path"));
-        img.setWidth(row.get("width") instanceof Number n ? n.intValue() : null);
-        img.setHeight(row.get("height") instanceof Number n ? n.intValue() : null);
-        img.setBytes(row.get("bytes") instanceof Number n ? n.longValue() : null);
-        img.setMimeType((String) row.get("mime_type"));
-        img.setImageType(CategoryImage.ImageTypeEnum.fromValue((String) row.get("image_type")));
-        img.setPosition(row.get("position") instanceof Number n ? n.intValue() : 0);
-        img.setIsPrimary(row.get("is_primary") instanceof Boolean b ? b : false);
-        return img;
+        return new CategoryImage()
+            .path((String) row.get("path"))
+            .width(row.get("width") instanceof Number n ? n.intValue() : null)
+            .height(row.get("height") instanceof Number n ? n.intValue() : null)
+            .bytes(row.get("bytes") instanceof Number n ? n.longValue() : null)
+            .mimeType((String) row.get("mime_type"))
+            .imageType(CategoryImage.ImageTypeEnum.fromValue((String) row.get("image_type")))
+            .position(row.get("position") instanceof Number n ? n.intValue() : 0)
+            .isPrimary(row.get("is_primary") instanceof Boolean b ? b : false);
     }
 
     private static LocaleCode toLocaleCode(@Nullable String value) {
