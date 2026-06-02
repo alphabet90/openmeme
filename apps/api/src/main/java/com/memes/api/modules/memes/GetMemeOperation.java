@@ -60,30 +60,26 @@ public class GetMemeOperation implements Operation<GetMemeInput, Optional<Meme>>
             : List.<MemeTranslationRow>of();
         m.setTranslations(allTranslations.stream()
             .filter(t -> locale.equals(t.locale()))
-            .map(t -> {
-                MemeTranslation out = new MemeTranslation();
-                out.setLocale(toLocaleCode(t.locale()));
-                out.setTitle(t.title());
-                out.setDescription(t.description());
-                return out;
-            })
+            .map(t -> new MemeTranslation()
+                .locale(toLocaleCode(t.locale()))
+                .title(t.title())
+                .description(t.description()))
             .toList());
 
         String imagesJson = (String) r.get("images_json");
         var allImages = imagesJson != null
             ? JsonAggregates.parseImages(imagesJson)
             : List.<MemeImageRow>of();
-        m.setImages(allImages.stream().map(img -> {
-            MemeImage out = new MemeImage();
-            out.setPath(resolveImageUrl(img.path()));
-            out.setWidth(img.width());
-            out.setHeight(img.height());
-            out.setBytes(img.bytes());
-            out.setMimeType(img.mimeType());
-            out.setPosition(img.position());
-            out.setIsPrimary(img.isPrimary());
-            return out;
-        }).toList());
+        m.setImages(allImages.stream().map(img ->
+            new MemeImage()
+                .path(resolveImageUrl(img.path()))
+                .width(img.width())
+                .height(img.height())
+                .bytes(img.bytes())
+                .mimeType(img.mimeType())
+                .position(img.position())
+                .isPrimary(img.isPrimary())
+        ).toList());
 
         Object tags = r.get("tag_slugs");
         if (tags instanceof String[] arr) {
