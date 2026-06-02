@@ -14,7 +14,7 @@ public class RevokeApiKeyOperation implements Operation<RevokeApiKeyInput, Void>
 
     @Override
     public Void execute(RevokeApiKeyInput input) {
-        apiKeyMapper.deactivate(input.id());
+        apiKeyMapper.deactivate(input.getId());
         return null;
     }
 }

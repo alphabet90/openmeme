@@ -56,8 +56,8 @@ public class AdminController implements AdminApiDelegate {
             new CreateApiKeyInputDto(
                 body.getClientName(), body.getRole().getValue(), body.getExpiresAt()));
         ApiKeyCreated created = new ApiKeyCreated();
-        created.setId(result.id());
-        created.setKey(result.plainKey());
+        created.setId(result.getId());
+        created.setKey(result.getPlainKey());
         return ResponseEntity.status(201).body(created);
     }
 

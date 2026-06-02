@@ -1,5 +1,11 @@
 package com.memes.api.common.dto;
 
 import java.util.List;
+import lombok.Data;
 
-public record IndexResult(int indexed, long durationMs, List<String> errors) {}
+@Data
+public class IndexResult {
+    private final int indexed;
+    private final long durationMs;
+    private final List<String> errors;
+}

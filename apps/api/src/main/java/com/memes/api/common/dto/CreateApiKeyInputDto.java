@@ -1,5 +1,11 @@
 package com.memes.api.common.dto;
 
 import java.time.OffsetDateTime;
+import lombok.Data;
 
-public record CreateApiKeyInputDto(String clientName, String role, OffsetDateTime expiresAt) {}
+@Data
+public class CreateApiKeyInputDto {
+    private final String clientName;
+    private final String role;
+    private final OffsetDateTime expiresAt;
+}

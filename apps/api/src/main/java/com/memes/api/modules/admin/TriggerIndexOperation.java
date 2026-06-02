@@ -42,7 +42,7 @@ public class TriggerIndexOperation implements Operation<IndexMemeInput, IndexRes
     @Override
     public IndexResult execute(IndexMemeInput input) {
         long start = System.currentTimeMillis();
-        MemeIndexRequest body = input.request();
+        MemeIndexRequest body = input.getRequest();
 
         if (body != null && body.getSlug() != null && !body.getSlug().isBlank()) {
             return indexSingle(body, start);
@@ -55,7 +55,7 @@ public class TriggerIndexOperation implements Operation<IndexMemeInput, IndexRes
         try {
             IndexResult result = execute(input);
             log.info("Async reindex done: indexed={} durationMs={} errors={}",
-                result.indexed(), result.durationMs(), result.errors().size());
+                result.getIndexed(), result.getDurationMs(), result.getErrors().size());
         } catch (Exception e) {
             log.error("Async reindex failed", e);
         }
