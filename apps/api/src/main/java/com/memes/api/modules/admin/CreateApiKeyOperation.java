@@ -1,28 +1,28 @@
 package com.memes.api.modules.admin;
 
-import com.memes.api.common.dto.CreateApiKeyInputDto;
 import com.memes.api.common.operation.Operation;
 import com.memes.api.models.ApiKey;
 import com.memes.api.mappers.ApiKeyMapper;
 import com.memes.api.util.ApiKeyGenerator;
 import com.memes.api.util.ApiKeyHasher;
+import com.memes.api.generated.model.ApiKeyCreateRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class CreateApiKeyOperation implements Operation<CreateApiKeyInputDto, CreateApiKeyOperation.Result> {
+public class CreateApiKeyOperation implements Operation<ApiKeyCreateRequest, CreateApiKeyOperation.Result> {
 
     private final ApiKeyMapper apiKeyMapper;
 
     @Override
-    public Result execute(CreateApiKeyInputDto input) {
+    public Result execute(ApiKeyCreateRequest input) {
         String plain = ApiKeyGenerator.generate();
         String hash = ApiKeyHasher.hash(plain);
         ApiKey entity = new ApiKey();
         entity.setKeyHash(hash);
         entity.setClientName(input.getClientName());
-        entity.setRole(input.getRole());
+        entity.setRole(input.getRole().getValue());
         entity.setActive(true);
         entity.setExpiresAt(input.getExpiresAt());
         apiKeyMapper.insert(entity);
