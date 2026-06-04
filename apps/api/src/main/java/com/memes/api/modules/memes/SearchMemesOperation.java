@@ -1,6 +1,6 @@
 package com.memes.api.modules.memes;
 
-import com.memes.api.common.dto.SearchMemesInput;
+import com.memes.api.common.dto.PaginationDto;
 import com.memes.api.common.constants.CacheNames;
 import com.memes.api.common.operation.Operation;
 import com.memes.api.generated.model.SearchResult;
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class SearchMemesOperation implements Operation<SearchMemesInput, List<SearchResult>> {
+public class SearchMemesOperation implements Operation<PaginationDto, List<SearchResult>> {
 
     private final MemeSearchMapper memeSearchMapper;
 
@@ -32,7 +32,7 @@ public class SearchMemesOperation implements Operation<SearchMemesInput, List<Se
     @Override
     @Cacheable(value = CacheNames.SEARCH,
                key = "#input.query + '-' + #input.page + '-' + #input.limit + '-' + #input.locale")
-    public List<SearchResult> execute(SearchMemesInput input) {
+    public List<SearchResult> execute(PaginationDto input) {
         int offset = input.getPage() * input.getLimit();
         List<Map<String, Object>> hits = memeSearchMapper.searchMemes(
             input.getQuery(), input.getLocale(), input.getLimit(), offset);
