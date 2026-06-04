@@ -1,6 +1,5 @@
 package com.memes.api.modules.memes;
 
-import com.memes.api.common.dto.GetStatsInput;
 import com.memes.api.common.operation.Operation;
 import com.memes.api.generated.model.Stats;
 import com.memes.api.mappers.StatsMapper;
@@ -13,13 +12,13 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class GetStatsOperation implements Operation<GetStatsInput, Stats> {
+public class GetStatsOperation implements Operation<Void, Stats> {
 
     private final StatsMapper statsMapper;
 
     @Override
     @Cacheable(value = CacheNames.STATS)
-    public Stats execute(GetStatsInput input) {
+    public Stats execute(Void input) {
         Stats stats = new Stats();
         statsMapper.selectStatsSnapshot().ifPresent(row -> {
             stats.setTotalMemes(Optional.ofNullable(row.getTotalMemes()).map(Long::intValue).orElse(0));
