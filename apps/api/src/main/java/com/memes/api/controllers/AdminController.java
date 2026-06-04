@@ -42,36 +42,18 @@ public class AdminController implements AdminApiDelegate {
 
     @Override
     public ResponseEntity<List<ApiKey>> listApiKeys() {
-        List<ApiKey> keys = listApiKeysOperation.execute(null).stream()
-            .map(this::toGenerated)
-            .toList();
-        return ResponseEntity.ok(keys);
+        return ResponseEntity.ok(listApiKeysOperation.execute(null));
     }
 
     @Override
     public ResponseEntity<ApiKeyCreated> createApiKey(ApiKeyCreateRequest body) {
         CreateApiKeyOperation.Result result = createApiKeyOperation.execute(body);
-        ApiKeyCreated created = new ApiKeyCreated();
-        created.setId(result.getId());
-        created.setKey(result.getPlainKey());
-        return ResponseEntity.status(201).body(created);
+        return ResponseEntity.status(201).body(createApiKeyOperation.toCreated(result));
     }
 
     @Override
     public ResponseEntity<Void> revokeApiKey(Long id) {
         revokeApiKeyOperation.execute(id);
         return ResponseEntity.noContent().build();
-    }
-
-    private ApiKey toGenerated(com.memes.api.models.ApiKey entity) {
-        ApiKey key = new ApiKey();
-        key.setId(entity.getId());
-        key.setClientName(entity.getClientName());
-        key.setRole(ApiKey.RoleEnum.fromValue(entity.getRole()));
-        key.setActive(entity.getActive());
-        key.setExpiresAt(entity.getExpiresAt());
-        key.setCreatedAt(entity.getCreatedAt());
-        key.setLastUsedAt(entity.getLastUsedAt());
-        return key;
     }
 }
