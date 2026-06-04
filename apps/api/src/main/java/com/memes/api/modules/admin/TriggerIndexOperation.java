@@ -22,8 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -232,58 +230,5 @@ public class TriggerIndexOperation implements Operation<IndexMemeInput, IndexRes
         log.warn("Dropping invalid author '{}'", raw);
         return null;
     }
-
-    @SuppressWarnings("unchecked")
-    private List<String> parseTags(Object raw) {
-        if (!(raw instanceof List<?> list)) return List.of();
-        List<String> out = new ArrayList<>();
-        for (Object o : list) {
-            String s = Optional.ofNullable(o).map(Object::toString).orElse("").trim();
-            if (s.isEmpty()) continue;
-            if (!SLUG_PATTERN.matcher(s).matches()) {
-                log.warn("Dropping invalid tag '{}'", s);
-                continue;
-            }
-            out.add(s);
-        }
-        return out;
-    }
-
-    private OffsetDateTime parseDateTime(String s) {
-        if (s == null || s.isBlank()) return null;
-        try {
-            return OffsetDateTime.parse(s);
-        } catch (Exception e) {
-            log.warn("Could not parse datetime: {}", s);
-            return null;
-        }
-    }
-
-    private String str(Map<String, Object> fm, String key) {
-        return Optional.ofNullable(fm.get(key)).map(Object::toString).orElse(null);
-    }
-
-    private String strFromMap(Map<Object, Object> map, String key) {
-        return Optional.ofNullable(map.get(key)).map(Object::toString).orElse(null);
-    }
-
-    private int toInt(Object v) {
-        if (v instanceof Number n) return n.intValue();
-        if (v instanceof String s) {
-            try { return Integer.parseInt(s); } catch (NumberFormatException ignored) {}
-        }
-        return 0;
-    }
-
-    private Integer intOrNull(Object v) {
-        if (v instanceof Number n) return n.intValue();
-        return null;
-    }
-
-    private Long longOrNull(Object v) {
-        if (v instanceof Number n) return n.longValue();
-        return null;
-    }
-
 
 }

@@ -1,7 +1,6 @@
 package com.memes.api.controllers;
 
 import com.memes.api.common.dto.GetMemeInput;
-import com.memes.api.common.dto.GetStatsInput;
 import com.memes.api.common.dto.PaginationDto;
 import com.memes.api.generated.api.MemesApiDelegate;
 import com.memes.api.generated.model.CategoryPage;
@@ -35,7 +34,7 @@ public class MemesController implements MemesApiDelegate {
 
     @Override
     public ResponseEntity<Stats> getStats() {
-        return ResponseEntity.ok(getStatsOperation.execute(GetStatsInput.INSTANCE));
+        return ResponseEntity.ok(getStatsOperation.execute(null));
     }
 
     @Override
