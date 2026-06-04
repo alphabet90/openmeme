@@ -6,6 +6,7 @@ import com.memes.api.mappers.ApiKeyMapper;
 import com.memes.api.util.ApiKeyGenerator;
 import com.memes.api.util.ApiKeyHasher;
 import com.memes.api.generated.model.ApiKeyCreateRequest;
+import com.memes.api.generated.model.ApiKeyCreated;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +28,13 @@ public class CreateApiKeyOperation implements Operation<ApiKeyCreateRequest, Cre
         entity.setExpiresAt(input.getExpiresAt());
         apiKeyMapper.insert(entity);
         return new Result(entity.getId(), plain);
+    }
+
+    public ApiKeyCreated toCreated(Result result) {
+        ApiKeyCreated created = new ApiKeyCreated();
+        created.setId(result.getId());
+        created.setKey(result.getPlainKey());
+        return created;
     }
 
     @Data
