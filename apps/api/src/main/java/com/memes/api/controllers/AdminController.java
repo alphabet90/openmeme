@@ -1,6 +1,5 @@
 package com.memes.api.controllers;
 
-import com.memes.api.common.dto.CreateApiKeyInputDto;
 import com.memes.api.common.dto.IndexMemeInput;
 import com.memes.api.common.dto.ListApiKeysInput;
 import com.memes.api.common.dto.RevokeApiKeyInput;
@@ -53,9 +52,7 @@ public class AdminController implements AdminApiDelegate {
 
     @Override
     public ResponseEntity<ApiKeyCreated> createApiKey(ApiKeyCreateRequest body) {
-        CreateApiKeyOperation.Result result = createApiKeyOperation.execute(
-            new CreateApiKeyInputDto(
-                body.getClientName(), body.getRole().getValue(), body.getExpiresAt()));
+        CreateApiKeyOperation.Result result = createApiKeyOperation.execute(body);
         ApiKeyCreated created = new ApiKeyCreated();
         created.setId(result.getId());
         created.setKey(result.getPlainKey());

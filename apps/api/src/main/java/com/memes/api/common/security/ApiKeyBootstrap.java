@@ -2,7 +2,7 @@ package com.memes.api.common.security;
 
 import com.memes.api.mappers.ApiKeyMapper;
 import com.memes.api.modules.admin.CreateApiKeyOperation;
-import com.memes.api.common.dto.CreateApiKeyInputDto;
+import com.memes.api.generated.model.ApiKeyCreateRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -20,8 +20,11 @@ public class ApiKeyBootstrap implements CommandLineRunner {
     public void run(String... args) {
         int activeAdmins = apiKeyMapper.countActiveAdminKeys();
         if (activeAdmins == 0) {
-            CreateApiKeyOperation.Result result = createApiKeyOperation.execute(
-                new CreateApiKeyInputDto("bootstrap-emergency", "ADMIN", null));
+            ApiKeyCreateRequest req = new ApiKeyCreateRequest();
+            req.setClientName("bootstrap-emergency");
+            req.setRole(ApiKeyCreateRequest.RoleEnum.ADMIN);
+            req.setExpiresAt(null);
+            CreateApiKeyOperation.Result result = createApiKeyOperation.execute(req);
             log.info("============================================================");
             log.info("EMERGENCY: No active ADMIN API keys found. A bootstrap key");
             log.info("has been created. Copy the key below immediately — it will");
