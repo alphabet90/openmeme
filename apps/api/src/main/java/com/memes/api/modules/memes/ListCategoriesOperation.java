@@ -1,6 +1,6 @@
 package com.memes.api.modules.memes;
 
-import com.memes.api.common.dto.ListCategoriesInput;
+import com.memes.api.common.dto.PaginationDto;
 import com.memes.api.common.constants.CacheNames;
 import com.memes.api.common.operation.Operation;
 import com.memes.api.generated.model.CategoryImage;
@@ -23,13 +23,13 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class ListCategoriesOperation implements Operation<ListCategoriesInput, CategoryPage> {
+public class ListCategoriesOperation implements Operation<PaginationDto, CategoryPage> {
 
     private final CategoryQueryMapper categoryQueryMapper;
 
     @Override
     @Cacheable(value = CacheNames.CATEGORIES, key = "#input.locale + '-' + #input.page + '-' + #input.limit")
-    public CategoryPage execute(ListCategoriesInput input) {
+    public CategoryPage execute(PaginationDto input) {
         int offset = input.getPage() * input.getLimit();
         List<Map<String, Object>> flatRows = categoryQueryMapper.selectCategoriesWithTranslations(
             input.getLocale(), input.getLimit(), offset);

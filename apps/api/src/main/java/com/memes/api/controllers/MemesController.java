@@ -2,10 +2,7 @@ package com.memes.api.controllers;
 
 import com.memes.api.common.dto.GetMemeInput;
 import com.memes.api.common.dto.GetStatsInput;
-import com.memes.api.common.dto.ListCategoriesInput;
-import com.memes.api.common.dto.ListMemesInput;
 import com.memes.api.common.dto.PaginationDto;
-import com.memes.api.common.dto.SearchMemesInput;
 import com.memes.api.generated.api.MemesApiDelegate;
 import com.memes.api.generated.model.CategoryPage;
 import com.memes.api.generated.model.LocaleCode;
@@ -43,12 +40,7 @@ public class MemesController implements MemesApiDelegate {
 
     @Override
     public ResponseEntity<CategoryPage> listCategories(Integer page, Integer limit, LocaleCode locale) {
-        return ResponseEntity.ok(listCategoriesOperation.execute(
-            ListCategoriesInput.builder()
-                .page(Optional.ofNullable(page).orElse(0))
-                .limit(Optional.ofNullable(limit).orElse(100))
-                .locale(localeValue(locale))
-                .build()));
+        return ResponseEntity.ok(listCategoriesOperation.execute(buildPagination(page, limit, locale)));
     }
 
     @Override
@@ -56,25 +48,15 @@ public class MemesController implements MemesApiDelegate {
             Integer page, Integer limit,
             String category, String sort,
             LocaleCode locale) {
-        PaginationDto pagination = buildPagination(page, limit, locale);
         return ResponseEntity.ok(listMemesOperation.execute(
-            ListMemesInput.builder()
-                .pagination(pagination)
-                .category(category)
-                .sort(Optional.ofNullable(sort).orElse("score"))
-                .build()));
+            buildPagination(page, limit, locale, category, sort)));
     }
 
     @Override
     public ResponseEntity<MemePage> listMemesByCategory(
             String category, Integer page, Integer limit, String sort, LocaleCode locale) {
-        PaginationDto pagination = buildPagination(page, limit, locale);
         MemePage result = listMemesOperation.execute(
-            ListMemesInput.builder()
-                .pagination(pagination)
-                .category(category)
-                .sort(Optional.ofNullable(sort).orElse("score"))
-                .build());
+            buildPagination(page, limit, locale, category, sort));
         return Optional.of(result)
             .filter(r -> r.getTotal() != null && r.getTotal() > 0)
             .map(ResponseEntity::ok)
@@ -90,12 +72,8 @@ public class MemesController implements MemesApiDelegate {
 
     @Override
     public ResponseEntity<List<SearchResult>> searchMemes(String q, Integer page, Integer limit, LocaleCode locale) {
-        PaginationDto pagination = buildPagination(page, limit, locale);
         return ResponseEntity.ok(searchMemesOperation.execute(
-            SearchMemesInput.builder()
-                .pagination(pagination)
-                .query(q)
-                .build()));
+            buildPagination(page, limit, locale, q)));
     }
 
     private static PaginationDto buildPagination(Integer page, Integer limit, LocaleCode locale) {
@@ -103,6 +81,25 @@ public class MemesController implements MemesApiDelegate {
             .page(Optional.ofNullable(page).orElse(0))
             .limit(Optional.ofNullable(limit).orElse(100))
             .locale(localeValue(locale))
+            .build();
+    }
+
+    private static PaginationDto buildPagination(Integer page, Integer limit, LocaleCode locale, String category, String sort) {
+        return PaginationDto.builder()
+            .page(Optional.ofNullable(page).orElse(0))
+            .limit(Optional.ofNullable(limit).orElse(100))
+            .locale(localeValue(locale))
+            .category(category)
+            .sort(Optional.ofNullable(sort).orElse("score"))
+            .build();
+    }
+
+    private static PaginationDto buildPagination(Integer page, Integer limit, LocaleCode locale, String query) {
+        return PaginationDto.builder()
+            .page(Optional.ofNullable(page).orElse(0))
+            .limit(Optional.ofNullable(limit).orElse(100))
+            .locale(localeValue(locale))
+            .query(query)
             .build();
     }
 

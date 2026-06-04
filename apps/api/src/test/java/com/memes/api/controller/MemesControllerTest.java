@@ -2,9 +2,7 @@ package com.memes.api.controller;
 
 import com.memes.api.common.dto.GetMemeInput;
 import com.memes.api.common.dto.GetStatsInput;
-import com.memes.api.common.dto.ListCategoriesInput;
-import com.memes.api.common.dto.ListMemesInput;
-import com.memes.api.common.dto.SearchMemesInput;
+import com.memes.api.common.dto.PaginationDto;
 import com.memes.api.common.security.ApiKeyRateLimiter;
 import com.memes.api.config.LocaleCodeConverter;
 import com.memes.api.config.LoggingProperties;
@@ -118,7 +116,7 @@ class MemesControllerTest {
         page.setLimit(20);
         page.setTotal(1);
         page.setTotalPages(1);
-        when(listCategoriesOperation.execute(any(ListCategoriesInput.class))).thenReturn(page);
+        when(listCategoriesOperation.execute(any(PaginationDto.class))).thenReturn(page);
 
         mockMvc.perform(get("/categories").header("X-Api-Key", READ_KEY))
             .andExpect(status().isOk())
@@ -136,7 +134,7 @@ class MemesControllerTest {
         page.setLimit(5);
         page.setTotal(50);
         page.setTotalPages(10);
-        when(listCategoriesOperation.execute(any(ListCategoriesInput.class))).thenReturn(page);
+        when(listCategoriesOperation.execute(any(PaginationDto.class))).thenReturn(page);
 
         mockMvc.perform(get("/categories?page=2&limit=5").header("X-Api-Key", READ_KEY))
             .andExpect(status().isOk())
@@ -152,7 +150,7 @@ class MemesControllerTest {
         page.setLimit(20);
         page.setTotal(0);
         page.setTotalPages(0);
-        when(listMemesOperation.execute(any(ListMemesInput.class))).thenReturn(page);
+        when(listMemesOperation.execute(any(PaginationDto.class))).thenReturn(page);
 
         mockMvc.perform(get("/memes?locale=es-ar").header("X-Api-Key", READ_KEY)).andExpect(status().isOk());
     }
@@ -175,7 +173,7 @@ class MemesControllerTest {
         page.setLimit(20);
         page.setTotal(1);
         page.setTotalPages(1);
-        when(listMemesOperation.execute(any(ListMemesInput.class))).thenReturn(page);
+        when(listMemesOperation.execute(any(PaginationDto.class))).thenReturn(page);
 
         mockMvc.perform(get("/memes").header("X-Api-Key", READ_KEY))
             .andExpect(status().isOk())
@@ -232,7 +230,7 @@ class MemesControllerTest {
         sr.setScore(3035);
         sr.setTitle("AFIP Tax Man");
         sr.setTags(List.of("argentina"));
-        when(searchMemesOperation.execute(any(SearchMemesInput.class))).thenReturn(List.of(sr));
+        when(searchMemesOperation.execute(any(PaginationDto.class))).thenReturn(List.of(sr));
 
         mockMvc.perform(get("/search?q=afip").header("X-Api-Key", READ_KEY))
             .andExpect(status().isOk())
@@ -241,7 +239,7 @@ class MemesControllerTest {
 
     @Test
     void searchMemes_defaultsToEnLocale() throws Exception {
-        when(searchMemesOperation.execute(any(SearchMemesInput.class))).thenReturn(List.of());
+        when(searchMemesOperation.execute(any(PaginationDto.class))).thenReturn(List.of());
         mockMvc.perform(get("/search?q=jubilado").header("X-Api-Key", READ_KEY)).andExpect(status().isOk());
     }
 }
