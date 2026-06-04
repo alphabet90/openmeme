@@ -1,6 +1,5 @@
 package com.memes.api.modules.admin;
 
-import com.memes.api.common.dto.InvalidateCachesInput;
 import com.memes.api.common.operation.Operation;
 import com.memes.api.common.constants.CacheNames;
 import lombok.RequiredArgsConstructor;
@@ -14,12 +13,12 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class InvalidateCachesOperation implements Operation<InvalidateCachesInput, Void> {
+public class InvalidateCachesOperation implements Operation<Void, Void> {
 
     private final CacheManager cacheManager;
 
     @Override
-    public Void execute(InvalidateCachesInput input) {
+    public Void execute(Void input) {
         List.of(
             CacheNames.STATS, CacheNames.CATEGORIES,
             CacheNames.MEME_LIST, CacheNames.MEME,
@@ -32,6 +31,6 @@ public class InvalidateCachesOperation implements Operation<InvalidateCachesInpu
     }
 
     public void invalidateAll() {
-        execute(InvalidateCachesInput.INSTANCE);
+        execute(null);
     }
 }
