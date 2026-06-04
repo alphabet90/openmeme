@@ -212,7 +212,11 @@ class MemesControllerTest {
         img.setPosition(0);
         img.setIsPrimary(true);
         meme.setImages(List.of(img));
-        when(getMemeOperation.execute(new GetMemeInput("argentina-football", "cat-world-cup", "en")))
+        when(getMemeOperation.execute(GetMemeInput.builder()
+                .category("argentina-football")
+                .slug("cat-world-cup")
+                .locale("en")
+                .build()))
             .thenReturn(Optional.of(meme));
 
         mockMvc.perform(get("/memes/argentina-football/cat-world-cup").header("X-Api-Key", READ_KEY))

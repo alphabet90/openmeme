@@ -65,7 +65,11 @@ public class MemesController implements MemesApiDelegate {
 
     @Override
     public ResponseEntity<Meme> getMeme(String category, String slug, LocaleCode locale) {
-        return getMemeOperation.execute(new GetMemeInput(category, slug, localeValue(locale)))
+        return getMemeOperation.execute(GetMemeInput.builder()
+                .category(category)
+                .slug(slug)
+                .locale(localeValue(locale))
+                .build())
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
     }
