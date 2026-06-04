@@ -1,5 +1,7 @@
 package com.memes.api.modules.admin;
 
+import com.memes.api.common.dto.CategoryTranslationDataDto;
+import com.memes.api.common.dto.CategoryUpsertDto;
 import com.memes.api.common.dto.IndexMemeInput;
 import com.memes.api.common.dto.IndexResult;
 import com.memes.api.common.operation.Operation;
@@ -74,15 +76,15 @@ public class TriggerIndexOperation implements Operation<IndexMemeInput, IndexRes
 
     // ===== DB write helpers ===================================================
 
-    private long upsertCategory(CategoryUpsert cat) {
-        long categoryId = categoryMapper.upsertReturningId(cat.slug());
-        for (var entry : cat.translations().entrySet()) {
-            CategoryTranslationData data = entry.getValue();
+    private long upsertCategory(CategoryUpsertDto cat) {
+        long categoryId = categoryMapper.upsertReturningId(cat.getSlug());
+        for (var entry : cat.getTranslations().entrySet()) {
+            CategoryTranslationDataDto data = entry.getValue();
             memeWriteMapper.upsertCategoryTranslation(
-                categoryId, entry.getKey(), data.name(), data.description());
+                categoryId, entry.getKey(), data.getName(), data.getDescription());
         }
         memeWriteMapper.deleteCategoryImages(categoryId);
-        for (CategoryImageRow img : cat.images()) {
+        for (CategoryImageRow img : cat.getImages()) {
             memeWriteMapper.insertCategoryImage(
                 categoryId, img.path(), img.width(), img.height(),
                 img.bytes(), img.mimeType(), img.imageType(), img.position(), img.isPrimary());
@@ -283,12 +285,5 @@ public class TriggerIndexOperation implements Operation<IndexMemeInput, IndexRes
         return null;
     }
 
-    public record CategoryTranslationData(String name, String description, List<String> tags) {}
 
-    public record CategoryUpsert(
-        String slug,
-        String defaultLocale,
-        Map<String, CategoryTranslationData> translations,
-        List<CategoryImageRow> images
-    ) {}
 }
