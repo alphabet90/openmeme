@@ -2,6 +2,7 @@ package com.memes.api.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +12,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "app.db-role-check", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class DatabaseRoleCheckConfig {
 
     private final JdbcTemplate jdbcTemplate;
