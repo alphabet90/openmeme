@@ -53,9 +53,9 @@ class RequestLoggingFilterTest {
         assertThat(appender.list)
                 .extracting(ILoggingEvent::getFormattedMessage)
                 .anyMatch(msg -> msg.contains("request headers:")
-                        && msg.contains("x-api-key=secret-key-123")
-                        && msg.contains("authorization=Bearer token-xyz")
-                        && msg.contains("accept=application/json"));
+                        && msg.contains("X-Api-Key=secret-key-123")
+                        && msg.contains("Authorization=Bearer token-xyz")
+                        && msg.contains("Accept=application/json"));
     }
 
     @Test
@@ -71,8 +71,8 @@ class RequestLoggingFilterTest {
         assertThat(appender.list)
                 .extracting(ILoggingEvent::getFormattedMessage)
                 .anyMatch(msg -> msg.contains("response headers:")
-                        && msg.contains("content-type=application/json")
-                        && msg.contains("x-custom-header=custom-value"));
+                        && msg.contains("Content-Type=application/json")
+                        && msg.contains("X-Custom-Header=custom-value"));
     }
 
     @Test

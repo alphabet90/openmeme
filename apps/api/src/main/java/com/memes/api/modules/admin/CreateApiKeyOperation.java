@@ -7,6 +7,7 @@ import com.memes.api.util.ApiKeyGenerator;
 import com.memes.api.util.ApiKeyHasher;
 import com.memes.api.generated.model.ApiKeyCreateRequest;
 import com.memes.api.generated.model.ApiKeyCreated;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

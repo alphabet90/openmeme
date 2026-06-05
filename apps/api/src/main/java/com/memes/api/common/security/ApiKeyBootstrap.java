@@ -29,7 +29,7 @@ public class ApiKeyBootstrap implements CommandLineRunner {
             log.info("EMERGENCY: No active ADMIN API keys found. A bootstrap key");
             log.info("has been created. Copy the key below immediately — it will");
             log.info("never be shown again. Revoke it after creating your own.");
-            log.info("BOOTSTRAP API KEY: {}", result.plainKey());
+            log.info("BOOTSTRAP API KEY: {}", result.getPlainKey());
             log.info("============================================================");
         }
     }

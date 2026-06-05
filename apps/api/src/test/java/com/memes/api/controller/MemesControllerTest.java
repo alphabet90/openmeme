@@ -1,7 +1,6 @@
 package com.memes.api.controller;
 
 import com.memes.api.common.dto.GetMemeInput;
-import com.memes.api.common.dto.GetStatsInput;
 import com.memes.api.common.dto.PaginationDto;
 import com.memes.api.common.security.ApiKeyRateLimiter;
 import com.memes.api.config.LocaleCodeConverter;
@@ -49,7 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest
-@Import({MemesController.class, AdminController.class, SecurityConfig.class,
+@Import({MemesController.class, SecurityConfig.class,
     ApiKeyAuthenticationFilter.class, RateLimitingFilter.class,
     LoggingProperties.class, LocaleCodeConverter.class})
 @TestPropertySource(properties = {

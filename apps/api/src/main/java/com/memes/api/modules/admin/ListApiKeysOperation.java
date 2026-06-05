@@ -4,7 +4,6 @@ import com.memes.api.common.operation.Operation;
 import com.memes.api.models.ApiKey;
 import com.memes.api.mappers.ApiKeyMapper;
 import com.memes.api.generated.model.ApiKey.RoleEnum;
-import com.memes.api.generated.model.ApiKey;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -12,19 +11,19 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class ListApiKeysOperation implements Operation<Void, List<ApiKey>> {
+public class ListApiKeysOperation implements Operation<Void, List<com.memes.api.generated.model.ApiKey>> {
 
     private final ApiKeyMapper apiKeyMapper;
 
     @Override
-    public List<ApiKey> execute(Void input) {
+    public List<com.memes.api.generated.model.ApiKey> execute(Void input) {
         return apiKeyMapper.selectAllActive().stream()
             .map(this::toGenerated)
             .toList();
     }
 
-    private ApiKey toGenerated(com.memes.api.models.ApiKey entity) {
-        ApiKey key = new ApiKey();
+    private com.memes.api.generated.model.ApiKey toGenerated(com.memes.api.models.ApiKey entity) {
+        com.memes.api.generated.model.ApiKey key = new com.memes.api.generated.model.ApiKey();
         key.setId(entity.getId());
         key.setClientName(entity.getClientName());
         key.setRole(RoleEnum.fromValue(entity.getRole()));
