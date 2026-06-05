@@ -8,7 +8,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
             CREATE ROLE memes WITH LOGIN PASSWORD '${DB_PASSWORD:-memes}';
         END IF;
     END
-    \$\$;
+    $$;
+
+    \c memesdb
 
     GRANT CONNECT ON DATABASE memesdb TO memes;
     GRANT USAGE ON SCHEMA public TO memes;
