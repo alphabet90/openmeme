@@ -67,26 +67,28 @@ There is no infrastructure-as-code or init-container guard that ensures the `mem
 
 Create a SQL init script that creates the `memes` role and database if they do not already exist, and grants the necessary permissions. Mount this script into the PostgreSQL container via Docker Compose so it runs on first initialization.
 
-**File to create:** `apps/api/src/main/resources/db/init/01-create-role.sql`
+**File to create:** `apps/api/src/main/resources/db/init/01-create-role.sh`
 
-```sql
--- Create role if it does not exist (PostgreSQL 16 compatible)
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'memes') THEN
-        CREATE ROLE memes WITH LOGIN PASSWORD '${DB_PASSWORD:-memes}';
-    END IF;
-END
-$$;
+`.sh` files in `docker-entrypoint-initdb.d` are executed by bash and *do* expand environment variables, whereas `.sql` files are passed directly to PostgreSQL and do **not** perform shell interpolation.
 
--- Ensure the role can connect to the database
-GRANT CONNECT ON DATABASE memesdb TO memes;
+```bash
+#!/bin/bash
+set -e
 
--- Grant schema usage and table privileges (idempotent)
-\c memesdb
-GRANT USAGE ON SCHEMA public TO memes;
-GRANT CREATE ON SCHEMA public TO memes;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO memes;
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+    DO \$\$
+    BEGIN
+        IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'memes') THEN
+            CREATE ROLE memes WITH LOGIN PASSWORD '${DB_PASSWORD:-memes}';
+        END IF;
+    END
+    \$\$;
+
+    GRANT CONNECT ON DATABASE memesdb TO memes;
+    GRANT USAGE ON SCHEMA public TO memes;
+    GRANT CREATE ON SCHEMA public TO memes;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO memes;
+EOSQL
 ```
 
 **File to change:** `docker-compose.yml`
@@ -103,16 +105,17 @@ This ensures that every fresh `docker-compose up` creates the role consistently,
 
 The `api` service in `docker-compose.yml` already uses `depends_on` with `condition: service_healthy`, which is correct. However, the health check on `db` only verifies that PostgreSQL accepts connections (`pg_isready -U memes -d memesdb`). If the `memes` role is missing, `pg_isready` may still succeed (it uses the `postgres` superuser internally or simply checks the socket), leading to a race where the API starts and immediately crashes.
 
-**Improve the `db` health check** to verify the `memes` role specifically:
+**Keep the `db` health check simple** (`pg_isready`) so it does not fail on existing volumes where the `memes` role is missing, and move role verification into a lightweight startup guard:
+
 ```yaml
 healthcheck:
-  test: ["CMD-SHELL", "pg_isready -U memes -d memesdb && psql -U memes -d memesdb -c 'SELECT 1'"]
+  test: ["CMD-SHELL", "pg_isready -U postgres -d memesdb"]
   interval: 10s
   timeout: 5s
   retries: 5
 ```
 
-This guarantees that the API only starts after the `memes` role is confirmed usable.
+A separate startup bean or init-container should run `SELECT 1 FROM pg_roles WHERE rolname = 'memes'` and fail fast with a clear error (e.g., "Role 'memes' does not exist — run init script or recreate volume") before Flyway attempts a connection. For Docker Compose, the init script + simple health check combination is sufficient on fresh volumes; developers reusing an existing `pg_data` volume must run `docker-compose down -v` once.
 
 ### 3.3 Update `.env.example` with Explicit DB_USER
 
@@ -128,7 +131,7 @@ Ensure `.env.example` documents the expected database user so new environments a
 
 ### 3.4 Optional: Add a Startup Role-Check Bean
 
-If the deployment platform supports custom startup hooks (e.g., Kubernetes init containers or Railway pre-deploy commands), add a lightweight SQL check that fails fast with a clear error message when the role is missing. For Docker Compose, the init script + health check combination is sufficient. For Kubernetes or similar, an init container running the same `01-create-role.sql` against the database before the API pod starts is recommended.
+If the deployment platform supports custom startup hooks (e.g., Kubernetes init containers or Railway pre-deploy commands), add a lightweight SQL check that fails fast with a clear error message when the role is missing. For Docker Compose, the init script + simple health check combination is sufficient on fresh volumes. For Kubernetes or similar, an init container running the same `01-create-role.sh` against the database before the API pod starts is recommended.
 
 ### 3.5 Alternative Options Considered
 
@@ -136,7 +139,7 @@ If the deployment platform supports custom startup hooks (e.g., Kubernetes init 
 |--------|------|------|
 | A. Init script + health check (chosen) | Idempotent, works for local and most deployment targets, self-documenting | Requires init script maintenance |
 | B. Change `DB_USER` to `postgres` | Minimal change, matches default PostgreSQL user | Breaks least-privilege principle; may conflict with platform-specific restrictions |
-| C. Create role via Flyway placeholder | Keeps everything in Java/Flyway | Flyway cannot run migrations without a connection; chicken-and-egg problem |
+| C. Create role via Flyway migration | Keeps everything in Java/Flyway | Flyway cannot run migrations without a connection; chicken-and-egg problem. **Explicitly ruled out** — the role must not be created via a Flyway migration because Flyway requires a valid connection before it can run any migration. The init script is the single source of truth for role creation; production runbooks should reference it, not add new migrations. |
 | D. Manual role creation in platform UI | Fastest immediate fix | Not reproducible, drifts again on the next provision |
 
 ---
@@ -148,15 +151,16 @@ If the deployment platform supports custom startup hooks (e.g., Kubernetes init 
 | Init script runs with wrong permissions or superuser context | Low | High | Use `docker-entrypoint-initdb.d` which runs as the bootstrap superuser; script is read-only mounted |
 | Health check `psql` command fails because `pg_isready` already passed but role is still being created | Low | Medium | The init script is synchronous during PostgreSQL first start; retries in health check absorb any transient state |
 | Existing `pg_data` volume prevents init script from running on restart | Medium | Low | The init script only runs on fresh containers/volumes; for existing volumes, manual role creation or a one-time migration is needed |
-| Password placeholder `${DB_PASSWORD:-memes}` is not expanded in raw SQL | Low | High | Use the PostgreSQL `DO` block with a fixed default, or rely on Docker Compose env substitution in an entrypoint wrapper if dynamic passwords are required |
+| Password placeholder `${DB_PASSWORD:-memes}` is not expanded in raw SQL | Low | High | Use a `.sh` init script in `docker-entrypoint-initdb.d` so bash expands the variable before passing the value to PostgreSQL |
 
 ---
 
 ## 5. Implementation Checklist
 
-- [ ] Create `apps/api/src/main/resources/db/init/01-create-role.sql` with idempotent role and permission setup
+- [ ] Create `apps/api/src/main/resources/db/init/01-create-role.sh` with idempotent role and permission setup
 - [ ] Update `docker-compose.yml` to mount `db/init` into `docker-entrypoint-initdb.d`
-- [ ] Update `docker-compose.yml` `db` health check to verify the `memes` role is usable
+- [ ] Update `docker-compose.yml` `db` health check to use `pg_isready` with the bootstrap superuser
+- [ ] Add a startup role-existence probe (bean or init-container) that fails fast with a clear message if the `memes` role is missing
 - [ ] Update `.env.example` to document `DB_USER=memes`
 - [ ] Run `docker-compose down -v && docker-compose up --build` locally to verify fresh stack starts cleanly
 - [ ] Confirm Flyway migrations execute without `role "memes" does not exist` errors
