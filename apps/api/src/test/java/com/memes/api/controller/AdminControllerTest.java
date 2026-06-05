@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest
-@Import({AdminController.class, com.memes.api.controllers.MemesController.class, SecurityConfig.class,
+@Import({com.memes.api.controllers.AdminController.class, com.memes.api.controllers.MemesController.class, SecurityConfig.class,
     ApiKeyAuthenticationFilter.class, RateLimitingFilter.class,
     LoggingProperties.class, LocaleCodeConverter.class})
 @TestPropertySource(properties = {
@@ -45,6 +45,11 @@ class AdminControllerTest {
     @MockBean ListApiKeysOperation listApiKeysOperation;
     @MockBean CreateApiKeyOperation createApiKeyOperation;
     @MockBean RevokeApiKeyOperation revokeApiKeyOperation;
+    @MockBean com.memes.api.modules.memes.GetStatsOperation getStatsOperation;
+    @MockBean com.memes.api.modules.memes.ListCategoriesOperation listCategoriesOperation;
+    @MockBean com.memes.api.modules.memes.ListMemesOperation listMemesOperation;
+    @MockBean com.memes.api.modules.memes.GetMemeOperation getMemeOperation;
+    @MockBean com.memes.api.modules.memes.SearchMemesOperation searchMemesOperation;
     @MockBean ApiKeyMapper apiKeyMapper;
     @MockBean ApiKeyRateLimiter apiKeyRateLimiter;
 
