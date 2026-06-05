@@ -48,6 +48,31 @@
           AND m.slug = #{slug}
     </select>
 
+    <select id="selectMemesFlat" resultType="java.util.LinkedHashMap">
+        SELECT id, slug, score, created_at, category_slug, author_username,
+               title, description, image_path, tags
+        FROM list_memes_flat(#{locale}::locale_code)
+        WHERE 1=1
+        <if test="category != null and !category.isEmpty()">
+            AND category_slug = #{category}
+        </if>
+        ORDER BY
+        <choose>
+            <when test="sort == 'title'">title ASC NULLS LAST, id DESC</when>
+            <when test="sort == 'created_at'">created_at DESC NULLS LAST, id DESC</when>
+            <otherwise>score DESC, id DESC</otherwise>
+        </choose>
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countMemesFlat" resultType="int">
+        SELECT COUNT(*) FROM list_memes_flat(#{locale}::locale_code)
+        WHERE 1=1
+        <if test="category != null and !category.isEmpty()">
+            AND category_slug = #{category}
+        </if>
+    </select>
+
     <select id="searchMemes" resultType="java.util.LinkedHashMap">
         SELECT meme_id, slug, category, title, description, score, rank, total_count
         FROM search_memes(#{query}, #{locale}::locale_code, #{limit}, #{offset})
