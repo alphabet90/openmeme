@@ -1,0 +1,6 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "pnpm --filter @openmeme/web build",
+  "installCommand": "pnpm install",
+  "ignoreCommand": "npx turbo-ignore"
+}

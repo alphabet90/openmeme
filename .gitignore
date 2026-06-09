@@ -19,6 +19,7 @@ processed.bloom
 !package.json
 !tsconfig.json
 !sync.config.json
+!vercel.json
 !apps/web/messages/*.json
 # Temporary directories
 tmp/
