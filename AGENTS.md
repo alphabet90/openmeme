@@ -175,6 +175,7 @@ mvn generate-sources         # Regenerate API stubs from openapi.yaml
 ```
 
 ### Web Client
+> **Node version**: Next.js 16 requires Node >=20.9.0. Use `nvm use 22` before running any web commands.
 ```bash
 cd apps/web
 pnpm dev                     # Next.js dev server
