@@ -20,7 +20,7 @@ import java.time.Duration;
 import java.util.Map;
 
 @Configuration
-@EnableCaching
+@EnableCaching(proxyTargetClass = true)
 public class RedisConfig implements CachingConfigurer {
 
     // Cache names carry a "-v2" suffix so any V1-shaped cache entries left over
