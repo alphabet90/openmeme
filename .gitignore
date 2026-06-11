@@ -19,6 +19,8 @@ processed.bloom
 !package.json
 !tsconfig.json
 !sync.config.json
+!composer.json
+# composer.lock must be committed (not affected by *.json)
 # Temporary directories
 tmp/
 temp/

@@ -4,13 +4,15 @@
  *
  * Every meme row is localized for the active LOCALE: es-AR text comes from
  * meme_locales (indexed from the .es-AR.mdx files) and falls back to the
- * canonical English columns. Search uses FTS5 with locale column filters
- * and degrades to LIKE otherwise.
+ * canonical English columns. Search and suggestions run on Meilisearch
+ * (src/meili.php, indexed by bin/build-search.php); rows are rehydrated
+ * from SQLite so rendering has a single source of truth.
  */
 
 declare(strict_types=1);
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/meili.php';
 
 /**
  * Shared locale-aware SELECT with title/description/tags localized.
@@ -113,87 +115,80 @@ function repo_category_page(string $category, int $page): array
     return ['rows' => $rows, 'total' => (int) $ct->fetchColumn()];
 }
 
-function repo_has_fts(): bool
+/** Localized rows for the given slugs, preserving the input order. */
+function repo_by_slugs(array $slugs): array
 {
-    static $has = null;
-    if ($has === null) {
-        $has = (bool) db()->query(
-            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'memes_fts'"
-        )->fetch();
+    if ($slugs === []) {
+        return [];
     }
-    return $has;
-}
-
-/** Escape user input into a prefix-matching FTS5 query: each token quoted + starred. */
-function fts_query(string $q): string
-{
-    $tokens = preg_split('/\s+/', trim($q), -1, PREG_SPLIT_NO_EMPTY);
-    $parts = [];
-    foreach (array_slice($tokens, 0, 8) as $t) {
-        $parts[] = '"' . str_replace('"', '""', $t) . '"*';
+    $ph = implode(',', array_fill(0, count($slugs), '?'));
+    $st = db()->prepare('SELECT x.* FROM (' . meme_select() . ") x WHERE x.slug IN ($ph)");
+    $st->execute(array_values($slugs));
+    $bySlug = array_column($st->fetchAll(), null, 'slug');
+    $rows = [];
+    foreach ($slugs as $slug) {
+        if (isset($bySlug[$slug])) {
+            $rows[] = $bySlug[$slug];
+        }
     }
-    return implode(' ', $parts);
+    return $rows;
 }
 
 /**
- * Search is multilingual in both locales: the query matches the English
- * base AND the es-AR columns, so "noose" works on the Spanish site and
- * "soga" works on the English site. Results render in the active locale.
+ * Search is multilingual in both locales: one Meilisearch query matches the
+ * English (*_en) AND es-AR (*_es) fields, so "noose" works on the Spanish
+ * site and "soga" on the English site. Results render in the active locale.
+ *
+ * @throws SearchUnavailableException when Meilisearch is unreachable/errored
  */
 function repo_search(string $q, int $page = 1): array
 {
-    $q = trim($q);
+    $q = mb_substr(trim($q), 0, MAX_QUERY_LENGTH);
     if ($q === '') {
         return ['rows' => [], 'total' => 0];
     }
-    $offset = ($page - 1) * PAGE_SIZE;
 
-    if (repo_has_fts()) {
-        $match = fts_query($q);
-        $st = db()->prepare(
-            'SELECT x.* FROM memes_fts f JOIN (' . meme_select() . ') x ON x.id = f.rowid
-             WHERE memes_fts MATCH ? ORDER BY rank, x.score DESC LIMIT ? OFFSET ?'
-        );
-        $st->execute([$match, PAGE_SIZE, $offset]);
-        $rows = $st->fetchAll();
-
-        $ct = db()->prepare('SELECT COUNT(*) FROM memes_fts WHERE memes_fts MATCH ?');
-        $ct->execute([$match]);
-        return ['rows' => $rows, 'total' => (int) $ct->fetchColumn()];
+    try {
+        $res = meili_search_client()->index(MEILI_INDEX)->search($q, [
+            // page + hitsPerPage → exhaustive totalHits (pagination shows real totals)
+            'page' => $page,
+            'hitsPerPage' => PAGE_SIZE,
+            'attributesToRetrieve' => ['id'],
+            // constrain query-language detection to our two languages
+            'locales' => ['spa', 'eng'],
+        ]);
+    } catch (Throwable $e) {
+        throw new SearchUnavailableException($e->getMessage(), 0, $e);
     }
 
-    $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $q) . '%';
-    $where = "m2.title LIKE :q ESCAPE '\\' OR m2.description LIKE :q ESCAPE '\\'
-              OR m2.tags LIKE :q ESCAPE '\\' OR m2.category LIKE :q ESCAPE '\\'
-              OR l2.title LIKE :q ESCAPE '\\' OR l2.description LIKE :q ESCAPE '\\'
-              OR l2.tags LIKE :q ESCAPE '\\'";
-    $ids = "SELECT DISTINCT m2.id FROM memes m2
-            LEFT JOIN meme_locales l2 ON l2.meme_id = m2.id
-            WHERE $where";
-    $st = db()->prepare(
-        'SELECT x.* FROM (' . meme_select() . ") x WHERE x.id IN ($ids)
-         ORDER BY x.score DESC LIMIT :lim OFFSET :off"
-    );
-    $st->bindValue(':q', $like);
-    $st->bindValue(':lim', PAGE_SIZE, PDO::PARAM_INT);
-    $st->bindValue(':off', $offset, PDO::PARAM_INT);
-    $st->execute();
-    $rows = $st->fetchAll();
-
-    $ct = db()->prepare("SELECT COUNT(*) FROM ($ids)");
-    $ct->execute([':q' => $like]);
-    return ['rows' => $rows, 'total' => (int) $ct->fetchColumn()];
+    $slugs = array_column($res->getHits(), 'id');
+    return ['rows' => repo_by_slugs($slugs), 'total' => (int) $res->getTotalHits()];
 }
 
-function repo_suggest(string $q, int $limit = 8): array
+/** Dropdown suggestions. Degrades to [] on any Meilisearch failure. */
+function repo_suggest(string $q, int $limit = 6): array
 {
-    $result = repo_search($q, 1);
+    $q = mb_substr(trim($q), 0, MAX_QUERY_LENGTH);
+    if (mb_strlen($q) < MIN_SUGGEST_LENGTH) {
+        return [];
+    }
+
+    try {
+        $res = meili_search_client()->index(MEILI_INDEX)->search($q, [
+            'limit' => $limit,
+            'attributesToRetrieve' => ['slug', 'title_en', 'title_es', 'category'],
+            'locales' => ['spa', 'eng'],
+        ]);
+    } catch (Throwable) {
+        return [];
+    }
+
     $out = [];
-    foreach (array_slice($result['rows'], 0, $limit) as $m) {
+    foreach ($res->getHits() as $hit) {
         $out[] = [
-            'term' => $m['title'],
-            'slug' => $m['slug'],
-            'cat' => $m['category'],
+            'term' => meili_suggest_term($hit, LOCALE),
+            'slug' => $hit['slug'],
+            'cat' => $hit['category'],
         ];
     }
     return $out;

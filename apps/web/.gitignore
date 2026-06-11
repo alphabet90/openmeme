@@ -14,3 +14,7 @@ data/memes.db
 
 # OS
 .DS_Store
+
+# Composer
+vendor/
+.phpunit.result.cache
