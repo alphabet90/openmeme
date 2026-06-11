@@ -6,7 +6,9 @@
 import $ from 'jquery';
 import '../css/main.css';
 
-const OM = window.OM || { trending: [], categories: [] };
+const OM = window.OM || { prefix: '', trending: [], categories: [], i18n: {} };
+const PREFIX = OM.prefix || '';
+const T = OM.i18n || {};
 
 /* ── helpers ── */
 const esc = (s) =>
@@ -45,30 +47,30 @@ const gotoSearch = (term) => {
   term = (term || '').trim();
   if (!term) return;
   addRecent(term);
-  window.location.href = '/search?q=' + encodeURIComponent(term);
+  window.location.href = PREFIX + '/search?q=' + encodeURIComponent(term);
 };
-const gotoMeme = (slug) => { window.location.href = '/meme/' + encodeURIComponent(slug); };
+const gotoMeme = (slug) => { window.location.href = PREFIX + '/meme/' + encodeURIComponent(slug); };
 
 /* ── suggestion markup ── */
 const recentsHTML = () => {
   const r = getRecents();
   if (!r.length) return '';
-  return '<div class="sugg-label">Búsquedas recientes <button type="button" data-clear="1">Borrar</button></div>' +
+  return `<div class="sugg-label">${esc(T.recents)} <button type="button" data-clear="1">${esc(T.clear)}</button></div>` +
     r.map((t) => `<div class="sugg-item" data-term="${esc(t)}">
         <span class="sugg-ic">${IC_CLOCK}</span>
         <span class="sugg-txt">${esc(t)}</span>
-        <span class="sugg-ic remove" data-remove="${esc(t)}" aria-label="Quitar">${IC_X}</span>
+        <span class="sugg-ic remove" data-remove="${esc(t)}" aria-label="${esc(T.remove)}">${IC_X}</span>
       </div>`).join('');
 };
 const trendingHTML = () => {
   if (!OM.trending.length) return '';
-  return '<div class="sugg-label">Tendencias 🔥</div><div class="sugg-chips">' +
+  return `<div class="sugg-label">${esc(T.trending)}</div><div class="sugg-chips">` +
     OM.trending.map((t, i) => `<button type="button" class="sugg-chip" data-term="${esc(t)}"><span class="rank">${i + 1}</span>${esc(t)}</button>`).join('') +
     '</div>';
 };
 const categoriesHTML = () => {
   if (!OM.categories.length) return '';
-  return '<div class="sugg-label">Explorar categorías</div>' +
+  return `<div class="sugg-label">${esc(T.explore)}</div>` +
     OM.categories.map((c) => `<div class="sugg-item" data-cat="${esc(c.slug)}">
         <span class="sugg-txt">${esc(c.name)}</span>
         <span class="sugg-ic">${IC_CHEVRON}</span>
@@ -76,7 +78,8 @@ const categoriesHTML = () => {
 };
 const resultsHTML = (items, q) => {
   if (!items.length) {
-    return `<div class="sugg-empty">Sin sugerencias para «${esc(q.trim())}».<br>Presioná <b>Enter</b> para ver todos los resultados.</div>`;
+    const msg = esc((T.no_suggestions || '%s').replace('%s', q.trim()));
+    return `<div class="sugg-empty">${msg}<br>${T.press_enter || ''}</div>`;
   }
   return items.map((x, i) => `<div class="sugg-item ${i === 0 ? 'kbd-active' : ''}" data-slug="${esc(x.slug)}">
       <span class="sugg-ic">${IC_SEARCH}</span>
@@ -90,7 +93,7 @@ let suggestTimer = null;
 const fetchSuggest = (q, cb) => {
   clearTimeout(suggestTimer);
   suggestTimer = setTimeout(() => {
-    $.getJSON('/api/suggest', { q }, cb).fail(() => cb([]));
+    $.getJSON(PREFIX + '/api/suggest', { q }, cb).fail(() => cb([]));
   }, 120);
 };
 
@@ -124,7 +127,7 @@ const bindSuggestionBox = ($box, rerender, eventName) => {
   });
   $box.on(eventName, '[data-cat]', function (e) {
     e.preventDefault();
-    window.location.href = '/category/' + encodeURIComponent($(this).data('cat'));
+    window.location.href = PREFIX + '/category/' + encodeURIComponent($(this).data('cat'));
   });
 };
 
