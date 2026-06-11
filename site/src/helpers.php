@@ -72,6 +72,20 @@ function is_new(array $meme): bool
     return $ts !== false && $ts > time() - NEW_DAYS * 86400;
 }
 
+/** "2026-01-17T12:22:20Z" → "17 de enero de 2026" */
+function fecha_es(string $iso): string
+{
+    $ts = strtotime($iso);
+    if ($ts === false) {
+        return '';
+    }
+    $meses = [
+        1 => 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+    ];
+    return sprintf('%02d de %s de %d', (int) date('j', $ts), $meses[(int) date('n', $ts)], (int) date('Y', $ts));
+}
+
 /** Cache-busted asset URL based on file mtime. */
 function asset(string $path): string
 {
