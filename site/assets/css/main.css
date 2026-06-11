@@ -364,6 +364,26 @@ svg { display: inline-block; vertical-align: middle; }
   pointer-events: none;
 }
 
+/* ── SHOW MORE ───────────────────────────────────────────────── */
+.show-more-wrap { display: flex; justify-content: center; padding-top: 24px; }
+.btn-show-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 12px 28px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: border-color 0.12s, color 0.12s;
+}
+.btn-show-more:hover { border-color: var(--accent); color: var(--accent); }
+.btn-show-more.loading { opacity: 0.6; pointer-events: none; }
+
 /* ── CATEGORIES ──────────────────────────────────────────────── */
 .categories-row { padding: 0 clamp(16px, 4vw, 48px); margin-bottom: 64px; }
 .cat-grid {

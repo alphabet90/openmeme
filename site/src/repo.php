@@ -43,10 +43,10 @@ function repo_stats(): array
     return $stats;
 }
 
-function repo_trending(int $limit = 20): array
+function repo_trending(int $limit = 20, int $offset = 0): array
 {
-    $st = db()->prepare(meme_select() . ' ORDER BY m.score DESC LIMIT ?');
-    $st->execute([$limit]);
+    $st = db()->prepare(meme_select() . ' ORDER BY m.score DESC LIMIT ? OFFSET ?');
+    $st->execute([$limit, $offset]);
     return $st->fetchAll();
 }
 

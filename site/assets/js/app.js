@@ -228,6 +228,29 @@ $(window).on('keydown', (e) => {
   }
 });
 
+/* ── home: append the next batch of trending cards in place ── */
+$('[data-show-more]').on('click', function (e) {
+  e.preventDefault();
+  const $btn = $(this);
+  if ($btn.hasClass('loading')) return;
+  const offset = parseInt($btn.attr('data-offset'), 10) || 0;
+  const label = $btn.contents().first()[0];
+  const original = label.textContent.trim();
+  $btn.addClass('loading');
+  label.textContent = $btn.data('loading');
+  $.get(PREFIX + '/api/memes', { offset }, (html) => {
+    const $cards = $($.parseHTML(html)).filter('.card');
+    $('[data-home-grid]').append($cards);
+    $btn.removeClass('loading');
+    label.textContent = original;
+    $btn.attr('data-offset', offset + $cards.length);
+    if (!$cards.length) $btn.parent().remove();
+  }).fail(() => {
+    // fall back to the plain /top listing link
+    window.location.href = $btn.attr('href');
+  });
+});
+
 /* ── card / detail actions: copy link + native share ── */
 $(document).on('click', '[data-copy]', function (e) {
   e.preventDefault();

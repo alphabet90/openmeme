@@ -44,6 +44,8 @@ const STRINGS = [
         'home.stat_categories' => 'Categorías',
         'home.stat_upvotes' => 'Upvotes',
         'home.stat_open' => 'Código abierto',
+        'home.show_more' => 'Mostrar más',
+        'home.loading' => 'Cargando…',
         'home.meta_title' => 'OpenMeme — El Stock de Memes Gratis Más Grande del Mundo',
         'home.meta_description' => 'OpenMeme es el stock de memes open-source más grande del mundo. %s memes gratis para descargar y compartir. Apoyando a Argentina y EE.UU.',
 
@@ -151,6 +153,8 @@ const STRINGS = [
         'home.stat_categories' => 'Categories',
         'home.stat_upvotes' => 'Upvotes',
         'home.stat_open' => 'Open source',
+        'home.show_more' => 'Show more',
+        'home.loading' => 'Loading…',
         'home.meta_title' => "OpenMeme — The World's Largest Free Meme Stock",
         'home.meta_description' => "OpenMeme is the world's largest open-source meme image stock. %s free memes to download and share. Supporting Argentina & the US.",
 
