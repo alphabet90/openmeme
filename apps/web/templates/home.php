@@ -5,7 +5,7 @@
     <span class="hero-search-icon">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </span>
-    <input name="q" data-search-input type="text" placeholder="<?= e(t('home.search_placeholder')) ?>" autocomplete="off" enterkeyhint="search" aria-label="<?= e(t('nav.search_label')) ?>">
+    <input name="q" maxlength="100" data-search-input type="text" placeholder="<?= e(t('home.search_placeholder')) ?>" autocomplete="off" enterkeyhint="search" aria-label="<?= e(t('nav.search_label')) ?>">
     <button class="hero-search-btn" type="submit" aria-label="<?= e(t('nav.search_btn')) ?>">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </button>

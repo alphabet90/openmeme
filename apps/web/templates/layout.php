@@ -59,7 +59,7 @@ $navCategories = repo_categories(6);
     <button class="nav-search-submit" type="submit" aria-label="<?= e(t('nav.search_btn')) ?>">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </button>
-    <input type="search" name="q" data-search-input placeholder="<?= e(t('nav.search_placeholder')) ?>" autocomplete="off" aria-label="<?= e(t('nav.search_label')) ?>" value="<?= e($q ?? '') ?>">
+    <input type="search" name="q" maxlength="100" data-search-input placeholder="<?= e(t('nav.search_placeholder')) ?>" autocomplete="off" aria-label="<?= e(t('nav.search_label')) ?>" value="<?= e($q ?? '') ?>">
     <div class="search-dropdown" data-dropdown></div>
   </form>
 
@@ -114,7 +114,7 @@ $navCategories = repo_categories(6);
     </button>
     <div class="msearch-field">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input name="q" data-msearch-input type="text" placeholder="<?= e(t('msearch.placeholder')) ?>" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search">
+      <input name="q" maxlength="100" data-msearch-input type="text" placeholder="<?= e(t('msearch.placeholder')) ?>" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search">
       <button class="msearch-clear" data-msearch-clear aria-label="<?= e(t('nav.clear')) ?>" type="button">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>

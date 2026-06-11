@@ -127,10 +127,20 @@ if ($path === '/categories') {
 }
 
 if ($path === '/search') {
-    $q = trim((string) ($_GET['q'] ?? ''));
+    $q = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, MAX_QUERY_LENGTH);
     $page = max(1, (int) ($_GET['page'] ?? 1));
-    $result = repo_search($q, $page);
+    $search_error = false;
+    try {
+        $result = repo_search($q, $page);
+    } catch (SearchUnavailableException) {
+        $search_error = true;
+        $result = ['rows' => [], 'total' => 0];
+        http_response_code(503);
+        header('Retry-After: 60');
+        header('Cache-Control: no-store');
+    }
     render('search', [
+        'search_error' => $search_error,
         'page_title' => $q === '' ? t('search.meta_title_empty') : t('search.meta_title', $q),
         'meta_description' => t('search.meta_description', compact_num((int) repo_stats()['memes'])),
         'canonical' => BASE_URL . lurl('/search' . ($q === '' ? '' : '?q=' . rawurlencode($q))),
@@ -200,6 +210,7 @@ if ($path === '/random') {
 if ($path === '/api/suggest') {
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: public, max-age=60');
+    header('X-Content-Type-Options: nosniff');
     echo json_encode(repo_suggest((string) ($_GET['q'] ?? '')), JSON_UNESCAPED_UNICODE);
     exit;
 }

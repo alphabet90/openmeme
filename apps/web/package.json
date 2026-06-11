@@ -7,7 +7,10 @@
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch",
     "clean": "rm -rf public/assets/app.js public/assets/app.css",
-    "index": "php bin/build-index.php",
+    "index": "php bin/build-index.php && php bin/build-search.php",
+    "index:db": "php bin/build-index.php",
+    "index:search": "php bin/build-search.php",
+    "test": "php vendor/bin/phpunit",
     "serve": "php -S 0.0.0.0:8090 -t public public/index.php"
   },
   "dependencies": {

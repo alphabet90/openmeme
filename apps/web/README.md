@@ -1,17 +1,19 @@
-# OpenMeme Site — vanilla PHP + SQLite + jQuery
+# OpenMeme Site — vanilla PHP + SQLite + Meilisearch + jQuery
 
 Extreme-minimalist rebuild of the OpenMeme web client. No frameworks, no
-build complexity, no runtime dependencies beyond PHP and nginx.
+build complexity. Runtime dependencies: PHP, nginx, and a self-hosted
+Meilisearch instance for search.
 
-**`/memes/*` is the source of truth.** The SQLite database is a disposable
-index rebuilt from MDX frontmatter at any time.
+**`/memes/*` is the source of truth.** The SQLite database and the
+Meilisearch index are disposable, rebuilt from MDX frontmatter at any time.
 
 ## Stack
 
 | Layer | Tech |
 |-------|------|
 | Server | nginx + PHP-FPM 8.2+ (pdo_sqlite, gd) |
-| Data | SQLite (FTS5 full-text search, LIKE fallback) |
+| Data | SQLite (pages, listings) + Meilisearch (search, required) |
+| PHP deps | Composer: meilisearch-php SDK + Guzzle |
 | Frontend | Server-rendered PHP templates + jQuery enhancement |
 | Build | webpack 5 (one JS bundle + one CSS bundle) |
 
@@ -19,8 +21,11 @@ index rebuilt from MDX frontmatter at any time.
 
 ```
 memes/**/*.mdx ──(bin/build-index.php)──▶ data/memes.db ──▶ public/index.php ──▶ HTML
-                                                                    ▲
-assets/{js,css} ──(webpack)──▶ public/assets/{app.js,app.css} ──────┘
+                                               │                    ▲
+                                (bin/build-search.php)              │ /search, /api/suggest
+                                               ▼                    ▼
+                                     Meilisearch index 'memes' ◀── src/meili.php
+assets/{js,css} ──(webpack)──▶ public/assets/{app.js,app.css} ──▶ browser
 ```
 
 - Every page is fully server-rendered → crawlable by Google with zero JS.
@@ -43,7 +48,7 @@ Two locales only (Argentina-first):
 - Every page emits `hreflang` alternates (`es-AR`, `en-US`, `x-default`);
   the sitemap lists both URLs per page with `xhtml:link` alternates.
 - Search is multilingual in both locales: queries match English and
-  Spanish text, results render in the active locale.
+  Spanish text, results render in the active locale (see Search below).
 - UI strings live in `src/i18n.php` (`t()`); static page content per
   locale in `src/pages.php`. Language switcher (AR / US) in the nav.
 
@@ -63,19 +68,50 @@ Two locales only (Argentina-first):
 | `/sitemap.xml`, `/robots.txt` | SEO |
 | `/memes/{cat}/{img}` | Meme images, served by nginx with 1y immutable cache |
 
+## Search (Meilisearch)
+
+`/search` and `/api/suggest` run on a **required** self-hosted Meilisearch
+instance (the rest of the site is pure SQLite and works without it).
+
+- **One bilingual index** (`memes`): each document carries `*_en` fields
+  (canonical MDX) and `*_es` fields (es-AR translations). The
+  `localizedAttributes` setting gives each language its own tokenizer, and
+  a single query matches both — "soga" works on the English site and
+  "noose" on the Spanish one.
+- **Relevance**: titles > tags > category > descriptions; default ranking
+  rules plus a final `score:desc` tie-break. Typo tolerance is on
+  (Meilisearch defaults). `synonyms` is an empty hook for Argentine slang.
+- **Zero-downtime reindex**: `bin/build-search.php` builds a staging index
+  and atomically swaps it with the live one.
+- **Degradation**: if Meilisearch is down, `/search` returns a localized
+  HTTP 503 message and `/api/suggest` returns `[]`; everything else keeps
+  working. Search recovers without a restart.
+- **Abuse limits**: queries capped at 100 chars and suggestions require
+  ≥ 2 chars (`config.php`, mirrored in `app.js` + input `maxlength`);
+  nginx rate-limits `/api/*` (10 r/s per IP, burst 20 → 429).
+
+Keys: dev falls back to `MEILI_MASTER_KEY` for everything. In production,
+print the auto-generated scoped keys with `php bin/meili-keys.php` and set
+`MEILI_SEARCH_KEY` (runtime) and `MEILI_ADMIN_KEY` (indexer) in the env.
+
 ## Setup
 
 ```bash
+# 0. Start Meilisearch (repo root; set MEILI_MASTER_KEY in .env first)
+cp .env.example .env           # then: MEILI_MASTER_KEY=$(openssl rand -base64 24)
+docker compose up -d
+
 cd apps/web
 
-# 1. Build the frontend bundle
+# 1. Install PHP dependencies + build the frontend bundle
+composer install
 pnpm install
 pnpm build                     # → public/assets/app.{js,css}
 
-# 2. Build the SQLite index from /memes/*
+# 2. Build the SQLite index from /memes/*, then push to Meilisearch
 php bin/build-index.php        # → data/memes.db
-# Or, from the repo root:
-# pnpm index
+php bin/build-search.php       # → Meilisearch index 'memes'
+# Or both, from the repo root: pnpm index
 
 # 3a. Dev server
 php -S 0.0.0.0:8090 -t public public/index.php
@@ -83,10 +119,17 @@ php -S 0.0.0.0:8090 -t public public/index.php
 # 3b. Production: nginx + php-fpm, see nginx.conf
 ```
 
-Re-run `php bin/build-index.php` (or `pnpm index` from the repo root) whenever
-`/memes/*` changes (e.g. from the scraper pipeline or a cron/CI step). The
-rebuild is atomic — the live DB is swapped via rename, so there is zero
-downtime.
+Re-run both index scripts (or `pnpm index` from the repo root) whenever
+`/memes/*` changes (e.g. from the scraper pipeline or a cron/CI step). Both
+rebuilds are atomic — SQLite swaps via rename, Meilisearch via index swap —
+so there is zero downtime.
 
-Set `OPENMEME_BASE_URL=https://yourdomain.com` in the PHP-FPM environment
-for correct sitemap/OG absolute URLs.
+Tests: `php vendor/bin/phpunit` (unit) and
+`php vendor/bin/phpunit --testsuite integration` (needs Meilisearch running
+and both indexes built).
+
+The app reads env from `apps/web/.env`, falling back to the repo-root
+`.env` (real environment variables always win). Set
+`OPENMEME_BASE_URL=https://yourdomain.com` for correct sitemap/OG absolute
+URLs, and `MEILI_URL` / `MEILI_SEARCH_KEY` for search (see nginx.conf for
+the PHP-FPM alternative).

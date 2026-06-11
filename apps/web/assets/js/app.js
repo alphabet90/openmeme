@@ -90,13 +90,28 @@ const resultsHTML = (items, q) => {
     </div>`).join('');
 };
 
-/* Debounced suggest fetch shared by all inputs */
+/* Debounced suggest fetch shared by all inputs.
+ * Abuse limits mirror the server (config.php): queries are capped at 100
+ * chars and shorter than 2 chars never hit the network. Only one request
+ * is in flight at a time, and recent answers are served from a small cache. */
+const SUGGEST_MIN = 2;
+const SUGGEST_MAX = 100;
 let suggestTimer = null;
+let suggestXhr = null;
+const suggestCache = new Map();
 const fetchSuggest = (q, cb) => {
   clearTimeout(suggestTimer);
+  q = q.trim().slice(0, SUGGEST_MAX);
+  if (q.length < SUGGEST_MIN) return cb([]);
+  if (suggestCache.has(q)) return cb(suggestCache.get(q));
   suggestTimer = setTimeout(() => {
-    $.getJSON(PREFIX + '/api/suggest', { q }, cb).fail(() => cb([]));
-  }, 120);
+    if (suggestXhr) suggestXhr.abort();
+    suggestXhr = $.getJSON(PREFIX + '/api/suggest', { q }, (items) => {
+      if (suggestCache.size > 50) suggestCache.clear();
+      suggestCache.set(q, items);
+      cb(items);
+    }).fail((xhr, status) => { if (status !== 'abort') cb([]); });
+  }, 200);
 };
 
 const renderInto = ($box, q, done) => {
@@ -253,14 +268,40 @@ $('[data-show-more]').on('click', function (e) {
   });
 });
 
-/* ── card / detail actions: copy link + native share ── */
+/* ── card / detail actions: copy image + native share ── */
+/* System clipboards only accept PNG, so JPEG/WebP/GIF are redrawn on a
+ * canvas first (GIFs copy as their first frame). */
+const toPngBlob = async (url) => {
+  const blob = await (await fetch(url)).blob();
+  if (blob.type === 'image/png') return blob;
+  const bmp = await createImageBitmap(blob);
+  const canvas = document.createElement('canvas');
+  canvas.width = bmp.width;
+  canvas.height = bmp.height;
+  canvas.getContext('2d').drawImage(bmp, 0, 0);
+  return new Promise((resolve, reject) =>
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png'));
+};
+
 $(document).on('click', '[data-copy]', function (e) {
   e.preventDefault();
   const $btn = $(this);
-  navigator.clipboard.writeText($btn.data('copy')).then(() => {
+  const flash = () => {
     $btn.addClass('copied');
     setTimeout(() => $btn.removeClass('copied'), 1200);
-  });
+  };
+  const copyLink = () => navigator.clipboard.writeText($btn.data('copy')).then(flash);
+  const img = $btn.data('copy-img');
+  if (img && window.ClipboardItem && navigator.clipboard.write) {
+    // ClipboardItem takes the pending promise so the user-gesture
+    // permission isn't lost while the image downloads (Safari).
+    navigator.clipboard
+      .write([new ClipboardItem({ 'image/png': toPngBlob(img) })])
+      .then(flash)
+      .catch(() => copyLink().catch(() => {}));
+  } else {
+    copyLink().catch(() => {});
+  }
 });
 $(document).on('click', '[data-share]', function (e) {
   e.preventDefault();

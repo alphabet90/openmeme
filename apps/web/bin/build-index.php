@@ -4,8 +4,10 @@
  *
  * The meme collection (MDX frontmatter + images) is the source of truth;
  * this index is disposable and rebuilt atomically (write temp DB, rename).
+ * Full-text search lives in Meilisearch — after this script, run
+ * bin/build-search.php to push the search index.
  *
- * Usage: php site/bin/build-index.php
+ * Usage: php bin/build-index.php && php bin/build-search.php
  */
 
 declare(strict_types=1);
@@ -55,20 +57,6 @@ $pdo->exec('
         PRIMARY KEY (meme_id, locale)
     );
 ');
-
-$hasFts = true;
-try {
-    // Base (English) columns + es columns so search can be locale-filtered.
-    $pdo->exec('
-        CREATE VIRTUAL TABLE memes_fts USING fts5(
-            title, description, tags, category,
-            title_es, description_es, tags_es
-        )
-    ');
-} catch (PDOException $e) {
-    $hasFts = false;
-    fwrite(STDERR, "warn: FTS5 unavailable, search will use LIKE fallback\n");
-}
 
 /**
  * Minimal YAML-frontmatter parser for the flat key/value format used in
@@ -218,15 +206,6 @@ foreach ($dirs as [$dir, $dirName]) {
     }
 }
 
-if ($hasFts) {
-    $pdo->exec("
-        INSERT INTO memes_fts (rowid, title, description, tags, category, title_es, description_es, tags_es)
-        SELECT m.id, m.title, m.description, m.tags, m.category,
-               COALESCE(l.title, ''), COALESCE(l.description, ''), COALESCE(l.tags, '')
-        FROM memes m
-        LEFT JOIN meme_locales l ON l.meme_id = m.id AND l.locale = 'es-AR'
-    ");
-}
 $pdo->commit();
 $pdo->exec('PRAGMA optimize');
 $pdo = null;
