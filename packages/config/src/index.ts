@@ -1,8 +1,0 @@
-export const tsConfig = {
-  compilerOptions: {
-    strict: true,
-    esModuleInterop: true,
-    skipLibCheck: true,
-    moduleResolution: "bundler",
-  },
-};

@@ -14,6 +14,7 @@ import {
   fetchSinglePost,
   fetchCommentImages,
   extractPostImageUrls,
+  type RedditPost,
 } from "./scraper.js";
 import { downloadBatch, computeFileSha1 } from "./downloader.js";
 import { saveAndCommitBatch, gitCreateBranch } from "./saver.js";
@@ -81,7 +82,7 @@ function indexExistingMemes(
   logger.info(`Content-indexed ${indexed} existing memes`);
 }
 
-function buildMeta(post: Record<string, unknown>, subreddit: string): PostMetadata {
+function buildMeta(post: RedditPost, subreddit: string): PostMetadata {
   return {
     post_id: String(post["name"] || ""),
     title: String(post["title"] || ""),
@@ -101,7 +102,7 @@ interface UrlWithMeta {
 }
 
 async function extractUrls(
-  posts: Record<string, unknown>[],
+  posts: RedditPost[],
   tracker: PostTracker,
   subreddit: string,
   minCommentUpvotes: number
@@ -116,7 +117,7 @@ async function extractUrls(
     const meta = buildMeta(post, subreddit);
 
     // Post-level images
-    const postUrls = extractPostImageUrls(post as Parameters<typeof extractPostImageUrls>[0]);
+    const postUrls = extractPostImageUrls(post);
     for (const url of postUrls) {
       if (!seen.has(url) && !tracker.isProcessed(url)) {
         seen.add(url);
@@ -127,7 +128,7 @@ async function extractUrls(
     // Comment images
     try {
       const commentImages = await fetchCommentImages(
-        post as Parameters<typeof fetchCommentImages>[0],
+        post,
         minCommentUpvotes
       );
       for (const { url, score } of commentImages) {
@@ -316,7 +317,7 @@ export async function runPipeline(options: Partial<ScraperOptions> = {}): Promis
     `Starting pipeline: r/${opts.subreddit} limit=${opts.limit} sort=${opts.sort} timeframe=${opts.timeframe} page=${opts.page} batch=${opts.batchSize} dryRun=${opts.dryRun}`
   );
 
-  let posts: Record<string, unknown>[];
+  let posts: RedditPost[];
   if (opts.postUrl) {
     posts = await fetchSinglePost(opts.postUrl);
   } else {

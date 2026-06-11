@@ -28,14 +28,7 @@ import { extname, resolve, relative, join, basename, dirname } from "path";
 import { Command } from "commander";
 import { humanSize, findImages } from "@openmeme/scraper";
 
-// sharp is loaded dynamically to handle optional dependency
-let sharpModule: typeof import("sharp") | null = null;
-async function getSharp(): Promise<typeof import("sharp")> {
-  if (!sharpModule) {
-    sharpModule = await import("sharp");
-  }
-  return sharpModule;
-}
+import sharp from "sharp";
 
 const logger = {
   info: (...args: unknown[]) => console.log("[optimize]", ...args),
@@ -135,7 +128,6 @@ async function optimizeImage(
     dryRun: boolean;
   }
 ): Promise<OptimizationResult | null> {
-  const sharp = await getSharp();
   const originalSize = statSync(filePath).size;
 
   try {
@@ -234,7 +226,7 @@ async function main() {
 
   // Check sharp availability
   try {
-    await getSharp();
+    sharp;
   } catch {
     logger.error(
       "Sharp is not installed. Run: npm install sharp"

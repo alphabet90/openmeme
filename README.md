@@ -13,25 +13,26 @@ OpenMeme is a modular monorepo for scraping, classifying, indexing, and serving 
 - **Git-tracked meme collection** — images + MDX metadata, browsable on GitHub
 - **Pre-commit validation** — guard script checks quality before every commit
 - **Auto-sync** — scheduled Reddit synchronization with configurable intervals
-- **Design system** — Refero-standard tokens and components
-- **Java REST API** — Spring Boot + PostgreSQL + Redis
-- **Next.js web client** — React/TypeScript/Tailwind
+- **Vanilla PHP web site** — server-rendered, SQLite-indexed, zero framework overhead
 
 ---
 
 ## Monorepo Structure
 
 ```
+├── apps/
+│   └── web/                # Vanilla PHP + SQLite + jQuery site
+│       ├── public/         # Front controller + static assets
+│       ├── src/            # PHP helpers, i18n, repo queries
+│       ├── templates/      # Server-rendered PHP templates
+│       ├── bin/            # build-index.php (SQLite index from memes/)
+│       ├── assets/         # Source JS/CSS for webpack
+│       └── package.json    # @openmeme/web
 ├── packages/
-│   ├── scraper/            # Core scraper pipeline (TypeScript)
-│   │   ├── src/            # scraper, downloader, classifier, saver, pipeline, bloom, validator
-│   │   ├── package.json    # @openmeme/scraper
-│   │   └── tsconfig.json
-│   └── design-system/      # Design tokens + components (CSS/Refero)
-│       ├── tokens/         # colors, typography, spacing, shadows, motion, radius
-│       ├── src/components.css
-│       ├── SKILL.md        # AI agent design skill reference
-│       └── references/design-refero.md
+│   └── scraper/            # Core scraper pipeline (TypeScript)
+│       ├── src/            # scraper, downloader, classifier, saver, pipeline, bloom, validator
+│       ├── package.json    # @openmeme/scraper
+│       └── tsconfig.json
 ├── scripts/
 │   ├── src/guard.ts        # Pre-commit validation gate
 │   ├── src/sync.ts         # Reddit auto-sync
@@ -44,16 +45,12 @@ OpenMeme is a modular monorepo for scraping, classifying, indexing, and serving 
 │   └── dev/                # Developer utilities (lint, benchmark, db-check, setup-hooks)
 │       ├── src/commands/
 │       └── package.json    # @openmeme/dev
+├── skills/                 # Reusable AI capabilities (classifier, curator, localizer)
 ├── craft/
 │   └── rules.md            # Brand manifesto + "good meme" criteria + anti-AI-slop
-├── apps/api/                    # Java Spring Boot REST API
-├── apps/web/            # Next.js frontend
-├── memes/                  # Git-tracked meme collection (2,086 files, 134 MB, 388 categories)
+├── memes/                  # Git-tracked meme collection
 ├── docs/
 │   └── CLI.md              # Complete CLI reference
-├── .github/workflows/
-│   └── index-memes.yml     # Auto-reindex memes on push
-├── docker-compose.yml      # PostgreSQL + Redis + API
 ├── turbo.json              # TurboRepo orchestration
 ├── pnpm-workspace.yaml     # Workspace definition
 └── package.json            # Root scripts (pnpm scrape, guard, sync, etc.)
@@ -66,8 +63,7 @@ OpenMeme is a modular monorepo for scraping, classifying, indexing, and serving 
 ### Prerequisites
 
 - Node.js 20+ and pnpm
-- Java 21 and Maven (for API)
-- Docker + Docker Compose (optional, for full stack)
+- PHP 8.2+ with `pdo_sqlite` and `gd`
 - Reddit app credentials (for scraper)
 
 ### Install
@@ -109,15 +105,20 @@ pnpm sync --subreddit argentina --limit 50
 pnpm optimize --all
 ```
 
-### Run Full Stack (Docker)
+### Run the Web Site
 
 ```bash
-# Start PostgreSQL, Redis, and API
-docker-compose up
+# 1. Build the front-end bundle
+cd apps/web && pnpm build
 
-# Frontend (in another terminal)
-cd apps/web && pnpm dev
+# 2. Build the SQLite index from /memes/*
+php bin/build-index.php
+
+# 3. Start the dev server
+php -S 0.0.0.0:8090 -t public public/index.php
 ```
+
+For production, use nginx + PHP-FPM. See `apps/web/nginx.conf`.
 
 ---
 
@@ -145,10 +146,8 @@ Full CLI docs: [`docs/CLI.md`](docs/CLI.md)
 | Scraper | TypeScript 5, Node 20, commander, p-queue, sharp |
 | Scripts | TypeScript 5, sharp |
 | CLI | TypeScript 5, chalk, ora, commander |
-| Design System | CSS tokens, Anton + Space Grotesk, Refero standard |
-| API | Java 21, Spring Boot 3, PostgreSQL 16, Redis 7, Flyway |
-| Web | Next.js 16, React 19, TypeScript 5, Tailwind CSS 4 |
-| DevOps | Docker Compose, GitHub Actions, TurboRepo |
+| Web | PHP 8.2, SQLite (FTS5), nginx, webpack 5, jQuery |
+| DevOps | GitHub Actions, TurboRepo |
 
 ---
 
@@ -168,18 +167,11 @@ REDDIT_USER_AGENT="OpenMemeBot/1.0 (by u/your_username)"
 REDDIT_CLIENT_ID=your_id
 REDDIT_CLIENT_SECRET=your_secret
 
-# API
-PORT=8080
-DB_PASSWORD=memes
-API_BASE_URL=http://localhost:8080
+# Web
+OPENMEME_BASE_URL=https://openmeme.example.com
 
 # Scripts
-BLOOM_FILTER_FILE=data/processed.bloom
-REPO_PATH=/path/to/repo
-SUBREDDIT=argentina
 BATCH_SIZE=10
-CLASSIFY_WORKERS=4
-CLASSIFIER=claude
 DRY_RUN=false
 PER_POST=false
 ```
@@ -188,34 +180,12 @@ Copy `.env.example` to `.env` and configure your values.
 
 ---
 
-## Design System
-
-OpenMeme's design system follows **Refero Research-First Design** principles:
-
-- **Dark-first**: `#0D0D0D` background — memes are the star
-- **Lime accent**: `#D4FF00` — CTAs, badges, highlights
-- **Celeste secondary**: `#74C6F4` — brand heritage
-- **Type contrast**: Anton (bold uppercase) vs Space Grotesk (clean UI)
-- **4px grid**: all spacing based on 4px unit system
-- **Motion**: 90-350ms durations, no unnecessary animation
-
-```css
-@import '@openmeme/design-system/tokens/index.css';
-@import '@openmeme/design-system/src/components.css';
-```
-
-See `packages/design-system/references/design-refero.md` for full documentation.
-
----
-
 ## Contributing
 
 1. **Scraper**: `packages/scraper/src/` — TypeScript pipeline
 2. **Scripts**: `scripts/src/` — automation (guard, sync, optimize)
 3. **CLI**: `tools/cli/src/commands/` — interactive commands
-4. **Design**: `packages/design-system/` — tokens, components
-5. **API**: `api/` — Java Spring Boot
-6. **Web**: `apps/web/` — Next.js frontend
+4. **Web**: `apps/web/` — PHP site
 
 **Before committing**: Run `pnpm guard --staged` to validate your memes.
 
@@ -225,8 +195,6 @@ See `packages/design-system/references/design-refero.md` for full documentation.
 
 ## Security
 
-- Admin API endpoints protected by `ApiKeyAuthFilter`
-- Sensitive headers masked in logs
 - `.env` is gitignored — never commit credentials
 - AI CLI processes require installed + authenticated CLIs
 

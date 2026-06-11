@@ -12,6 +12,9 @@ const logger = {
   info: (...args: unknown[]) => console.log("[saver]", ...args),
   warning: (...args: unknown[]) => console.warn("[saver]", ...args),
   error: (...args: unknown[]) => console.error("[saver]", ...args),
+  debug: (...args: unknown[]) => {
+    if (process.env.DEBUG) console.log("[saver:debug]", ...args);
+  },
 };
 
 function yamlStr(s: string): string {
@@ -22,7 +25,7 @@ function yamlStr(s: string): string {
     .replace(/\r/g, "\\r");
 }
 
-function sanitizeSlug(slug: string): string {
+export function sanitizeSlug(slug: string): string {
   return (slug || "meme")
     .toLowerCase()
     .trim()

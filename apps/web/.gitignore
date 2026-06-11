@@ -1,4 +1,16 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+public/assets/app.js
+public/assets/app.css
+
+# SQLite index (rebuilt from memes/)
+data/memes.db
+
+# Environment
+.env
 .env.local
-.open-next/
-.dev.vars
-.wrangler/
+
+# OS
+.DS_Store
