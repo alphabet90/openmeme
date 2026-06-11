@@ -20,7 +20,8 @@
     "setup-hooks": "pnpm --filter @openmeme/dev setup-hooks",
     "generate-prompt": "pnpm --filter @openmeme/dev generate-prompt",
     "benchmark": "pnpm --filter @openmeme/dev benchmark",
-    "db-check": "pnpm --filter @openmeme/dev db-check"
+    "db-check": "pnpm --filter @openmeme/dev db-check",
+    "index": "pnpm --filter @openmeme/web index"
   },
   "keywords": ["meme", "reddit", "scraper", "monorepo"],
   "license": "Apache-2.0",
