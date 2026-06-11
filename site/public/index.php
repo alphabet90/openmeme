@@ -10,6 +10,7 @@ declare(strict_types=1);
 require __DIR__ . '/../config.php';
 require __DIR__ . '/../src/helpers.php';
 require __DIR__ . '/../src/repo.php';
+require __DIR__ . '/../src/pages.php';
 
 $path = rawurldecode((string) parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 
@@ -109,6 +110,50 @@ if ($path === '/search') {
         'total' => $result['total'],
         'page' => $page,
         'base' => '/search?q=' . rawurlencode($q),
+    ]);
+    exit;
+}
+
+if ($path === '/top' || $path === '/nuevos') {
+    $order = $path === '/top' ? 'top' : 'new';
+    $page = max(1, (int) ($_GET['page'] ?? 1));
+    $result = repo_list($order, $page);
+    if ($page > 1 && empty($result['rows'])) {
+        not_found();
+    }
+    $isTop = $order === 'top';
+    render('listing', [
+        'page_title' => ($isTop ? 'Top Memes — Los Más Votados' : 'Memes Nuevos — Recién Llegados') . ' | OpenMeme',
+        'meta_description' => $isTop
+            ? 'Los memes más votados de OpenMeme. Gratis para descargar y compartir.'
+            : 'Los memes más recientes de OpenMeme. Gratis para descargar y compartir.',
+        'canonical' => BASE_URL . page_link($path, $page),
+        'heading' => $isTop ? 'Top Memes' : 'Memes Nuevos',
+        'subtitle' => $isTop
+            ? 'Los ' . $result['total'] . ' memes más votados'
+            : 'Los últimos memes agregados a la colección',
+        'memes' => $result['rows'],
+        'total' => $result['total'],
+        'page' => $page,
+        'base' => $path,
+    ]);
+    exit;
+}
+
+$staticPages = [
+    '/terminos' => ['legal', 'page_terminos'],
+    '/privacidad' => ['legal', 'page_privacidad'],
+    '/dmca' => ['legal', 'page_dmca'],
+    '/contacto' => ['contact', 'page_contacto'],
+];
+if (isset($staticPages[$path])) {
+    [$template, $contentFn] = $staticPages[$path];
+    $content = $contentFn();
+    render($template, [
+        'page_title' => $content['meta_title'],
+        'meta_description' => $content['meta_description'],
+        'canonical' => BASE_URL . $path,
+        'content' => $content,
     ]);
     exit;
 }
