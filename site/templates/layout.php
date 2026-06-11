@@ -111,15 +111,46 @@ $navCategories = repo_categories(6);
 </main>
 
 <footer class="footer">
-  <div class="footer-logo">OPEN<span class="lime">MEME</span></div>
-  <div class="footer-links">
-    <a class="footer-link" href="/categories">Categories</a>
-    <a class="footer-link" href="/random">Random</a>
-    <a class="footer-link" href="/sitemap.xml">Sitemap</a>
-    <a class="footer-link" href="https://github.com/alphabet90/openmeme" rel="noopener">GitHub</a>
+  <div class="footer-grid">
+    <div>
+      <p class="footer-brand">OPEN<span class="lime">MEME</span></p>
+      <p class="footer-tagline">Todos los memes. En un solo lugar.</p>
+    </div>
+
+    <nav aria-label="Navegación del pie de página">
+      <h3 class="footer-col-title">Explorar</h3>
+      <ul>
+        <li><a href="/">Inicio</a></li>
+        <li><a href="/top">Top</a></li>
+        <li><a href="/nuevos">Nuevos</a></li>
+        <li><a href="/random">Aleatorio</a></li>
+        <li><a href="/categories">Categorías</a></li>
+      </ul>
+    </nav>
+
+    <nav aria-label="Navegación de categorías">
+      <h3 class="footer-col-title">Categorías</h3>
+      <ul>
+        <?php foreach (array_slice($navCategories, 0, 5) as $c): ?>
+        <li><a href="<?= e(category_url($c['category'])) ?>"><?= e(cat_label($c['category'])) ?></a></li>
+        <?php endforeach ?>
+      </ul>
+    </nav>
+
+    <nav aria-label="Navegación legal">
+      <h3 class="footer-col-title">Legal</h3>
+      <ul>
+        <li><a href="/terminos">Términos</a></li>
+        <li><a href="/privacidad">Privacidad</a></li>
+        <li><a href="/dmca">DMCA</a></li>
+        <li><a href="/contacto">Contacto</a></li>
+      </ul>
+    </nav>
   </div>
-  <div class="footer-flags">🇦🇷 🇺🇸</div>
-  <div class="footer-copy">© <?= date('Y') ?> OpenMeme. Open source, free forever. <?= e(compact_num((int) $stats['memes'])) ?> memes and counting.</div>
+
+  <div class="footer-bottom">
+    <small>© <?= date('Y') ?> OpenMeme. Todos los derechos reservados.</small>
+  </div>
 </footer>
 
 <script>

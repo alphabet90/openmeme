@@ -36,6 +36,16 @@ function repo_newest(int $limit = 20): array
     return $st->fetchAll();
 }
 
+/** Paginated full listing, $order 'top' (score) or 'new' (created_at). */
+function repo_list(string $order, int $page): array
+{
+    $orderBy = $order === 'new' ? 'created_at DESC' : 'score DESC';
+    $offset = ($page - 1) * PAGE_SIZE;
+    $st = db()->prepare("SELECT * FROM memes ORDER BY $orderBy LIMIT ? OFFSET ?");
+    $st->execute([PAGE_SIZE, $offset]);
+    return ['rows' => $st->fetchAll(), 'total' => (int) repo_stats()['memes']];
+}
+
 function repo_random(): ?array
 {
     $row = db()->query('SELECT * FROM memes ORDER BY RANDOM() LIMIT 1')->fetch();

@@ -4,11 +4,14 @@ $h = (int) $meme['height'];
 $tags = preg_split('/\s+/', (string) $meme['tags'], -1, PREG_SPLIT_NO_EMPTY);
 $fecha = fecha_es((string) $meme['created_at']);
 ?>
-<nav class="breadcrumb-bar" aria-label="Breadcrumb">
-  <a href="/">Home</a> <span class="crumb-sep">/</span>
-  <a href="/categories">Categories</a> <span class="crumb-sep">/</span>
-  <a href="<?= e(category_url($meme['category'])) ?>"><?= e(cat_label($meme['category'])) ?></a> <span class="crumb-sep">/</span>
-  <span class="crumb-current" aria-current="page"><?= e($meme['title']) ?></span>
+<div class="meme-main">
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <ol>
+    <li><a href="/">Home</a></li>
+    <li><a href="/categories">Categories</a></li>
+    <li><a href="<?= e(category_url($meme['category'])) ?>"><?= e(cat_label($meme['category'])) ?></a></li>
+    <li><span aria-current="page"><?= e($meme['title']) ?></span></li>
+  </ol>
 </nav>
 
 <article class="meme-hero">
@@ -61,6 +64,7 @@ $fecha = fecha_es((string) $meme['created_at']);
     </div>
   </div>
 </article>
+</div>
 
 <?php if (!empty($related)): ?>
 <div class="section-header">

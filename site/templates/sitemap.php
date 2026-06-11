@@ -2,6 +2,11 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc><?= e(BASE_URL) ?>/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
   <url><loc><?= e(BASE_URL) ?>/categories</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc><?= e(BASE_URL) ?>/top</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc><?= e(BASE_URL) ?>/nuevos</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+<?php foreach (['terminos', 'privacidad', 'dmca', 'contacto'] as $p): ?>
+  <url><loc><?= e(BASE_URL) ?>/<?= $p ?></loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+<?php endforeach ?>
 <?php foreach ($categories as $c): ?>
   <url><loc><?= e(BASE_URL . category_url($c['category'])) ?></loc><changefreq>daily</changefreq><priority>0.7</priority></url>
 <?php endforeach ?>
