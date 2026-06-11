@@ -15,8 +15,9 @@ define('DB_PATH', SITE_ROOT . '/data/memes.db');
 
 define('TEMPLATES_DIR', SITE_ROOT . '/templates');
 
-// Listing page size
-define('PAGE_SIZE', 40);
+// Default page size everywhere: home grid, listings, search,
+// and the "show more" batch size.
+define('PAGE_SIZE', 100);
 
 // Memes newer than this many days get the NEW badge
 define('NEW_DAYS', 7);

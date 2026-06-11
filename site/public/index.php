@@ -58,11 +58,22 @@ if ($path === '/') {
         'meta_description' => t('home.meta_description', compact_num((int) $stats['memes'])),
         'canonical' => BASE_URL . lurl('/'),
         'alternates' => alternates('/'),
-        'trending' => repo_trending(20),
+        'trending' => repo_trending(PAGE_SIZE),
         'top_categories' => repo_categories(8),
         'stats' => $stats,
         'is_home' => true,
     ]);
+    exit;
+}
+
+// HTML fragment of the next batch of cards, appended by the home "show more" button.
+if ($path === '/api/memes') {
+    $offset = max(0, min(10000, (int) ($_GET['offset'] ?? 0)));
+    header('Content-Type: text/html; charset=utf-8');
+    header('Cache-Control: public, max-age=300');
+    foreach (repo_trending(PAGE_SIZE, $offset) as $meme) {
+        partial('partials/card', ['meme' => $meme]);
+    }
     exit;
 }
 
