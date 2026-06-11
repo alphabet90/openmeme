@@ -37,30 +37,52 @@ A good meme on OpenMeme satisfies **at least 3** of the following criteria:
 
 ## 2. Category System
 
-Categories must be **specific** and **useful**. Avoid overly broad categories.
+Categories in OpenMeme are **format/franchise/topic folders**, not broad genre buckets. Each meme lives in exactly one category folder; secondary concepts go in tags.
 
-### 2.1 Main Categories
+### 2.1 Category Philosophy
+
+- **Primary category = dominant content signal**: franchise, recognizable format, or specific topic.
+- **Secondary concepts go in tags**: region, emotion, format subtype, political leaning, etc.
+- Avoid overly broad or overly narrow categories.
+
+### 2.2 Canonical Category Tiers
+
+| Tier | Examples | When to use |
+|------|----------|-------------|
+| **Franchise** | `simpsons`, `spongebob`, `star-wars`, `dragon-ball` | The meme is clearly from a known franchise |
+| **Format** | `reaction`, `template`, `shitpost`, `cursed`, `comparison` | No franchise; the format itself is the identity |
+| **Regional/Topic** | `argentina-politics`, `argentina-football`, `argentina-humor` | Region-specific or topic-specific with no franchise |
+| **Specific meme** | `always-has-been`, `chad`, `crying-wojak` | A recognizable standalone meme/format |
+
+### 2.3 Examples
 
 ```
-funny          - General humor, visual jokes
-wholesome      - Positive content, feel-good
-politics       - Political satire and social commentary
-gaming         - Video games, gamer culture
-tech           - Technology, programming, internet
-culture        - Cultural references, music, movies, TV
-relatable      - Universal everyday situations
-absurd         - Surreal humor, anti-humor, shitposting
-argentina      - Memes specific to Argentine culture
-other          - Last-resort category (use with justification)
+simpsons              - Any Simpsons-derived meme
+reaction              - Generic reaction images
+argentina-politics    - Argentine political memes
+always-has-been       - The "Wait, it's all ...? Always has been" format
+cursed-car            - Weird/unsettling car images
+futbol-shitpost       - Football-related shitposting
 ```
 
-### 2.2 Creating New Categories
+### 2.4 Creating New Categories
 
 To create a new category, you need:
 
 1. **Justification**: Why don't existing categories cover this content?
-2. **Minimum examples**: At least 10 memes that fit the proposed category
-3. **Approval**: PR with explanation and maintainer review
+2. **Minimum examples**: At least 5 memes that fit the proposed category
+3. **Naming**: kebab-case, lowercase, no spaces, no special characters
+4. **Approval**: PR with explanation and maintainer review
+
+### 2.5 Cross-Categorization Rule
+
+When a meme belongs to two worlds (e.g., Simpsons + Argentina):
+
+1. **Primary category**: The franchise/source material wins — `simpsons`
+2. **Secondary via tags**: Add `argentina`, `political`, `satire` as tags
+3. **Never create**: `simpsons-argentina-politics` — this is the anti-pattern
+
+Exception: When a cross-category has **10+ memes** with a **distinct, self-sustaining identity** (e.g., `argentina-politics` with 40+ memes), it may remain as a dedicated category. Review case by case.
 
 ---
 
@@ -85,7 +107,7 @@ title:        "string - Descriptive title, max 200 chars"
 description:  "string - Context / memeticness description"
 author:       "string - Reddit username (u/username) or 'unknown'"
 subreddit:    "string - Source subreddit (without r/)"
-category:     "string - Must exist in the category list"
+category:     "string - Must match the parent folder name"
 slug:         "string - URL-safe, lowercase, a-z0-9-"
 score:        "number - Original post upvotes"
 created_at:   "ISO 8601 - Post creation date"
@@ -133,7 +155,7 @@ Add 5 memes from r/argentina batch 3 [politics(2), funny(3)]
 1. Fork the repository
 2. Add memes in the correct structure: `memes/{category}/{slug}.{ext}`
 3. Include an MDX file with complete frontmatter
-4. Run `npx tsx scripts/src/guard.ts --all`
+4. Run `pnpm guard --all`
 5. Create a PR with a description that includes:
    - Meme source (Reddit URL)
    - Category justification (if new)
@@ -219,8 +241,7 @@ de      - Deutsch
 To add a new language to the classifier:
 
 ```bash
-npx tsx tools/dev/src/index.ts generate-prompt {locale} \
-  --output prompts/prompt.{locale}.txt
+pnpm generate-prompt {locale}
 ```
 
 ---
@@ -246,9 +267,10 @@ author: "unknown"             # Unknown origin
 ### 8.3 Tags
 
 - Minimum 1 tag (category is included automatically)
-- Recommended maximum: 8 tags
+- Recommended maximum: 12 tags
 - Use descriptive and specific tags
 - Avoid redundant synonyms
+- Include: franchise, character, emotion, format type, region/language, action
 
 ---
 
@@ -262,6 +284,7 @@ Review quarterly:
 - [ ] Orphan MDX files (no image)
 - [ ] Duplicate content (SHA1)
 - [ ] Underused categories (< 5 memes)
+- [ ] Categories that should merge per `skills/meme-classifier/references/taxonomy.md`
 
 ### 9.2 Health Metrics
 
@@ -274,6 +297,6 @@ Target: 100% author attribution
 
 ---
 
-*Last updated: 2026-05-10*  
-*Version: 1.0.0*  
+*Last updated: 2026-06-11*  
+*Version: 1.1.0*  
 *Maintained by: OpenMeme Contributors*

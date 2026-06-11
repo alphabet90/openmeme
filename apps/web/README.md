@@ -66,14 +66,16 @@ Two locales only (Argentina-first):
 ## Setup
 
 ```bash
-cd site
+cd apps/web
 
 # 1. Build the frontend bundle
-npm install
-npm run build                  # → public/assets/app.{js,css}
+pnpm install
+pnpm build                     # → public/assets/app.{js,css}
 
 # 2. Build the SQLite index from /memes/*
 php bin/build-index.php        # → data/memes.db
+# Or, from the repo root:
+# pnpm index
 
 # 3a. Dev server
 php -S 0.0.0.0:8090 -t public public/index.php
@@ -81,9 +83,10 @@ php -S 0.0.0.0:8090 -t public public/index.php
 # 3b. Production: nginx + php-fpm, see nginx.conf
 ```
 
-Re-run `php bin/build-index.php` whenever `/memes/*` changes (e.g. from the
-scraper pipeline or a cron/CI step). The rebuild is atomic — the live DB is
-swapped via rename, so there is zero downtime.
+Re-run `php bin/build-index.php` (or `pnpm index` from the repo root) whenever
+`/memes/*` changes (e.g. from the scraper pipeline or a cron/CI step). The
+rebuild is atomic — the live DB is swapped via rename, so there is zero
+downtime.
 
 Set `OPENMEME_BASE_URL=https://yourdomain.com` in the PHP-FPM environment
 for correct sitemap/OG absolute URLs.
