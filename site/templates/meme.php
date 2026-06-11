@@ -2,46 +2,64 @@
 $w = (int) $meme['width'];
 $h = (int) $meme['height'];
 $tags = preg_split('/\s+/', (string) $meme['tags'], -1, PREG_SPLIT_NO_EMPTY);
+$fecha = fecha_es((string) $meme['created_at']);
 ?>
-<article class="meme-page">
-  <nav class="breadcrumb" aria-label="Breadcrumb">
-    <a href="/">Memes</a> <span>/</span>
-    <a href="<?= e(category_url($meme['category'])) ?>"><?= e(cat_label($meme['category'])) ?></a>
-  </nav>
+<nav class="breadcrumb-bar" aria-label="Breadcrumb">
+  <a href="/">Home</a> <span class="crumb-sep">/</span>
+  <a href="/categories">Categories</a> <span class="crumb-sep">/</span>
+  <a href="<?= e(category_url($meme['category'])) ?>"><?= e(cat_label($meme['category'])) ?></a> <span class="crumb-sep">/</span>
+  <span class="crumb-current" aria-current="page"><?= e($meme['title']) ?></span>
+</nav>
 
-  <h1 class="meme-title"><?= e($meme['title']) ?></h1>
-
+<article class="meme-hero">
   <figure class="meme-figure">
     <img src="<?= e(meme_img($meme)) ?>" alt="<?= e($meme['title']) ?>"
       <?= $w > 0 ? 'width="' . $w . '" height="' . $h . '"' : '' ?> decoding="async" fetchpriority="high">
-    <figcaption><?= e($meme['description']) ?></figcaption>
   </figure>
 
-  <div class="meme-actions">
-    <a class="btn-primary" href="<?= e(meme_img($meme)) ?>" download="<?= e(basename($meme['image'])) ?>">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Download free
-    </a>
-    <button class="btn-secondary" data-copy="<?= e(BASE_URL . meme_url($meme)) ?>" type="button">Copy link</button>
-    <button class="btn-secondary" data-share="<?= e(BASE_URL . meme_url($meme)) ?>" data-title="<?= e($meme['title']) ?>" type="button">Share</button>
-  </div>
+  <div class="meme-info">
+    <h1 class="meme-title"><?= e($meme['title']) ?></h1>
 
-  <dl class="meme-meta">
-    <div><dt>Score</dt><dd><?= e(compact_num((int) $meme['score'])) ?> upvotes</dd></div>
-    <div><dt>Author</dt><dd>u/<?= e($meme['author']) ?></dd></div>
-    <?php if ($meme['subreddit'] !== ''): ?>
-    <div><dt>Source</dt><dd><a href="<?= e($meme['post_url']) ?>" rel="nofollow noopener ugc">r/<?= e($meme['subreddit']) ?></a></dd></div>
-    <?php endif ?>
-    <div><dt>License</dt><dd>Free to use &amp; share</dd></div>
-  </dl>
+    <div class="meme-byline">
+      <?php if ($meme['author'] !== ''): ?>
+      <span class="byline-avatar" aria-hidden="true"><?= e(mb_strtoupper(mb_substr($meme['author'], 0, 1))) ?></span>
+      <span class="byline-author">u/<?= e($meme['author']) ?></span>
+      <?php endif ?>
+      <?php if ($meme['subreddit'] !== ''): ?>
+      <span class="byline-sep" aria-hidden="true">·</span>
+      <a class="byline-sub" href="<?= e($meme['post_url']) ?>" rel="nofollow noopener ugc">#<?= e($meme['subreddit']) ?></a>
+      <?php endif ?>
+      <?php if ($fecha !== ''): ?>
+      <span class="byline-sep" aria-hidden="true">·</span>
+      <span class="byline-date">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <?= e($fecha) ?>
+      </span>
+      <?php endif ?>
+    </div>
 
-  <?php if ($tags): ?>
-  <div class="meme-tags">
-    <?php foreach ($tags as $tag): ?>
-    <a class="filter-pill" href="/search?q=<?= e(rawurlencode($tag)) ?>">#<?= e($tag) ?></a>
-    <?php endforeach ?>
+<?php if ($meme['description'] !== ''): ?>
+    <p class="meme-desc"><?= e($meme['description']) ?></p>
+<?php endif ?>
+<?php if ($tags): ?>
+    <div class="meme-tags">
+      <?php foreach ($tags as $tag): ?>
+      <a class="tag-pill" href="/search?q=<?= e(rawurlencode($tag)) ?>">#<?= e($tag) ?></a>
+      <?php endforeach ?>
+    </div>
+<?php endif ?>
+
+    <div class="meme-actions">
+      <a class="btn-primary" href="<?= e(meme_img($meme)) ?>" download="<?= e(basename($meme['image'])) ?>">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Free download
+      </a>
+      <button class="btn-secondary" data-copy="<?= e(BASE_URL . meme_url($meme)) ?>" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copy
+      </button>
+    </div>
   </div>
-  <?php endif ?>
 </article>
 
 <?php if (!empty($related)): ?>
