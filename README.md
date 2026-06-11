@@ -11,6 +11,7 @@ OpenMeme is a modular monorepo for scraping, classifying, indexing, and serving 
 - **TypeScript scraper** with pluggable AI classifiers (Claude / Codex)
 - **Bloom filter deduplication** — tracks 200K items in ~360 KB
 - **Git-tracked meme collection** — images + MDX metadata, browsable on GitHub
+- **Format/franchise category folders** — `memes/simpsons/`, `memes/reaction/`, `memes/argentina-politics/`, etc.
 - **Pre-commit validation** — guard script checks quality before every commit
 - **Auto-sync** — scheduled Reddit synchronization with configurable intervals
 - **Vanilla PHP web site** — server-rendered, SQLite-indexed, zero framework overhead
@@ -30,7 +31,7 @@ OpenMeme is a modular monorepo for scraping, classifying, indexing, and serving 
 │       └── package.json    # @openmeme/web
 ├── packages/
 │   └── scraper/            # Core scraper pipeline (TypeScript)
-│       ├── src/            # scraper, downloader, classifier, saver, pipeline, bloom, validator
+│       ├── src/            # cli, scraper, downloader, classifier, saver, pipeline, bloom, validator
 │       ├── package.json    # @openmeme/scraper
 │       └── tsconfig.json
 ├── scripts/
@@ -48,7 +49,8 @@ OpenMeme is a modular monorepo for scraping, classifying, indexing, and serving 
 ├── skills/                 # Reusable AI capabilities (classifier, curator, localizer)
 ├── craft/
 │   └── rules.md            # Brand manifesto + "good meme" criteria + anti-AI-slop
-├── memes/                  # Git-tracked meme collection
+├── memes/                  # Git-tracked meme collection (format/franchise folders)
+├── site/                   # STALE leftover (not a workspace; ignore)
 ├── docs/
 │   └── CLI.md              # Complete CLI reference
 ├── turbo.json              # TurboRepo orchestration
@@ -62,7 +64,7 @@ OpenMeme is a modular monorepo for scraping, classifying, indexing, and serving 
 
 ### Prerequisites
 
-- Node.js 20+ and pnpm
+- Node.js 22 (see `.nvmrc`) and pnpm
 - PHP 8.2+ with `pdo_sqlite` and `gd`
 - Reddit app credentials (for scraper)
 
@@ -80,6 +82,8 @@ pnpm install
 pnpm build
 ```
 
+> Note: `pnpm lint` currently fails because `eslint` is not installed, and `pnpm test` fails because no test files exist yet.
+
 ### Scrape Memes
 
 ```bash
@@ -90,6 +94,12 @@ pnpm scrape --subreddit argentina --limit 50
 export SUBREDDIT=argentina
 export REDDIT_USER_AGENT="OpenMemeBot/1.0"
 pnpm scrape --limit 100
+```
+
+The classifier looks for prompts at `packages/scraper/prompts/prompt.{locale}.txt`. If the directory does not exist, it falls back to a hard-coded prompt. Generate a locale prompt with:
+
+```bash
+pnpm generate-prompt es-AR
 ```
 
 ### Validate & Commit
@@ -118,7 +128,7 @@ php bin/build-index.php
 php -S 0.0.0.0:8090 -t public public/index.php
 ```
 
-For production, use nginx + PHP-FPM. See `apps/web/nginx.conf`.
+For production, use nginx + PHP-FPM. See `apps/web/nginx.conf`. Ignore the stale `site/` directory.
 
 ---
 
@@ -134,6 +144,8 @@ For production, use nginx + PHP-FPM. See `apps/web/nginx.conf`.
 | `pnpm validate` | Validate all memes |
 | `pnpm stats` | Repository statistics |
 | `pnpm import <url>` | Import from Reddit/URL |
+| `pnpm generate-prompt es-AR` | Generate classifier prompt |
+| `pnpm db-check` | Check repository consistency |
 
 Full CLI docs: [`docs/CLI.md`](docs/CLI.md)
 
@@ -143,9 +155,9 @@ Full CLI docs: [`docs/CLI.md`](docs/CLI.md)
 
 | Layer | Technology |
 |-------|------------|
-| Scraper | TypeScript 5, Node 20, commander, p-queue, sharp |
-| Scripts | TypeScript 5, sharp |
-| CLI | TypeScript 5, chalk, ora, commander |
+| Scraper | TypeScript 5.7, Node 22, commander, p-queue, sharp |
+| Scripts | TypeScript 5.7, sharp |
+| CLI | TypeScript 5.7, chalk, ora, commander |
 | Web | PHP 8.2, SQLite (FTS5), nginx, webpack 5, jQuery |
 | DevOps | GitHub Actions, TurboRepo |
 

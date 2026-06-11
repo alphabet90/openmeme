@@ -2,13 +2,15 @@
 
 Single source of truth for AI coding agents working on this repository. OpenMeme is a modular monorepo for scraping, classifying, indexing, and serving Reddit memes.
 
+---
+
 ## Subsystems
 
-1. **TypeScript Scraper** (`packages/scraper/`) — Reddit pipeline, Bloom filter, AI classification, git automation
+1. **TypeScript Scraper** (`packages/scraper/`) — Reddit JSON pipeline, Bloom filter, SHA1 dedup, AI classification, git branching
 2. **Automation Scripts** (`scripts/`) — guard.ts (validation), sync.ts (auto-sync), optimize.ts (image compression)
 3. **CLI Tools** (`tools/cli/`) — Interactive meme management (add, list, search, validate, stats, import)
-4. **Dev Tools** (`tools/dev/`) — Lint, benchmark, prompt generation, db-check, git hooks
-5. **Web Site** (`apps/web/`) — Vanilla PHP + SQLite + jQuery site
+4. **Dev Tools** (`tools/dev/`) — lint, benchmark, generate-prompt, db-check, setup-hooks
+5. **Web Site** (`apps/web/`) — Vanilla PHP + SQLite + jQuery site; `site/` is a stale leftover, not a workspace
 6. **Meme Collection** (`memes/`) — Git-tracked meme images + MDX metadata
 7. **Skills** (`skills/`) — Reusable AI capabilities: i18n-localizer, meme-classifier, meme-curator
 
@@ -18,8 +20,8 @@ Single source of truth for AI coding agents working on this repository. OpenMeme
 
 | Layer | Tech |
 |-------|------|
-| Scraper | TypeScript 5.7, Node 20, pnpm, commander, p-queue, sharp, vitest |
-| Scripts | TypeScript 5.7, Node 20, sharp |
+| Scraper | TypeScript 5.7, Node 22 (`.nvmrc`), pnpm, commander, p-queue, sharp, vitest |
+| Scripts | TypeScript 5.7, Node 22, sharp |
 | CLI | TypeScript 5.7, commander, inquirer, chalk, ora |
 | Dev Tools | TypeScript 5.7, commander, chalk, ora |
 | Web | PHP 8.2+, SQLite (FTS5), nginx, webpack 5, jQuery |
@@ -37,11 +39,12 @@ Single source of truth for AI coding agents working on this repository. OpenMeme
 │       ├── templates/          # Server-rendered PHP templates
 │       ├── bin/                # build-index.php (SQLite index from memes/)
 │       ├── assets/             # Source JS/CSS for webpack
+│       ├── data/               # Generated memes.db
 │       ├── nginx.conf          # Production nginx config
 │       └── package.json        # @openmeme/web
 ├── packages/
 │   └── scraper/                # Core scraper pipeline (TypeScript)
-│       ├── src/                # scraper, downloader, classifier, saver, pipeline, bloom, validator
+│       ├── src/                # cli, scraper, downloader, classifier, saver, pipeline, bloom, validator
 │       └── package.json        # @openmeme/scraper
 ├── scripts/
 │   ├── src/guard.ts            # Pre-commit validation gate
@@ -61,7 +64,8 @@ Single source of truth for AI coding agents working on this repository. OpenMeme
 │   └── meme-curator/           # SEO-optimize metadata
 ├── craft/
 │   └── rules.md                # Brand manifesto + quality standards
-├── memes/                      # Git-tracked meme collection
+├── memes/                      # Git-tracked meme collection (format/franchise folders)
+├── site/                       # STALE leftover; only contains data/memes.db. Do not use.
 ├── turbo.json                  # TurboRepo task orchestration
 ├── pnpm-workspace.yaml         # Workspace definition
 └── package.json                # Root scripts (pnpm scrape, guard, sync, etc.)
@@ -91,8 +95,8 @@ Single source of truth for AI coding agents working on this repository. OpenMeme
 ```bash
 pnpm build                   # Build all workspace packages
 pnpm dev                     # Start all dev servers/watchers
-pnpm lint                    # Lint all packages
-pnpm test                    # Run all test suites
+pnpm lint                    # Lint all packages (currently fails: eslint not installed)
+pnpm test                    # Run all test suites (currently fails: no test files yet)
 pnpm clean                   # Clean build artifacts
 ```
 
@@ -100,6 +104,7 @@ pnpm clean                   # Clean build artifacts
 ```bash
 pnpm scrape --subreddit argentina --limit 100
 cd packages/scraper && pnpm build && node dist/cli.js scrape --subreddit argentina
+pnpm --filter @openmeme/scraper validate
 ```
 
 ### Scripts
@@ -127,20 +132,21 @@ pnpm --filter @openmeme/dev setup-hooks             # Install git hooks
 
 ### Web Site
 ```bash
+pnpm index                   # Rebuild SQLite index from memes/* (runs apps/web/bin/build-index.php)
 cd apps/web
 pnpm build                   # webpack → public/assets/app.{js,css}
-php bin/build-index.php      # Rebuild SQLite index from memes/*
+php bin/build-index.php      # Same as above, but from inside apps/web
 php -S 0.0.0.0:8090 -t public public/index.php   # Dev server
 ```
 
-For production, use nginx + PHP-FPM with `apps/web/nginx.conf`.
+For production, use nginx + PHP-FPM with `apps/web/nginx.conf`. Ignore `site/` — it is a stale directory and is not included in `pnpm-workspace.yaml`.
 
 ---
 
 ## Code Style
 
 ### TypeScript (Scraper, Scripts, CLI, Dev)
-- Node 20+ ES2022, `NodeNext` module resolution
+- Node 22 ES2022, `NodeNext` module resolution
 - Strict TypeScript, no `any` unless necessary
 - `pnpm` for package management
 - Workspace packages: `@openmeme/scraper`, `@openmeme/scripts`, `@openmeme/cli`, `@openmeme/dev`
@@ -148,7 +154,7 @@ For production, use nginx + PHP-FPM with `apps/web/nginx.conf`.
 ### PHP (Web)
 - PHP 8.2+ with `declare(strict_types=1);`
 - Server-rendered templates; no framework
-- `/memes/*` is the source of truth; `data/memes.db` is a disposable index
+- `/memes/*` is the source of truth; `apps/web/data/memes.db` is a disposable index
 - Two locales: `es-AR` (default) and `en-US` (at `/en/...`)
 
 ---
@@ -157,8 +163,12 @@ For production, use nginx + PHP-FPM with `apps/web/nginx.conf`.
 
 | Suite | Command | Details |
 |-------|---------|---------|
-| Scraper | `cd packages/scraper && pnpm test` | Vitest |
+| Scraper | `cd packages/scraper && pnpm test` | Vitest (no test files implemented yet) |
+| CLI | `cd tools/cli && pnpm test` | Vitest (no test files implemented yet) |
+| Dev | `cd tools/dev && pnpm test` | Vitest (no test files implemented yet) |
 | Web | `cd apps/web && pnpm build` | webpack build validation |
+
+> Note: The project currently has `vitest` configured but no `.test.ts`/`.spec.ts` files. Running `pnpm test` will fail until tests are added. Lint also fails because `eslint` is referenced in package scripts but not installed.
 
 ---
 
@@ -175,7 +185,7 @@ For production, use nginx + PHP-FPM with `apps/web/nginx.conf`.
 | Component | Method |
 |-----------|--------|
 | Web | PHP-FPM + nginx (see `apps/web/nginx.conf`) |
-| CI | GitHub Actions (to be redefined for the PHP site) |
+| CI | GitHub Actions (see `.github/workflows/`) |
 
 ---
 
@@ -190,7 +200,7 @@ For production, use nginx + PHP-FPM with `apps/web/nginx.conf`.
 | MDX localization | Base: `{slug}.mdx` (English); translations: `{slug}.{locale}.mdx` (e.g., `slug.es-AR.mdx`) |
 | Design tokens | Refero standard: lime `#D4FF00`, dark `#0D0D0D`, Anton display, Space Grotesk UI, 4px grid |
 | Commit messages | `Add {N} memes from r/{subreddit} batch {N} [{category1}({count1}), {category2}({count2})]` |
-| Category system | `funny`, `wholesome`, `politics`, `gaming`, `tech`, `culture`, `relatable`, `absurd`, `argentina`, `other` |
+| Category system | **Format/franchise/topic folders** (e.g., `simpsons`, `reaction`, `argentina-politics`, `always-has-been`). See `craft/rules.md` and `skills/meme-classifier/references/taxonomy.md`. The legacy taxonomy (`funny`, `wholesome`, `politics`, `gaming`, etc.) only survives as the classifier's hard-coded fallback prompt. |
 | Quality criteria | A good meme satisfies ≥3 of: cultural relevance, originality, emotional connection, technical quality (min 400×400px), clear context, appropriate format |
 | Health targets | >90% complete metadata, <5% duplicates, <2% uncategorized, 100% author attribution |
 
