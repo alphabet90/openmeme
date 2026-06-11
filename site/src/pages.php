@@ -1,15 +1,33 @@
 <?php
 /**
- * Static page content, copied from apps/web messages/es-AR.json
- * (namespaces: terminos, privacidad, dmca, contacto).
+ * Static page content, copied from apps/web messages/es-AR.json and en.json
+ * (namespaces: terminos, privacidad, dmca, contacto). Selected by LOCALE.
  */
 
 declare(strict_types=1);
 
 function page_terminos(): array
 {
+    if (LOCALE === 'en') {
+        return [
+            'meta_title' => 'Terms and Conditions — OpenMeme',
+            'meta_description' => 'Read the Terms and Conditions for using OpenMeme, including user conduct, content ownership, liability, and governing law.',
+            'title' => 'Terms and Conditions',
+            'last_updated' => 'Last updated: January 1, 2025',
+            'intro' => 'Welcome to OpenMeme. By accessing or using our website at openmeme.io, you agree to be bound by these Terms and Conditions. If you do not agree with any part of these terms, you must not use our services.',
+            'sections' => [
+                ['1. Acceptance of Terms', 'By creating an account, uploading content, or browsing the platform, you acknowledge that you have read, understood, and agree to be bound by these Terms. We reserve the right to update these terms at any time. Continued use of the platform after changes constitutes acceptance of the new terms.'],
+                ['2. User Conduct', 'You agree to use OpenMeme only for lawful purposes and in a way that does not infringe the rights of others. Prohibited conduct includes: uploading illegal or offensive content, attempting to disrupt platform operations, impersonating others, collecting user data without consent, and engaging in any form of harassment or abuse.'],
+                ['3. Content Ownership', 'Users retain ownership of the content they upload to OpenMeme. By uploading content, you grant OpenMeme a non-exclusive, royalty-free, worldwide license to display, distribute, and promote your content on the platform. You represent that you own or have the necessary rights to upload and share the content.'],
+                ['4. Intellectual Property Rights', 'The OpenMeme name, logo, design, and platform features are owned by OpenMeme and protected by intellectual property laws. You may not copy, modify, distribute, or create derivative works based on our platform without explicit written permission.'],
+                ['5. Disclaimer of Warranties', "OpenMeme is provided on an 'as is' and 'as available' basis. We make no warranties, expressed or implied, regarding the availability, reliability, or accuracy of the platform or its content. We do not guarantee that the platform will be uninterrupted or error-free."],
+                ['6. Limitation of Liability', 'OpenMeme and its operators shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the platform. In no event shall our total liability exceed the amount paid by you, if any, for using OpenMeme.'],
+                ['7. Governing Law', 'These Terms shall be governed by and construed in accordance with the laws. Any disputes arising from these terms shall be resolved in the competent courts.'],
+                ['8. Changes to Terms', 'We reserve the right to modify these Terms at any time. Changes will be effective immediately upon posting. Your continued use of the platform after changes constitutes acceptance of the revised terms. We encourage you to review these terms periodically.'],
+            ],
+        ];
+    }
     return [
-        'slug' => 'terminos',
         'meta_title' => 'Términos y Condiciones — OpenMeme',
         'meta_description' => 'Leé los Términos y Condiciones de uso de OpenMeme, incluyendo conducta del usuario, propiedad del contenido, responsabilidad y ley aplicable.',
         'title' => 'Términos y Condiciones',
@@ -30,8 +48,25 @@ function page_terminos(): array
 
 function page_privacidad(): array
 {
+    if (LOCALE === 'en') {
+        return [
+            'meta_title' => 'Privacy Policy — OpenMeme',
+            'meta_description' => 'Read the Privacy Policy for OpenMeme, covering data collection, cookies, third-party services, and user rights.',
+            'title' => 'Privacy Policy',
+            'last_updated' => 'Last updated: January 1, 2025',
+            'intro' => 'OpenMeme respects your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website. Please read this policy carefully.',
+            'sections' => [
+                ['1. Information We Collect', 'We may collect personal information such as your name and email address when you create an account or contact us. We also automatically collect certain information when you visit the platform, including your IP address, browser type, operating system, referring URLs, and usage patterns.'],
+                ['2. How We Use Your Information', 'We use the information we collect to provide, maintain, and improve our services, to communicate with you, to personalize your experience, and to enforce our policies. We do not sell your personal information to third parties.'],
+                ['3. Cookies', 'We use cookies and similar tracking technologies to enhance your browsing experience, analyze site traffic, and understand where our audience comes from. You can control cookie preferences through your browser settings. Disabling cookies may affect certain features of the platform.'],
+                ['4. Third-Party Services', 'We may use third-party services such as analytics providers and hosting services that collect, monitor, and analyze data to improve our service. These third parties have their own privacy policies governing the use of your information.'],
+                ['5. Your Rights', 'You have the right to access, update, or delete your personal information. You may also object to or restrict certain processing of your data. To exercise these rights, please contact us at support@openmeme.io.'],
+                ['6. Data Security', 'We implement reasonable security measures to protect your personal information from unauthorized access, alteration, disclosure, or destruction. However, no method of transmission over the Internet is completely secure.'],
+                ['7. Changes to This Policy', 'We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated effective date. We encourage you to review this policy periodically.'],
+            ],
+        ];
+    }
     return [
-        'slug' => 'privacidad',
         'meta_title' => 'Política de Privacidad — OpenMeme',
         'meta_description' => 'Leé la Política de Privacidad de OpenMeme, incluyendo recopilación de datos, cookies, servicios de terceros y derechos del usuario.',
         'title' => 'Política de Privacidad',
@@ -51,8 +86,22 @@ function page_privacidad(): array
 
 function page_dmca(): array
 {
+    if (LOCALE === 'en') {
+        return [
+            'meta_title' => 'DMCA Policy — OpenMeme',
+            'meta_description' => 'Read the DMCA Copyright Policy for OpenMeme, including how to report copyright infringement and file a counter-notice.',
+            'title' => 'DMCA Policy',
+            'last_updated' => 'Last updated: January 1, 2025',
+            'intro' => 'OpenMeme respects the intellectual property rights of others. In accordance with the Digital Millennium Copyright Act (DMCA), we have adopted a policy to respond to notices of alleged copyright infringement.',
+            'sections' => [
+                ['1. Filing a DMCA Complaint', 'If you believe that your copyrighted work has been copied in a way that constitutes copyright infringement, please provide our Designated Copyright Agent with the following information: (a) your physical or electronic signature; (b) identification of the copyrighted work claimed to have been infringed; (c) identification of the material that is claimed to be infringing; (d) your contact information; (e) a statement that you have a good faith belief that the use is not authorized; and (f) a statement that the information in the notification is accurate.'],
+                ['2. Counter-Notice Procedure', 'If you believe that material you posted was removed or disabled by mistake or misidentification, you may file a counter-notice. Your counter-notice must include: (a) your physical or electronic signature; (b) identification of the material that has been removed; (c) a statement under penalty of perjury that you have a good faith belief that the material was removed as a result of mistake or misidentification; and (d) your contact information.'],
+                ['3. Repeat Infringers', 'OpenMeme reserves the right to terminate user accounts that are determined to be repeat infringers of copyright. We may also suspend or terminate accounts at our discretion based on the severity and frequency of infringing activity.'],
+                ['4. Contact Information', 'All DMCA notices and counter-notices should be submitted to our Designated Copyright Agent at: support@openmeme.io. We aim to respond to all legitimate complaints within 5 business days.'],
+            ],
+        ];
+    }
     return [
-        'slug' => 'dmca',
         'meta_title' => 'Política DMCA — OpenMeme',
         'meta_description' => 'Leé la Política de Derechos de Autor DMCA de OpenMeme, incluyendo cómo reportar infracciones de derechos de autor y presentar una contra-notificación.',
         'title' => 'Política DMCA',
@@ -69,8 +118,19 @@ function page_dmca(): array
 
 function page_contacto(): array
 {
+    if (LOCALE === 'en') {
+        return [
+            'meta_title' => 'Contact Us — OpenMeme',
+            'meta_description' => 'Get in touch with the OpenMeme team. Reach out to support@openmeme.io for questions, feedback, or support.',
+            'title' => 'Contact Us',
+            'eyebrow' => 'Get in touch',
+            'description' => "Have a question, suggestion, or need help? We'd love to hear from you. Reach out to us via email and we'll get back to you as soon as possible.",
+            'email_heading' => 'Email',
+            'email_address' => 'support@openmeme.io',
+            'response_time' => 'We aim to respond within 24-48 hours.',
+        ];
+    }
     return [
-        'slug' => 'contacto',
         'meta_title' => 'Contacto — OpenMeme',
         'meta_description' => 'Comunicate con el equipo de OpenMeme. Escribinos a support@openmeme.io para preguntas, comentarios o soporte.',
         'title' => 'Contacto',

@@ -2,14 +2,14 @@
 $w = (int) $meme['width'];
 $h = (int) $meme['height'];
 $tags = preg_split('/\s+/', (string) $meme['tags'], -1, PREG_SPLIT_NO_EMPTY);
-$fecha = fecha_es((string) $meme['created_at']);
+$fecha = format_date((string) $meme['created_at']);
 ?>
 <div class="meme-main">
 <nav class="breadcrumbs" aria-label="Breadcrumb">
   <ol>
-    <li><a href="/">Home</a></li>
-    <li><a href="/categories">Categories</a></li>
-    <li><a href="<?= e(category_url($meme['category'])) ?>"><?= e(cat_label($meme['category'])) ?></a></li>
+    <li><a href="<?= e(lurl('/')) ?>"><?= e(t('meme.home')) ?></a></li>
+    <li><a href="<?= e(lurl('/categories')) ?>"><?= e(t('meme.categories')) ?></a></li>
+    <li><a href="<?= e(lurl(category_url($meme['category']))) ?>"><?= e(cat_label($meme['category'])) ?></a></li>
     <li><span aria-current="page"><?= e($meme['title']) ?></span></li>
   </ol>
 </nav>
@@ -47,7 +47,7 @@ $fecha = fecha_es((string) $meme['created_at']);
 <?php if ($tags): ?>
     <div class="meme-tags">
       <?php foreach ($tags as $tag): ?>
-      <a class="tag-pill" href="/search?q=<?= e(rawurlencode($tag)) ?>">#<?= e($tag) ?></a>
+      <a class="tag-pill" href="<?= e(lurl('/search?q=' . rawurlencode($tag))) ?>">#<?= e($tag) ?></a>
       <?php endforeach ?>
     </div>
 <?php endif ?>
@@ -55,11 +55,11 @@ $fecha = fecha_es((string) $meme['created_at']);
     <div class="meme-actions">
       <a class="btn-primary" href="<?= e(meme_img($meme)) ?>" download="<?= e(basename($meme['image'])) ?>">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Free download
+        <?= e(t('meme.download')) ?>
       </a>
-      <button class="btn-secondary" data-copy="<?= e(BASE_URL . meme_url($meme)) ?>" type="button">
+      <button class="btn-secondary" data-copy="<?= e(BASE_URL . lurl(meme_url($meme))) ?>" type="button">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-        Copy
+        <?= e(t('meme.copy')) ?>
       </button>
     </div>
   </div>
@@ -68,8 +68,8 @@ $fecha = fecha_es((string) $meme['created_at']);
 
 <?php if (!empty($related)): ?>
 <div class="section-header">
-  <h2 class="section-title">More <?= e(cat_label($meme['category'])) ?></h2>
-  <a href="<?= e(category_url($meme['category'])) ?>" class="section-link">View all →</a>
+  <h2 class="section-title"><?= e(t('meme.more', cat_label($meme['category']))) ?></h2>
+  <a href="<?= e(lurl(category_url($meme['category']))) ?>" class="section-link"><?= e(t('meme.view_all')) ?></a>
 </div>
 <div class="masonry-wrap">
   <div class="masonry">
@@ -85,14 +85,15 @@ $fecha = fecha_es((string) $meme['created_at']);
     '@context' => 'https://schema.org',
     '@type' => 'ImageObject',
     'contentUrl' => BASE_URL . meme_img($meme),
-    'url' => BASE_URL . meme_url($meme),
+    'url' => BASE_URL . lurl(meme_url($meme)),
     'name' => $meme['title'],
     'description' => $meme['description'],
+    'inLanguage' => locale_tag(),
     'width' => $w,
     'height' => $h,
     'datePublished' => $meme['created_at'],
     'author' => ['@type' => 'Person', 'name' => $meme['author']],
-    'acquireLicensePage' => BASE_URL . '/',
+    'acquireLicensePage' => BASE_URL . lurl('/'),
     'creditText' => 'OpenMeme',
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>
 </script>

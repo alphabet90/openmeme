@@ -1,16 +1,16 @@
 <div class="search-results-header">
   <div>
-    <h1 class="search-results-title"><?= $q === '' ? 'Buscar memes' : 'Resultados: «' . e($q) . '»' ?></h1>
-    <span class="search-results-count"><?= (int) $total ?> memes encontrados</span>
+    <h1 class="search-results-title"><?= $q === '' ? e(t('search.title')) : e(t('search.results_for', $q)) ?></h1>
+    <span class="search-results-count"><?= e(t('search.count', (int) $total)) ?></span>
   </div>
 </div>
 
 <?php if (empty($memes)): ?>
 <div class="empty-state">
   <?php if ($q === ''): ?>
-  <p>Escribí algo para buscar entre miles de memes gratis.</p>
+  <p><?= e(t('search.empty_prompt')) ?></p>
   <?php else: ?>
-  <p>Sin resultados para «<?= e($q) ?>». Probá con otra palabra o <a href="/categories">explorá las categorías</a>.</p>
+  <p><?= e(t('search.no_results', $q)) ?> <a href="<?= e(lurl('/categories')) ?>"><?= e(t('search.browse_link')) ?></a>.</p>
   <?php endif ?>
 </div>
 <?php else: ?>

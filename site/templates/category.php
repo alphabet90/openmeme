@@ -1,9 +1,9 @@
 <div class="search-results-header">
   <div>
     <h1 class="search-results-title"><?= e(cat_label($category)) ?></h1>
-    <span class="search-results-count"><?= (int) $total ?> memes gratis en esta categoría</span>
+    <span class="search-results-count"><?= e(t('category.count', (int) $total)) ?></span>
   </div>
-  <a href="/categories" class="section-link">All categories →</a>
+  <a href="<?= e(lurl('/categories')) ?>" class="section-link"><?= e(t('category.all')) ?></a>
 </div>
 
 <div class="masonry-wrap">

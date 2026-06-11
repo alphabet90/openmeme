@@ -45,16 +45,26 @@ $pdo->exec('
     CREATE INDEX idx_memes_category ON memes(category, score DESC);
     CREATE INDEX idx_memes_score ON memes(score DESC);
     CREATE INDEX idx_memes_created ON memes(created_at DESC);
+
+    CREATE TABLE meme_locales (
+        meme_id INTEGER NOT NULL REFERENCES memes(id),
+        locale TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT "",
+        tags TEXT NOT NULL DEFAULT "",
+        PRIMARY KEY (meme_id, locale)
+    );
 ');
 
 $hasFts = true;
 try {
-    $pdo->exec("
+    // Base (English) columns + es columns so search can be locale-filtered.
+    $pdo->exec('
         CREATE VIRTUAL TABLE memes_fts USING fts5(
             title, description, tags, category,
-            content='memes', content_rowid='id'
+            title_es, description_es, tags_es
         )
-    ");
+    ');
 } catch (PDOException $e) {
     $hasFts = false;
     fwrite(STDERR, "warn: FTS5 unavailable, search will use LIKE fallback\n");
@@ -105,65 +115,116 @@ $insert = $pdo->prepare('
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ');
 
-$stats = ['indexed' => 0, 'skipped' => 0, 'dupes' => 0, 'no_image' => 0];
+$insertLocale = $pdo->prepare('
+    INSERT OR REPLACE INTO meme_locales (meme_id, locale, title, description, tags)
+    VALUES (?, ?, ?, ?, ?)
+');
+$findBySlug = $pdo->prepare('SELECT id FROM memes WHERE slug = ?');
+
+$stats = ['indexed' => 0, 'skipped' => 0, 'dupes' => 0, 'no_image' => 0, 'locales' => 0, 'es_only' => 0];
 $pdo->beginTransaction();
 
+/** Validate frontmatter, resolve the image, and insert a canonical meme row. Returns id or null. */
+function insert_meme(array $fm, string $dir, string $dirName, PDOStatement $insert, PDO $pdo, array &$stats): ?int
+{
+    if (empty($fm['title']) || empty($fm['slug']) || empty($fm['image'])) {
+        $stats['skipped']++;
+        return null;
+    }
+    $imageFile = $dir . '/' . basename((string) $fm['image']);
+    if (!is_file($imageFile)) {
+        $stats['no_image']++;
+        return null;
+    }
+    $size = @getimagesize($imageFile);
+    [$w, $h] = $size === false ? [0, 0] : [$size[0], $size[1]];
+    $tags = $fm['tags'] ?? [];
+    try {
+        $insert->execute([
+            $fm['slug'],
+            $fm['title'],
+            $fm['description'] ?? '',
+            $fm['author'] ?? '',
+            $fm['subreddit'] ?? '',
+            $fm['category'] ?? $dirName,
+            (int) ($fm['score'] ?? 0),
+            $fm['created_at'] ?? '',
+            $fm['source_url'] ?? '',
+            $fm['post_url'] ?? '',
+            $dirName . '/' . basename($imageFile),
+            $w,
+            $h,
+            is_array($tags) ? implode(' ', $tags) : (string) $tags,
+        ]);
+        $stats['indexed']++;
+        return (int) $pdo->lastInsertId();
+    } catch (PDOException $e) {
+        if (str_contains($e->getMessage(), 'UNIQUE')) {
+            $stats['dupes']++;
+            return null;
+        }
+        throw $e;
+    }
+}
+
+// Pass 1 — base .mdx files become the canonical (English) rows.
+$dirs = [];
 foreach (glob(MEMES_DIR . '/*', GLOB_ONLYDIR) as $dir) {
     $dirName = basename($dir);
     if ($dirName[0] === '_' || $dirName[0] === '.') {
         continue;
     }
+    $dirs[] = [$dir, $dirName];
     foreach (glob($dir . '/*.mdx') as $file) {
         if (is_locale_variant($file)) {
             continue;
         }
         $fm = parse_frontmatter((string) file_get_contents($file));
-        if ($fm === null || empty($fm['title']) || empty($fm['slug']) || empty($fm['image'])) {
+        if ($fm === null) {
             $stats['skipped']++;
             continue;
         }
+        insert_meme($fm, $dir, $dirName, $insert, $pdo, $stats);
+    }
+}
 
-        $imageFile = $dir . '/' . basename((string) $fm['image']);
-        if (!is_file($imageFile)) {
-            $stats['no_image']++;
+// Pass 2 — .es-AR.mdx files are the Argentina memes. They localize the
+// canonical row, or become canonical themselves when no base file exists.
+foreach ($dirs as [$dir, $dirName]) {
+    foreach (glob($dir . '/*.es-AR.mdx') as $file) {
+        $fm = parse_frontmatter((string) file_get_contents($file));
+        if ($fm === null || empty($fm['title']) || empty($fm['slug'])) {
+            $stats['skipped']++;
             continue;
         }
-        $size = @getimagesize($imageFile);
-        [$w, $h] = $size === false ? [0, 0] : [$size[0], $size[1]];
-
-        $tags = $fm['tags'] ?? [];
-        try {
-            $insert->execute([
-                $fm['slug'],
-                $fm['title'],
-                $fm['description'] ?? '',
-                $fm['author'] ?? '',
-                $fm['subreddit'] ?? '',
-                $fm['category'] ?? $dirName,
-                (int) ($fm['score'] ?? 0),
-                $fm['created_at'] ?? '',
-                $fm['source_url'] ?? '',
-                $fm['post_url'] ?? '',
-                $dirName . '/' . basename($imageFile),
-                $w,
-                $h,
-                is_array($tags) ? implode(' ', $tags) : (string) $tags,
-            ]);
-            $stats['indexed']++;
-        } catch (PDOException $e) {
-            if (str_contains($e->getMessage(), 'UNIQUE')) {
-                $stats['dupes']++;
-            } else {
-                throw $e;
+        $findBySlug->execute([$fm['slug']]);
+        $id = $findBySlug->fetchColumn();
+        if ($id === false) {
+            $id = insert_meme($fm, $dir, $dirName, $insert, $pdo, $stats);
+            if ($id === null) {
+                continue;
             }
+            $stats['es_only']++;
         }
+        $tags = $fm['tags'] ?? [];
+        $insertLocale->execute([
+            (int) $id,
+            'es-AR',
+            $fm['title'],
+            $fm['description'] ?? '',
+            is_array($tags) ? implode(' ', $tags) : (string) $tags,
+        ]);
+        $stats['locales']++;
     }
 }
 
 if ($hasFts) {
     $pdo->exec("
-        INSERT INTO memes_fts (rowid, title, description, tags, category)
-        SELECT id, title, description, tags, category FROM memes
+        INSERT INTO memes_fts (rowid, title, description, tags, category, title_es, description_es, tags_es)
+        SELECT m.id, m.title, m.description, m.tags, m.category,
+               COALESCE(l.title, ''), COALESCE(l.description, ''), COALESCE(l.tags, '')
+        FROM memes m
+        LEFT JOIN meme_locales l ON l.meme_id = m.id AND l.locale = 'es-AR'
     ");
 }
 $pdo->commit();
@@ -173,8 +234,10 @@ $pdo = null;
 rename($tmpPath, DB_PATH);
 
 printf(
-    "Indexed %d memes (%d skipped, %d duplicate slugs, %d missing images) in %.1fs → %s\n",
+    "Indexed %d memes, %d es-AR translations (%d es-AR-only, %d skipped, %d duplicate slugs, %d missing images) in %.1fs → %s\n",
     $stats['indexed'],
+    $stats['locales'],
+    $stats['es_only'],
     $stats['skipped'],
     $stats['dupes'],
     $stats['no_image'],

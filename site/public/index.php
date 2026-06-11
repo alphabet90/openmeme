@@ -2,6 +2,8 @@
 /**
  * Front controller. nginx rewrites everything that isn't a real file here.
  *
+ * Locales: es-AR (default, at /) and en-US (at /en/...).
+ *
  * Dev server: php -S 0.0.0.0:8090 -t site/public site/public/index.php
  */
 
@@ -9,6 +11,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../config.php';
 require __DIR__ . '/../src/helpers.php';
+require __DIR__ . '/../src/i18n.php';
 require __DIR__ . '/../src/repo.php';
 require __DIR__ . '/../src/pages.php';
 
@@ -31,15 +34,30 @@ if (PHP_SAPI === 'cli-server') {
     }
 }
 
+// ── Locale detection: /en[/...] → en-US, everything else → es-AR ──
+if ($path === '/en' || str_starts_with($path, '/en/')) {
+    define('LOCALE', 'en');
+    $path = substr($path, 3);
+    if ($path === '') {
+        $path = '/';
+    }
+} else {
+    define('LOCALE', 'es');
+}
+
+// Unprefixed path + query, used by the language switcher and hreflang.
+$query = (string) ($_SERVER['QUERY_STRING'] ?? '');
+define('REQUEST_PATH', $path . ($query === '' ? '' : '?' . $query));
+
 // ── Routes ──────────────────────────────────────────────────────
 
 if ($path === '/') {
     $stats = repo_stats();
     render('home', [
-        'page_title' => "OpenMeme — The World's Largest Free Meme Stock",
-        'meta_description' => 'OpenMeme is the world\'s largest open-source meme image stock. '
-            . compact_num((int) $stats['memes']) . ' free memes to download and share. Supporting Argentina & the US.',
-        'canonical' => BASE_URL . '/',
+        'page_title' => t('home.meta_title'),
+        'meta_description' => t('home.meta_description', compact_num((int) $stats['memes'])),
+        'canonical' => BASE_URL . lurl('/'),
+        'alternates' => alternates('/'),
         'trending' => repo_trending(20),
         'top_categories' => repo_categories(8),
         'stats' => $stats,
@@ -56,7 +74,8 @@ if (preg_match('#^/meme/([a-z0-9-]+)$#', $path, $m)) {
     render('meme', [
         'page_title' => mb_substr($meme['title'], 0, 58) . ' | OpenMeme',
         'meta_description' => mb_substr((string) $meme['description'], 0, 160),
-        'canonical' => BASE_URL . meme_url($meme),
+        'canonical' => BASE_URL . lurl(meme_url($meme)),
+        'alternates' => alternates(meme_url($meme)),
         'og_image' => BASE_URL . meme_img($meme),
         'meme' => $meme,
         'related' => repo_related($meme),
@@ -72,10 +91,10 @@ if (preg_match('#^/category/([a-z0-9-]+)$#', $path, $m)) {
         not_found();
     }
     render('category', [
-        'page_title' => cat_label($category) . ' Memes — Free Download | OpenMeme',
-        'meta_description' => $result['total'] . ' free ' . cat_label($category)
-            . ' memes. Open source, free to download and share.',
-        'canonical' => BASE_URL . page_link(category_url($category), $page),
+        'page_title' => t('category.meta_title', cat_label($category)),
+        'meta_description' => t('category.meta_description', $result['total'], cat_label($category)),
+        'canonical' => BASE_URL . lurl(page_link(category_url($category), $page)),
+        'alternates' => alternates(page_link(category_url($category), $page)),
         'category' => $category,
         'memes' => $result['rows'],
         'total' => $result['total'],
@@ -87,9 +106,10 @@ if (preg_match('#^/category/([a-z0-9-]+)$#', $path, $m)) {
 
 if ($path === '/categories') {
     render('categories', [
-        'page_title' => 'Browse All Meme Categories | OpenMeme',
-        'meta_description' => 'Explore every meme category on OpenMeme. All open source, all free.',
-        'canonical' => BASE_URL . '/categories',
+        'page_title' => t('categories.meta_title'),
+        'meta_description' => t('categories.meta_description'),
+        'canonical' => BASE_URL . lurl('/categories'),
+        'alternates' => alternates('/categories'),
         'categories' => repo_categories(),
     ]);
     exit;
@@ -100,10 +120,10 @@ if ($path === '/search') {
     $page = max(1, (int) ($_GET['page'] ?? 1));
     $result = repo_search($q, $page);
     render('search', [
-        'page_title' => ($q === '' ? 'Search Memes' : 'Memes for "' . $q . '"') . ' | OpenMeme',
-        'meta_description' => 'Search ' . compact_num((int) repo_stats()['memes'])
-            . ' free open-source memes.',
-        'canonical' => BASE_URL . '/search' . ($q === '' ? '' : '?q=' . rawurlencode($q)),
+        'page_title' => $q === '' ? t('search.meta_title_empty') : t('search.meta_title', $q),
+        'meta_description' => t('search.meta_description', compact_num((int) repo_stats()['memes'])),
+        'canonical' => BASE_URL . lurl('/search' . ($q === '' ? '' : '?q=' . rawurlencode($q))),
+        'alternates' => alternates('/search' . ($q === '' ? '' : '?q=' . rawurlencode($q))),
         'robots' => 'noindex, follow',
         'q' => $q,
         'memes' => $result['rows'],
@@ -121,17 +141,14 @@ if ($path === '/top' || $path === '/nuevos') {
     if ($page > 1 && empty($result['rows'])) {
         not_found();
     }
-    $isTop = $order === 'top';
+    $ns = $order === 'top' ? 'top' : 'new';
     render('listing', [
-        'page_title' => ($isTop ? 'Top Memes — Los Más Votados' : 'Memes Nuevos — Recién Llegados') . ' | OpenMeme',
-        'meta_description' => $isTop
-            ? 'Los memes más votados de OpenMeme. Gratis para descargar y compartir.'
-            : 'Los memes más recientes de OpenMeme. Gratis para descargar y compartir.',
-        'canonical' => BASE_URL . page_link($path, $page),
-        'heading' => $isTop ? 'Top Memes' : 'Memes Nuevos',
-        'subtitle' => $isTop
-            ? 'Los ' . $result['total'] . ' memes más votados'
-            : 'Los últimos memes agregados a la colección',
+        'page_title' => t("$ns.meta_title"),
+        'meta_description' => t("$ns.meta_description"),
+        'canonical' => BASE_URL . lurl(page_link($path, $page)),
+        'alternates' => alternates(page_link($path, $page)),
+        'heading' => t("$ns.heading"),
+        'subtitle' => $order === 'top' ? t('top.subtitle', $result['total']) : t('new.subtitle'),
         'memes' => $result['rows'],
         'total' => $result['total'],
         'page' => $page,
@@ -152,7 +169,8 @@ if (isset($staticPages[$path])) {
     render($template, [
         'page_title' => $content['meta_title'],
         'meta_description' => $content['meta_description'],
-        'canonical' => BASE_URL . $path,
+        'canonical' => BASE_URL . lurl($path),
+        'alternates' => alternates($path),
         'content' => $content,
     ]);
     exit;
@@ -164,7 +182,7 @@ if ($path === '/random') {
         not_found();
     }
     header('Cache-Control: no-store');
-    header('Location: ' . meme_url($meme), true, 302);
+    header('Location: ' . lurl(meme_url($meme)), true, 302);
     exit;
 }
 
@@ -186,7 +204,7 @@ if ($path === '/sitemap.xml') {
 
 if ($path === '/robots.txt') {
     header('Content-Type: text/plain; charset=utf-8');
-    echo "User-agent: *\nAllow: /\nDisallow: /search\nDisallow: /api/\n\nSitemap: " . BASE_URL . "/sitemap.xml\n";
+    echo "User-agent: *\nAllow: /\nDisallow: /search\nDisallow: /en/search\nDisallow: /api/\nDisallow: /en/api/\n\nSitemap: " . BASE_URL . "/sitemap.xml\n";
     exit;
 }
 

@@ -26,8 +26,8 @@ function not_found(): never
 {
     http_response_code(404);
     render('404', [
-        'page_title' => 'Page not found — OpenMeme',
-        'meta_description' => 'The page you are looking for does not exist.',
+        'page_title' => t('notfound.meta_title'),
+        'meta_description' => t('notfound.meta_description'),
     ]);
     exit;
 }
