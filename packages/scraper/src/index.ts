@@ -47,6 +47,7 @@ export {
   gitCreateBranch,
   gitAdd,
   gitCommit,
+  sanitizeSlug,
 } from "./saver.js";
 
 export { runPipeline } from "./pipeline.js";
@@ -62,6 +63,14 @@ export {
   isValidImage,
   normalizeLocale,
 } from "./utils.js";
+
+// Validation
+export {
+  validateMemeFile,
+  validateMeme,
+  validateMemes,
+  VALIDATION_RULES,
+} from "./validator.js";
 
 // Models
 export type {

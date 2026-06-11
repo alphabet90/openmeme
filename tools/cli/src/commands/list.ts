@@ -47,11 +47,11 @@ export async function listCommand(options: ListOptions): Promise<void> {
             const size = existsSync(imagePath) ? statSync(imagePath).size : 0;
             if (!options.category || data.category === options.category) {
               entries.push({
-                title: data.title || entry.name,
-                category: data.category || "unknown",
-                author: data.author || "unknown",
-                subreddit: data.subreddit || "unknown",
-                tags: data.tags || [],
+                title: String(data.title || entry.name),
+                category: String(data.category || "unknown"),
+                author: String(data.author || "unknown"),
+                subreddit: String(data.subreddit || "unknown"),
+                tags: (data.tags || []) as string[],
                 imagePath: fullPath,
                 size,
               });

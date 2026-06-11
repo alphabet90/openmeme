@@ -43,7 +43,7 @@ export async function searchCommand(query: string, options: SearchOptions): Prom
             const data = parseFrontmatter(frontmatter[1]);
             const title = String(data.title || "").toLowerCase();
             const desc = String(data.description || "").toLowerCase();
-            const tags = (data.tags || []).map((t: string) => t.toLowerCase());
+            const tags = ((data.tags || []) as string[]).map((t: string) => t.toLowerCase());
             const category = String(data.category || "").toLowerCase();
 
             let match = false;
@@ -62,7 +62,7 @@ export async function searchCommand(query: string, options: SearchOptions): Prom
                 title: String(data.title || "Untitled"),
                 category: String(data.category || "unknown"),
                 description: String(data.description || ""),
-                tags: data.tags || [],
+                tags: (data.tags || []) as string[],
                 score: parseInt(String(data.score || "0"), 10),
                 path: fullPath,
               });

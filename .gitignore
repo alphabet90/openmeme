@@ -19,7 +19,6 @@ processed.bloom
 !package.json
 !tsconfig.json
 !sync.config.json
-!apps/web/messages/*.json
 # Temporary directories
 tmp/
 temp/
@@ -36,17 +35,8 @@ yarn-error.log*
 # ── BUILD OUTPUT ─────────────────────────────────────────────
 dist/
 build/
-.next/
 *.tsbuildinfo
 .turbo/
-
-# ── JAVA / MAVEN ─────────────────────────────────────────────
-target/
-.mvn/
-*.class
-*.jar
-*.war
-*.ear
 
 # ── IDE ──────────────────────────────────────────────────────
 .idea/

@@ -8,12 +8,9 @@ Single source of truth for AI coding agents working on this repository. OpenMeme
 2. **Automation Scripts** (`scripts/`) — guard.ts (validation), sync.ts (auto-sync), optimize.ts (image compression)
 3. **CLI Tools** (`tools/cli/`) — Interactive meme management (add, list, search, validate, stats, import)
 4. **Dev Tools** (`tools/dev/`) — Lint, benchmark, prompt generation, db-check, git hooks
-5. **Design System** (`packages/design-system/`) — Color tokens, typography, components (Refero standard)
-6. **Shared UI** (`packages/ui/`) — React presentational components consumed by the web app
-7. **Java API** (`apps/api/`) — Spring Boot REST API + PostgreSQL + Redis + Flyway
-8. **Next.js Web Client** (`apps/web/`) — React/TypeScript frontend with next-intl i18n
-9. **Meme Collection** (`memes/`) — Git-tracked meme images + MDX metadata
-10. **Skills** (`skills/`) — Reusable AI capabilities: i18n-localizer, meme-classifier, meme-curator
+5. **Web Site** (`apps/web/`) — Vanilla PHP + SQLite + jQuery site
+6. **Meme Collection** (`memes/`) — Git-tracked meme images + MDX metadata
+7. **Skills** (`skills/`) — Reusable AI capabilities: i18n-localizer, meme-classifier, meme-curator
 
 ---
 
@@ -25,11 +22,8 @@ Single source of truth for AI coding agents working on this repository. OpenMeme
 | Scripts | TypeScript 5.7, Node 20, sharp |
 | CLI | TypeScript 5.7, commander, inquirer, chalk, ora |
 | Dev Tools | TypeScript 5.7, commander, chalk, ora |
-| Design System | CSS tokens, Anton + Space Grotesk fonts, Refero standard, Storybook |
-| Shared UI | React 19, TypeScript 5, CSS Modules |
-| API | Java 21, Spring Boot 3.3.4, Maven, PostgreSQL 16, Redis 7, Flyway, Testcontainers |
-| Web | Next.js 16.2.4, React 19, TypeScript 5, Tailwind CSS 4, next-intl, PostHog, @opennextjs/cloudflare, wrangler |
-| DevOps | Docker Compose, GitHub Actions, TurboRepo, Cloudflare Workers |
+| Web | PHP 8.2+, SQLite (FTS5), nginx, webpack 5, jQuery |
+| DevOps | GitHub Actions, TurboRepo |
 
 ---
 
@@ -37,36 +31,18 @@ Single source of truth for AI coding agents working on this repository. OpenMeme
 
 ```
 ├── apps/
-│   ├── api/                    # Java Spring Boot REST API (Maven project)
-│   │   ├── pom.xml
-│   │   ├── src/main/java/      # Controllers, operations, mappers, models, config
-│   │   ├── src/main/resources/ # openapi.yaml, application.yml, Flyway migrations
-│   │   ├── src/test/java/      # JUnit 5 + Testcontainers tests
-│   │   └── Dockerfile          # Multi-stage build
-│   └── web/                    # Next.js frontend
-│       ├── app/                # App Router with [locale] segment
-│       ├── components/         # App-specific components
-│       ├── lib/                # API client, data fetchers, SEO utilities
-│       ├── i18n/               # next-intl config
-│       ├── messages/           # 7 JSON translation files
-│       ├── open-next.config.ts # OpenNext Cloudflare adapter config
-│       └── wrangler.jsonc      # Cloudflare Worker config
+│   └── web/                    # Vanilla PHP + SQLite + jQuery site
+│       ├── public/             # Front controller + static assets
+│       ├── src/                # PHP helpers, i18n, repo queries
+│       ├── templates/          # Server-rendered PHP templates
+│       ├── bin/                # build-index.php (SQLite index from memes/)
+│       ├── assets/             # Source JS/CSS for webpack
+│       ├── nginx.conf          # Production nginx config
+│       └── package.json        # @openmeme/web
 ├── packages/
-│   ├── scraper/                # Core scraper pipeline (TypeScript)
-│   │   ├── src/                # scraper, downloader, classifier, saver, pipeline, bloom, validator
-│   │   └── package.json        # @openmeme/scraper
-│   ├── design-system/          # Design tokens + components (CSS/Refero)
-│   │   ├── tokens/             # colors, typography, spacing, shadows, motion, radius
-│   │   ├── src/components.css
-│   │   ├── scripts/build-tokens.js
-│   │   └── package.json        # @openmeme/design-system
-│   ├── ui/                     # Shared React components
-│   │   ├── src/                # MemeCard, MasonryGrid, Pagination, icons, etc.
-│   │   └── package.json        # @openmeme/ui
-│   ├── config/                 # Shared static TS/ESLint configs (stub/minimal)
-│   │   └── package.json        # @openmeme/config
-│   └── utils/                  # Minimal shared utilities (stub/minimal)
-│       └── package.json        # @openmeme/utils
+│   └── scraper/                # Core scraper pipeline (TypeScript)
+│       ├── src/                # scraper, downloader, classifier, saver, pipeline, bloom, validator
+│       └── package.json        # @openmeme/scraper
 ├── scripts/
 │   ├── src/guard.ts            # Pre-commit validation gate
 │   ├── src/sync.ts             # Reddit auto-sync
@@ -86,8 +62,6 @@ Single source of truth for AI coding agents working on this repository. OpenMeme
 ├── craft/
 │   └── rules.md                # Brand manifesto + quality standards
 ├── memes/                      # Git-tracked meme collection
-├── .github/workflows/          # CI/CD (index-memes.yml)
-├── docker-compose.yml          # Local dev stack
 ├── turbo.json                  # TurboRepo task orchestration
 ├── pnpm-workspace.yaml         # Workspace definition
 └── package.json                # Root scripts (pnpm scrape, guard, sync, etc.)
@@ -97,20 +71,14 @@ Single source of truth for AI coding agents working on this repository. OpenMeme
 
 | Package | Status | Build Tool |
 |---------|--------|------------|
-| `@openmeme/web` | Active | Next.js |
-| `@openmeme/api` | Active (Maven) | Maven — package.json is a placeholder for monorepo compatibility |
+| `@openmeme/web` | Active | webpack |
 | `@openmeme/scraper` | Active | tsc |
-| `@openmeme/design-system` | Active | tsc + token compiler |
-| `@openmeme/ui` | Active | Consumed as raw TypeScript source |
 | `@openmeme/scripts` | Active | tsc |
 | `@openmeme/cli` | Active | tsc |
 | `@openmeme/dev` | Active | tsc |
-| `@openmeme/config` | Stub/minimal | Consumed as raw TypeScript source |
-| `@openmeme/utils` | Stub/minimal | Consumed as raw TypeScript source |
 
 ### Inter-workspace Dependencies
 
-- `@openmeme/web` → `@openmeme/ui`, `@openmeme/design-system`
 - `@openmeme/cli` → `@openmeme/scraper`
 - `@openmeme/dev` → `@openmeme/scraper`
 - `@openmeme/scripts` → `@openmeme/scraper`
@@ -157,65 +125,31 @@ pnpm --filter @openmeme/dev db-check                # Check repo consistency
 pnpm --filter @openmeme/dev setup-hooks             # Install git hooks
 ```
 
-### Design System
-```bash
-cd packages/design-system
-pnpm build                   # tsc + build-tokens
-pnpm storybook               # Start Storybook dev server
-pnpm build-storybook         # Build Storybook static site
-```
-
-### Java API
-```bash
-cd apps/api
-mvn verify                   # Compile + generate OpenAPI stubs + run all tests
-mvn test                     # Run tests only
-mvn package                  # Build fat JAR
-mvn generate-sources         # Regenerate API stubs from openapi.yaml
-```
-
-### Web Client
-> **Node version**: Next.js 16 requires Node >=20.9.0. Use `nvm use 22` before running any web commands.
+### Web Site
 ```bash
 cd apps/web
-pnpm dev                     # Next.js dev server
-pnpm build                   # Standard Next.js build (used by Vercel previews/staging)
-pnpm build:cf                # OpenNext Cloudflare build (used for Cloudflare Workers production)
-pnpm start                   # wrangler dev (local worker simulator)
-pnpm deploy                  # wrangler deploy (Cloudflare Workers)
-pnpm lint                    # ESLint
+pnpm build                   # webpack → public/assets/app.{js,css}
+php bin/build-index.php      # Rebuild SQLite index from memes/*
+php -S 0.0.0.0:8090 -t public public/index.php   # Dev server
 ```
 
-### Docker Compose (full stack)
-```bash
-docker-compose up            # Postgres 16 + Redis 7 + API
-```
+For production, use nginx + PHP-FPM with `apps/web/nginx.conf`.
 
 ---
 
 ## Code Style
 
-### TypeScript (Scraper, Scripts, CLI, Dev, UI)
+### TypeScript (Scraper, Scripts, CLI, Dev)
 - Node 20+ ES2022, `NodeNext` module resolution
 - Strict TypeScript, no `any` unless necessary
 - `pnpm` for package management
 - Workspace packages: `@openmeme/scraper`, `@openmeme/scripts`, `@openmeme/cli`, `@openmeme/dev`
 
-### Java (API)
-- Lombok required: `@Data`, `@Value`, `@Builder`, `@Slf4j`
-- No ternary operators — use `Optional<T>`
-- Controllers delegate only; Operations (`Operation<I, O>`) own business logic
-- OpenAPI spec (`src/main/resources/openapi.yaml`) is source of truth
-- Persistence layer uses MyBatis mappers (`@Mapper` interfaces + XML) — no raw `JdbcTemplate`
-- MyBatis Generator: run `mvn mybatis-generator:generate` to regenerate models/mappers from schema
-- Custom mappers live in `mappers/custom/` to avoid overwrite on regeneration
-
-### TypeScript / Next.js (Web)
-- App Router, Server Components by default
-- CSS Modules for component-scoped styles
-- `next-intl` for i18n (default: `es-AR`, supported: `en`, `es`, `es-AR`, `pt`, `fr`, `de`, `ar`)
-- Arabic (`ar`) renders RTL
-- ISR with `revalidate` (300s–3600s) and fetch cache tags
+### PHP (Web)
+- PHP 8.2+ with `declare(strict_types=1);`
+- Server-rendered templates; no framework
+- `/memes/*` is the source of truth; `data/memes.db` is a disposable index
+- Two locales: `es-AR` (default) and `en-US` (at `/en/...`)
 
 ---
 
@@ -224,22 +158,12 @@ docker-compose up            # Postgres 16 + Redis 7 + API
 | Suite | Command | Details |
 |-------|---------|---------|
 | Scraper | `cd packages/scraper && pnpm test` | Vitest |
-| Design System | `cd packages/design-system && pnpm test` | Vitest |
-| API | `cd apps/api && mvn test` | JUnit 5, Mockito, AssertJ, Testcontainers (PostgreSQL 16) |
-| Web | `cd apps/web && pnpm lint` | ESLint (build + lint validation) |
-
-### API Test Coverage
-- `MemesControllerTest` — Mocked operations; locale param resolution, 404s, pagination
-- `AdminControllerTest` — Auth filter (401/200), role-based access
-- `SchemaSmokeTest` — Validates extensions, enums, domains, materialized views, SQL functions
-- `RequestLoggingFilterTest` — Request/response header logging, actuator exclusion
+| Web | `cd apps/web && pnpm build` | webpack build validation |
 
 ---
 
 ## Security
 
-- Admin API (`/admin/*`) protected by Spring Security + `ApiKeyAuthenticationFilter` with DB-backed key hashing
-- Request/response headers are logged in full (no redaction); body values are masked for sensitive headers (`X-Api-Key`, `Authorization`)
 - AI CLI processes (`claude`, `codex`) require installed + authenticated CLIs
 - `.env` is gitignored — never commit it
 - **Never scan `memes/` in bulk** — thousands of images will exhaust context
@@ -250,44 +174,8 @@ docker-compose up            # Postgres 16 + Redis 7 + API
 
 | Component | Method |
 |-----------|--------|
-| API | Docker multi-stage → Railway/Render |
-| Web | **Dual-target**: Vercel (previews/staging) + @opennextjs/cloudflare → Cloudflare Workers (production) |
-| CDN | Cloudflare Worker for meme images |
-| CI | GitHub Actions reindexes memes on push to `main` |
-
-### CI/CD Details
-
-**.github/workflows/index-memes.yml** — triggers on pushes to `main` that change `memes/**`:
-1. Detects changed `.mdx` files (including locale variants like `slug.es-AR.mdx`)
-2. Parses YAML frontmatter
-3. Deduplicates by base stem
-4. POSTs JSON payload to `/admin/reindex` with `X-Api-Key` header
-5. Requires secrets: `API_BASE_URL`, `ADMIN_API_KEY`
-
-**.github/workflows/deploy-web.yml** — triggers on pushes to `main` that change `apps/web/**`, `packages/ui/**`, or `packages/design-system/**`:
-1. Installs dependencies with pnpm
-2. Builds with `pnpm build:cf` (OpenNext Cloudflare adapter, which internally wraps `next build`)
-3. Deploys to Cloudflare Workers via `wrangler deploy`
-4. Requires secrets: `CF_API_TOKEN`, `CF_ACCOUNT_ID`
-
-### Dual-Target Build Strategy
-
-The web client supports two deployment targets:
-
-| Platform | Build Command | Purpose |
-|----------|--------------|---------|
-| **Vercel** | `pnpm build` → `next build` | Previews, staging, branch deployments |
-| **Cloudflare Workers** | `pnpm build:cf` → `opennextjs-cloudflare build` | Production (via GitHub Actions) |
-
-**Why two commands?** `@opennextjs/cloudflare build` internally shells out to execute the `build` script. If `build` is aliased to `opennextjs-cloudflare build`, it creates an infinite recursion. By separating them:
-- `build` runs `next build` directly (Vercel-native, no recursion).
-- `build:cf` explicitly invokes the Cloudflare adapter, which in turn runs `next build` internally to produce both `.next/` and `.open-next/` output directories.
-
-**Key points:**
-- Vercel automatically runs the package `build` script → gets standard `next build`.
-- GitHub Actions uses `build:cf` for Cloudflare Workers production deploys.
-- No manual code changes needed when switching between targets.
-- `turbo.json` outputs already include both `.next/**` and `.open-next/**` for cache compatibility.
+| Web | PHP-FPM + nginx (see `apps/web/nginx.conf`) |
+| CI | GitHub Actions (to be redefined for the PHP site) |
 
 ---
 
@@ -300,7 +188,6 @@ The web client supports two deployment targets:
 | Git branching | `memes/{subreddit}-{YYYYMMDD-HHMMSS}` |
 | MDX format | `title`, `description`, `author`, `subreddit`, `category`, `slug`, `score`, `created_at`, `source_url`, `post_url`, `image`, `tags` |
 | MDX localization | Base: `{slug}.mdx` (English); translations: `{slug}.{locale}.mdx` (e.g., `slug.es-AR.mdx`) |
-| API caching | Redis cache names suffixed with `-v2`: `stats-v2`, `categories-v2`, `meme-list-v2`, `meme-v2`, `search-v2` |
 | Design tokens | Refero standard: lime `#D4FF00`, dark `#0D0D0D`, Anton display, Space Grotesk UI, 4px grid |
 | Commit messages | `Add {N} memes from r/{subreddit} batch {N} [{category1}({count1}), {category2}({count2})]` |
 | Category system | `funny`, `wholesome`, `politics`, `gaming`, `tech`, `culture`, `relatable`, `absurd`, `argentina`, `other` |
@@ -335,8 +222,7 @@ Copy `.env.example` to `.env` and configure per subsystem:
 | Section | Key Vars |
 |---------|----------|
 | Scraper | `SUBREDDIT`, `REPO_PATH`, `TMP_DIR`, `BLOOM_FILTER_FILE`, `CLASSIFIER` (`claude`/`codex`), `CLASSIFY_WORKERS`, `REDDIT_CLIENT_ID/SECRET`, `REDDIT_USERNAME/PASSWORD` |
-| API | `PORT` (default `8080`), `DB_URL`, `DB_USER`, `DB_PASSWORD`, `REDIS_HOST`, `REDIS_PORT`, `CDN_URL` |
 | Scripts | `BATCH_SIZE`, `DRY_RUN`, `PER_POST`, `FROM_FILE`, `POST_URL` |
 | Sync | `SYNC_SUBREDDITS`, `SYNC_LIMIT`, `SYNC_BATCH_SIZE`, `SYNC_CLASSIFIER`, `SYNC_CLASSIFY_WORKERS`, `SYNC_MIN_COMMENT_UPVOTES`, `SYNC_DRY_RUN`, `SYNC_TIME` |
 | Optimize | `OPTIMIZE_DRY_RUN`, `OPTIMIZE_RESIZE` |
-| Web | `NEXT_PUBLIC_MEMES_API_URL`, `NEXT_PUBLIC_POSTHOG_KEY`, `MEMES_API_KEY`, `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` |
+| Web | `OPENMEME_BASE_URL` |

@@ -4,7 +4,7 @@
  */
 
 import { CONFIG } from "./config.js";
-import { extractImageUrls } from "./utils.js";
+
 
 const logger = {
   info: (...args: unknown[]) => console.log("[scraper]", ...args),
@@ -15,7 +15,7 @@ const logger = {
   },
 };
 
-interface RedditPost {
+export interface RedditPost {
   name: string;
   id: string;
   title: string;
