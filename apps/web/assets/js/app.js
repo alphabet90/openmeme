@@ -6,7 +6,7 @@
 import $ from 'jquery';
 import '../css/main.css';
 
-const OM = window.OM || { prefix: '', trending: [], categories: [], i18n: {} };
+const OM = window.OM || { prefix: '', categories: [], i18n: {} };
 const PREFIX = OM.prefix || '';
 const T = OM.i18n || {};
 
@@ -62,12 +62,6 @@ const recentsHTML = () => {
         <span class="sugg-ic remove" data-remove="${esc(t)}" aria-label="${esc(T.remove)}">${IC_X}</span>
       </div>`).join('');
 };
-const trendingHTML = () => {
-  if (!OM.trending.length) return '';
-  return `<div class="sugg-label">${esc(T.trending)}</div><div class="sugg-chips">` +
-    OM.trending.map((t, i) => `<button type="button" class="sugg-chip" data-term="${esc(t)}"><span class="rank">${i + 1}</span>${esc(t)}</button>`).join('') +
-    '</div>';
-};
 const categoriesHTML = () => {
   if (!OM.categories.length) return '';
   return `<div class="sugg-label">${esc(T.explore)}</div>` +
@@ -116,7 +110,7 @@ const fetchSuggest = (q, cb) => {
 
 const renderInto = ($box, q, done) => {
   if (!q.trim()) {
-    $box.html(recentsHTML() + trendingHTML() + categoriesHTML());
+    $box.html(recentsHTML() + categoriesHTML());
     if (done) done();
     return;
   }

@@ -119,7 +119,6 @@ const STRINGS = [
 
         'js.recents' => 'Búsquedas recientes',
         'js.clear' => 'Borrar',
-        'js.trending' => 'Tendencias 🔥',
         'js.explore' => 'Explorar categorías',
         'js.no_suggestions' => 'Sin sugerencias para «%s».',
         'js.press_enter' => 'Presioná <b>Enter</b> para ver todos los resultados.',
@@ -227,7 +226,6 @@ const STRINGS = [
 
         'js.recents' => 'Recent searches',
         'js.clear' => 'Clear',
-        'js.trending' => 'Trending 🔥',
         'js.explore' => 'Browse categories',
         'js.no_suggestions' => 'No suggestions for "%s".',
         'js.press_enter' => 'Press <b>Enter</b> to see all results.',

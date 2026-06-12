@@ -742,17 +742,6 @@ svg { display: inline-block; vertical-align: middle; }
 }
 .sugg-empty { padding: 28px 16px; text-align: center; color: var(--fg-dark); font-size: 13px; line-height: 1.6; }
 .sugg-empty b { color: var(--accent); }
-.sugg-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 12px 8px; }
-.sugg-chip {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: var(--surface); border: 1.5px solid var(--border);
-  border-radius: var(--radius-pill); padding: 8px 14px;
-  font-family: var(--font-ui); font-size: 13px; font-weight: 600; color: var(--muted);
-  cursor: pointer; transition: border-color 0.12s, color 0.12s;
-}
-.sugg-chip:hover { border-color: var(--accent); color: var(--accent); }
-.sugg-chip .rank { color: var(--accent); font-weight: 700; font-size: 11px; font-family: var(--font-display); }
-
 .search-dropdown {
   display: none;
   position: absolute;
