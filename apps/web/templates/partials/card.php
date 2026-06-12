@@ -1,6 +1,6 @@
 <?php
 /**
- * Meme card. Expects: $meme (row), optional $rank (1-3), optional $index (int).
+ * Meme card. Expects: $meme (row), optional $index (int).
  * width/height come from the index so the masonry never reflows (zero CLS).
  *
  * The first 12 cards (above the fold) are eager-loaded so the browser keeps them
@@ -12,11 +12,6 @@ $index = $index ?? null;
 $lazy = $index === null || $index >= 12;
 ?>
 <article class="card">
-  <?php if (!empty($rank) && $rank <= 3): ?>
-  <span class="card-rank rank-<?= (int) $rank ?>"><?= (int) $rank ?></span>
-  <?php elseif (is_new($meme)): ?>
-  <span class="card-badge badge-nuevo"><?= e(t('card.new')) ?></span>
-  <?php endif ?>
   <a class="card-link" href="<?= e(lurl(meme_url($meme))) ?>" aria-label="<?= e($meme['title']) ?>">
     <img class="card-img" src="<?= e(meme_img_src($meme)) ?>" alt="<?= e($meme['title']) ?>"
       <?= $w > 0 ? 'width="' . $w . '" height="' . $h . '"' : '' ?><?= $lazy ? ' loading="lazy"' : '' ?> decoding="async">

@@ -26,9 +26,6 @@ define('TEMPLATES_DIR', SITE_ROOT . '/templates');
 // and the "show more" batch size.
 define('PAGE_SIZE', 100);
 
-// Memes newer than this many days get the NEW badge
-define('NEW_DAYS', 7);
-
 // Search abuse limits: queries are truncated server-side, and the suggest
 // endpoint ignores queries shorter than this (mirrored client-side in app.js).
 define('MAX_QUERY_LENGTH', 100);

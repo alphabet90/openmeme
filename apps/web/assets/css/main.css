@@ -145,7 +145,7 @@ svg { display: inline-block; vertical-align: middle; }
 
 /* ── HERO ────────────────────────────────────────────────────── */
 .hero {
-  padding: 80px clamp(16px, 4vw, 48px) 48px;
+  padding: 80px clamp(16px, 4vw, 48px) 25px;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -186,7 +186,7 @@ svg { display: inline-block; vertical-align: middle; }
 .hero-search-icon {
   position: absolute;
   left: 20px;
-  top: 28px;
+  top: 15px;
   pointer-events: none;
   color: #3a3a3a;
 }
@@ -259,7 +259,7 @@ svg { display: inline-block; vertical-align: middle; }
 
 /* ── MASONRY GRID ────────────────────────────────────────────── */
 .masonry-wrap { padding: 0 clamp(16px, 4vw, 48px); margin-bottom: 64px; }
-.masonry { columns: 5; column-gap: 12px; }
+.masonry { columns: 7; column-gap: 12px; }
 .card {
   break-inside: avoid;
   margin-bottom: 12px;
@@ -275,39 +275,6 @@ svg { display: inline-block; vertical-align: middle; }
 .card:hover .card-views { opacity: 1; }
 .card-link { display: block; }
 .card-img { width: 100%; display: block; background: #161616; }
-
-.card-badge {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  font-size: 9px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: var(--radius-sm);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  z-index: 2;
-}
-.badge-nuevo { background: var(--accent); color: var(--bg); }
-.badge-top { background: var(--accent-hot); color: var(--fg); }
-.card-rank {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  z-index: 2;
-}
-.rank-1, .rank-2, .rank-3 { display: flex; }
-.rank-1 { background: var(--accent); color: var(--bg); }
-.rank-2 { background: var(--muted); color: var(--bg); }
-.rank-3 { background: var(--accent-hot); color: var(--fg); }
 
 .card-overlay {
   position: absolute;
@@ -489,11 +456,14 @@ svg { display: inline-block; vertical-align: middle; }
   gap: 32px;
   align-items: start;
 }
-/* Image keeps its natural width — never upscaled, capped at 480px / column */
+/* Image keeps its natural width — never upscaled, capped at 480px.
+   The cap must be a plain length: a percentage inside min() can't resolve
+   during grid track sizing, so the auto column would grow to the image's
+   intrinsic width, leaving a blank gap and crushing .meme-info. */
 .meme-figure {
   margin: 0;
   width: fit-content;
-  max-width: min(100%, 480px);
+  max-width: 480px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   background: var(--surface);
@@ -936,7 +906,7 @@ svg { display: inline-block; vertical-align: middle; }
   .stats-bar { gap: 20px; padding: 24px 16px; }
   .cat-grid { grid-template-columns: 1fr; }
   .footer { flex-direction: column; text-align: center; }
-  /* Touch devices: card actions always visible */
-  .card-actions { opacity: 1; transform: none; }
-  .card-views { opacity: 1; }
+  /* Mobile: hide card actions and view counts, keep the card image clean */
+  .card-actions { display: none; }
+  .card-views { display: none; }
 }
