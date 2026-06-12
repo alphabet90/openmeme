@@ -721,6 +721,7 @@ svg { display: inline-block; vertical-align: middle; }
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
+  text-align: left; /* don't inherit the hero's centering */
   background: var(--surface);
   border: 1.5px solid var(--border);
   border-radius: 16px;
@@ -733,6 +734,8 @@ svg { display: inline-block; vertical-align: middle; }
 .search-dropdown.open { display: block; }
 .nav-search .search-dropdown { width: 380px; }
 .hero-search .search-dropdown { left: 0; right: 0; }
+.hero-search .sugg-cat,
+.mobile-search-overlay .sugg-cat { display: none; }
 
 /* ── MOBILE SEARCH OVERLAY ───────────────────────────────────── */
 .mobile-search-overlay {

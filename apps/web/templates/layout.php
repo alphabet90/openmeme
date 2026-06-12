@@ -172,14 +172,9 @@ $navCategories = repo_categories(6);
 <script>
 window.OM = <?= json_encode([
     'prefix' => LOCALES[LOCALE]['prefix'],
-    'categories' => array_map(
-        fn ($c) => ['name' => cat_label($c['category']), 'slug' => $c['category']],
-        $navCategories
-    ),
     'i18n' => [
         'recents' => t('js.recents'),
         'clear' => t('js.clear'),
-        'explore' => t('js.explore'),
         'no_suggestions' => t('js.no_suggestions', '%s'),
         'press_enter' => t('js.press_enter'),
         'remove' => t('js.remove'),

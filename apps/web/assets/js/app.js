@@ -25,7 +25,6 @@ const hl = (text, q) => {
 const IC_CLOCK = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>';
 const IC_SEARCH = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
 const IC_X = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-const IC_CHEVRON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>';
 
 /* ── recent searches (localStorage) ── */
 const getRecents = () => {
@@ -60,14 +59,6 @@ const recentsHTML = () => {
         <span class="sugg-ic">${IC_CLOCK}</span>
         <span class="sugg-txt">${esc(t)}</span>
         <span class="sugg-ic remove" data-remove="${esc(t)}" aria-label="${esc(T.remove)}">${IC_X}</span>
-      </div>`).join('');
-};
-const categoriesHTML = () => {
-  if (!OM.categories.length) return '';
-  return `<div class="sugg-label">${esc(T.explore)}</div>` +
-    OM.categories.map((c) => `<div class="sugg-item" data-cat="${esc(c.slug)}">
-        <span class="sugg-txt">${esc(c.name)}</span>
-        <span class="sugg-ic">${IC_CHEVRON}</span>
       </div>`).join('');
 };
 const resultsHTML = (items, q) => {
@@ -110,7 +101,7 @@ const fetchSuggest = (q, cb) => {
 
 const renderInto = ($box, q, done) => {
   if (!q.trim()) {
-    $box.html(recentsHTML() + categoriesHTML());
+    $box.html(recentsHTML());
     if (done) done();
     return;
   }
@@ -136,10 +127,6 @@ const bindSuggestionBox = ($box, rerender, eventName) => {
     e.preventDefault();
     gotoMeme($(this).data('slug'));
   });
-  $box.on(eventName, '[data-cat]', function (e) {
-    e.preventDefault();
-    window.location.href = PREFIX + '/category/' + encodeURIComponent($(this).data('cat'));
-  });
 };
 
 /* ── desktop dropdowns (nav + hero) ── */
@@ -152,7 +139,7 @@ $('[data-search-input]').each(function () {
 
   $input.on('focus input', render);
   $input.on('keydown', (e) => {
-    const $items = $dd.find('[data-term], [data-slug], [data-cat]');
+    const $items = $dd.find('[data-term], [data-slug]');
     const $active = $dd.find('.kbd-active');
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
