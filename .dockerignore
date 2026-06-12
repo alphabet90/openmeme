@@ -1,0 +1,49 @@
+# Git
+.git
+.gitignore
+
+# Environment files
+.env
+.env.example
+apps/web/.env
+
+# Node modules (reinstalled in image)
+**/node_modules/
+
+# Composer vendor (reinstalled in image)
+apps/web/vendor/
+
+# Build outputs (rebuilt in image)
+apps/web/public/assets/app.js
+apps/web/public/assets/app.css
+apps/web/data/memes.db
+
+# Cache / logs
+.turbo
+apps/web/.turbo
+apps/web/.phpunit.result.cache
+*.log
+
+# IDE
+.idea
+.vscode
+
+# Documentation (not needed at runtime)
+README.md
+apps/web/README.md
+docs/
+craft/
+
+# Tests (not needed at runtime)
+apps/web/tests/
+apps/web/phpunit.xml
+
+# Stale local-only data
+site/
+
+# GitHub / agent config (not needed at runtime)
+.github/
+.claude/
+
+# Root-level Dockerfile is sent separately by Docker; no need to include it.
+Dockerfile
