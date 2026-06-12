@@ -33,7 +33,7 @@ $navCategories = repo_categories(6);
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= e(asset('/assets/app.css')) ?>">
 <?php if (!empty($is_home)): ?>
-<script type="application/ld+json">
+<script type="application/ld+json" nonce="<?= e(csp_nonce()) ?>">
 <?= json_encode([
     '@context' => 'https://schema.org',
     '@type' => 'WebSite',
@@ -169,7 +169,7 @@ $navCategories = repo_categories(6);
   </div>
 </footer>
 
-<script>
+<script nonce="<?= e(csp_nonce()) ?>">
 window.OM = <?= json_encode([
     'prefix' => LOCALES[LOCALE]['prefix'],
     'i18n' => [

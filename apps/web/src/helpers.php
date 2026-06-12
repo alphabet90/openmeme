@@ -7,6 +7,62 @@ function e(?string $s): string
     return htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
 }
 
+/** Per-request CSP nonce for the layout's inline <script>/<style> blocks. */
+function csp_nonce(): string
+{
+    static $nonce = null;
+    return $nonce ??= base64_encode(random_bytes(16));
+}
+
+/**
+ * Content-Security-Policy for dynamic responses. Inline scripts/styles must
+ * carry csp_nonce(); the only third parties are Google Fonts and CDN_URL.
+ */
+function csp_policy(): string
+{
+    $nonce = "'nonce-" . csp_nonce() . "'";
+    $img = "'self'" . (CDN_URL !== '' ? ' ' . CDN_URL : '');
+    $directives = [
+        "default-src 'self'",
+        "script-src 'self' $nonce",
+        "style-src 'self' $nonce https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com",
+        "img-src $img",
+        "connect-src 'self'",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'self'",
+    ];
+    if (is_https()) {
+        $directives[] = 'upgrade-insecure-requests';
+    }
+    return implode('; ', $directives);
+}
+
+/**
+ * OWASP-recommended security headers for every dynamic response.
+ * nginx adds its own minimal set on static-asset locations (see nginx.conf);
+ * keep the two in sync rather than duplicating headers across layers.
+ */
+function send_security_headers(): void
+{
+    header_remove('X-Powered-By');
+    header('Content-Security-Policy: ' . csp_policy());
+    header('X-Content-Type-Options: nosniff');
+    header('X-Frame-Options: SAMEORIGIN');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('X-XSS-Protection: 0');
+    header('Permissions-Policy: camera=(), geolocation=(), microphone=(), payment=(), usb=()');
+    header('Cross-Origin-Opener-Policy: same-origin');
+    header('Cross-Origin-Resource-Policy: same-origin');
+    // Browsers ignore HSTS over plain HTTP, so only send it when the request
+    // arrived via TLS (directly or at the proxy in front of us).
+    if (is_https()) {
+        header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+    }
+}
+
 /** Render a template into the shared layout. */
 function render(string $template, array $vars = []): void
 {
