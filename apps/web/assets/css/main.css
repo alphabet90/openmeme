@@ -922,8 +922,17 @@ svg { display: inline-block; vertical-align: middle; }
   .card { margin-bottom: 8px; }
   .hero { padding: 48px 16px 32px; }
   .hero-title { font-size: 38px; }
-  .filters { gap: 6px; }
-  .filter-pill { font-size: 11px; padding: 6px 12px; }
+  /* Filters become a single-row horizontal scroll */
+  .filters {
+    gap: 6px;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .filters::-webkit-scrollbar { display: none; }
+  .filter-pill { font-size: 11px; padding: 6px 12px; flex-shrink: 0; white-space: nowrap; }
   .stats-bar { gap: 20px; padding: 24px 16px; }
   .cat-grid { grid-template-columns: 1fr; }
   .footer { flex-direction: column; text-align: center; }
