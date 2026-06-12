@@ -1,6 +1,5 @@
 <?php
 /** @var string $templateFile */
-$stats = repo_stats();
 $navCategories = repo_categories(6);
 ?><!DOCTYPE html>
 <html lang="<?= e(locale_tag()) ?>">
@@ -119,7 +118,6 @@ $navCategories = repo_categories(6);
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <button class="msearch-go" type="submit"><?= e(t('nav.search_btn')) ?></button>
   </form>
   <div class="msearch-body" data-msearch-body></div>
 </div>
@@ -130,12 +128,12 @@ $navCategories = repo_categories(6);
 
 <footer class="footer">
   <div class="footer-grid">
-    <div>
+    <div class="footer-brand-col">
       <p class="footer-brand">OPEN<span class="lime">MEME</span></p>
       <p class="footer-tagline"><?= e(t('footer.tagline')) ?></p>
     </div>
 
-    <nav aria-label="<?= e(t('footer.nav_label')) ?>">
+    <nav class="footer-explore" aria-label="<?= e(t('footer.nav_label')) ?>">
       <h3 class="footer-col-title"><?= e(t('footer.explore')) ?></h3>
       <ul>
         <li><a href="<?= e(lurl('/')) ?>"><?= e(t('footer.home')) ?></a></li>
@@ -146,7 +144,7 @@ $navCategories = repo_categories(6);
       </ul>
     </nav>
 
-    <nav aria-label="<?= e(t('footer.categories_label')) ?>">
+    <nav class="footer-categories" aria-label="<?= e(t('footer.categories_label')) ?>">
       <h3 class="footer-col-title"><?= e(t('footer.categories')) ?></h3>
       <ul>
         <?php foreach (array_slice($navCategories, 0, 5) as $c): ?>
@@ -155,7 +153,7 @@ $navCategories = repo_categories(6);
       </ul>
     </nav>
 
-    <nav aria-label="<?= e(t('footer.legal_label')) ?>">
+    <nav class="footer-legal" aria-label="<?= e(t('footer.legal_label')) ?>">
       <h3 class="footer-col-title"><?= e(t('footer.legal')) ?></h3>
       <ul>
         <li><a href="<?= e(lurl('/terminos')) ?>"><?= e(t('footer.terms')) ?></a></li>

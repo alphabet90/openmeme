@@ -30,7 +30,7 @@
       <?php partial('partials/card', ['meme' => $meme, 'rank' => $i + 1, 'index' => $i]) ?>
     <?php endforeach ?>
   </div>
-  <?php if ((int) $stats['memes'] > count($trending)): ?>
+  <?php if ($total_memes > count($trending)): ?>
   <div class="show-more-wrap">
     <a class="btn-show-more" href="<?= e(lurl('/top?page=' . (intdiv(count($trending), PAGE_SIZE) + 1))) ?>"
        data-show-more data-offset="<?= count($trending) ?>"
@@ -57,24 +57,5 @@
       <div class="cat-card-count"><?= e(compact_num((int) $c['n'])) ?></div>
     </a>
     <?php endforeach ?>
-  </div>
-</div>
-
-<div class="stats-bar">
-  <div class="stat">
-    <div class="stat-num"><?= e(compact_num((int) $stats['memes'])) ?></div>
-    <div class="stat-label"><?= e(t('home.stat_memes')) ?></div>
-  </div>
-  <div class="stat">
-    <div class="stat-num"><?= e(compact_num((int) $stats['categories'])) ?></div>
-    <div class="stat-label"><?= e(t('home.stat_categories')) ?></div>
-  </div>
-  <div class="stat">
-    <div class="stat-num"><?= e(compact_num((int) $stats['upvotes'])) ?></div>
-    <div class="stat-label"><?= e(t('home.stat_upvotes')) ?></div>
-  </div>
-  <div class="stat">
-    <div class="stat-num">100%</div>
-    <div class="stat-label"><?= e(t('home.stat_open')) ?></div>
   </div>
 </div>
