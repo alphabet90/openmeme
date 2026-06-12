@@ -66,6 +66,22 @@ function meme_img(array $meme): string
     return '/memes/' . implode('/', array_map('rawurlencode', explode('/', $meme['image'])));
 }
 
+/**
+ * Image URL for <img> src: CDN host when configured, else same-origin.
+ * Download/copy links must keep using meme_img() — the download attribute
+ * is ignored on cross-origin anchors.
+ */
+function meme_img_src(array $meme): string
+{
+    return CDN_URL !== '' ? CDN_URL . meme_img($meme) : meme_img($meme);
+}
+
+/** Absolute image URL for OG tags / JSON-LD. */
+function meme_img_abs(array $meme): string
+{
+    return CDN_URL !== '' ? CDN_URL . meme_img($meme) : BASE_URL . meme_img($meme);
+}
+
 function is_new(array $meme): bool
 {
     $ts = strtotime($meme['created_at'] ?? '');

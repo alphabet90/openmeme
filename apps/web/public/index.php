@@ -87,7 +87,7 @@ if (preg_match('#^/meme/([a-z0-9-]+)$#', $path, $m)) {
         'meta_description' => mb_substr((string) $meme['description'], 0, 160),
         'canonical' => BASE_URL . lurl(meme_url($meme)),
         'alternates' => alternates(meme_url($meme)),
-        'og_image' => BASE_URL . meme_img($meme),
+        'og_image' => meme_img_abs($meme),
         'meme' => $meme,
         'related' => repo_related($meme),
     ]);

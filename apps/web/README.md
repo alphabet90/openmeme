@@ -132,4 +132,7 @@ The app reads env from `apps/web/.env`, falling back to the repo-root
 `.env` (real environment variables always win). Set
 `OPENMEME_BASE_URL=https://yourdomain.com` for correct sitemap/OG absolute
 URLs, and `MEILI_URL` / `MEILI_SEARCH_KEY` for search (see nginx.conf for
-the PHP-FPM alternative).
+the PHP-FPM alternative). Set `OPENMEME_CDN_URL=https://cdn.yourdomain.com`
+to serve meme images from a CDN; when empty, images are served same-origin
+from `/memes/*`. Download and copy-image links always stay same-origin
+(the `download` attribute and clipboard fetch don't work cross-origin).

@@ -13,7 +13,7 @@ $h = (int) $meme['height'];
   <span class="card-badge badge-nuevo"><?= e(t('card.new')) ?></span>
   <?php endif ?>
   <a class="card-link" href="<?= e(lurl(meme_url($meme))) ?>" aria-label="<?= e($meme['title']) ?>">
-    <img class="card-img" src="<?= e(meme_img($meme)) ?>" alt="<?= e($meme['title']) ?>"
+    <img class="card-img" src="<?= e(meme_img_src($meme)) ?>" alt="<?= e($meme['title']) ?>"
       <?= $w > 0 ? 'width="' . $w . '" height="' . $h . '"' : '' ?> loading="lazy" decoding="async">
   </a>
   <div class="card-overlay"></div>

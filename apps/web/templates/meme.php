@@ -16,7 +16,7 @@ $fecha = format_date((string) $meme['created_at']);
 
 <article class="meme-hero">
   <figure class="meme-figure">
-    <img src="<?= e(meme_img($meme)) ?>" alt="<?= e($meme['title']) ?>"
+    <img src="<?= e(meme_img_src($meme)) ?>" alt="<?= e($meme['title']) ?>"
       <?= $w > 0 ? 'width="' . $w . '" height="' . $h . '"' : '' ?> decoding="async" fetchpriority="high">
   </figure>
 
@@ -84,7 +84,7 @@ $fecha = format_date((string) $meme['created_at']);
 <?= json_encode([
     '@context' => 'https://schema.org',
     '@type' => 'ImageObject',
-    'contentUrl' => BASE_URL . meme_img($meme),
+    'contentUrl' => meme_img_abs($meme),
     'url' => BASE_URL . lurl(meme_url($meme)),
     'name' => $meme['title'],
     'description' => $meme['description'],

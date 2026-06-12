@@ -41,6 +41,10 @@ load_env();
 // Canonical base URL for sitemap/OG tags. Override in production via env.
 define('BASE_URL', rtrim(env('OPENMEME_BASE_URL') ?: detect_base_url(), '/'));
 
+// Optional CDN host for meme images (e.g. https://cdn.openmeme.io).
+// Empty = serve images same-origin from /memes/*.
+define('CDN_URL', rtrim(env('OPENMEME_CDN_URL'), '/'));
+
 // Meilisearch (required for /search and /api/suggest).
 // Scoped keys are a production hardening step; dev can run on the master key.
 define('MEILI_URL', rtrim(env('MEILI_URL', 'http://127.0.0.1:7700'), '/'));
