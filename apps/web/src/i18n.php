@@ -89,8 +89,6 @@ const STRINGS = [
         'meme.download_label' => 'Descargar %s',
         'meme.share' => 'Compartir',
 
-        'card.new' => 'NUEVO',
-
         'pager.prev' => '← Anterior',
         'pager.next' => 'Siguiente →',
         'pager.label' => 'Paginación',
@@ -198,8 +196,6 @@ const STRINGS = [
         'meme.copy_link' => 'Copy image',
         'meme.download_label' => 'Download %s',
         'meme.share' => 'Share',
-
-        'card.new' => 'NEW',
 
         'pager.prev' => '← Previous',
         'pager.next' => 'Next →',

@@ -82,12 +82,6 @@ function meme_img_abs(array $meme): string
     return CDN_URL !== '' ? CDN_URL . meme_img($meme) : BASE_URL . meme_img($meme);
 }
 
-function is_new(array $meme): bool
-{
-    $ts = strtotime($meme['created_at'] ?? '');
-    return $ts !== false && $ts > time() - NEW_DAYS * 86400;
-}
-
 /** "2026-01-17T12:22:20Z" → "17 de enero de 2026" */
 function fecha_es(string $iso): string
 {
