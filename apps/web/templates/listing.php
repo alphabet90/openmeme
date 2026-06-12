@@ -8,8 +8,8 @@
 
 <div class="masonry-wrap">
   <div class="masonry">
-    <?php foreach ($memes as $meme): ?>
-      <?php partial('partials/card', ['meme' => $meme]) ?>
+    <?php foreach ($memes as $i => $meme): ?>
+      <?php partial('partials/card', ['meme' => $meme, 'index' => $i]) ?>
     <?php endforeach ?>
   </div>
 </div>

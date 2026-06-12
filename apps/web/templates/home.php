@@ -27,7 +27,7 @@
 <div class="masonry-wrap">
   <div class="masonry" data-home-grid>
     <?php foreach ($trending as $i => $meme): ?>
-      <?php partial('partials/card', ['meme' => $meme, 'rank' => $i + 1]) ?>
+      <?php partial('partials/card', ['meme' => $meme, 'rank' => $i + 1, 'index' => $i]) ?>
     <?php endforeach ?>
   </div>
   <?php if ((int) $stats['memes'] > count($trending)): ?>

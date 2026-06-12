@@ -73,8 +73,8 @@ $fecha = format_date((string) $meme['created_at']);
 </div>
 <div class="masonry-wrap">
   <div class="masonry">
-    <?php foreach ($related as $rel): ?>
-      <?php partial('partials/card', ['meme' => $rel]) ?>
+    <?php foreach ($related as $i => $rel): ?>
+      <?php partial('partials/card', ['meme' => $rel, 'index' => $i]) ?>
     <?php endforeach ?>
   </div>
 </div>

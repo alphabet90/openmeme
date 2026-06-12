@@ -1,10 +1,15 @@
 <?php
 /**
- * Meme card. Expects: $meme (row), optional $rank (1-3).
+ * Meme card. Expects: $meme (row), optional $rank (1-3), optional $index (int).
  * width/height come from the index so the masonry never reflows (zero CLS).
+ *
+ * The first 12 cards (above the fold) are eager-loaded so the browser keeps them
+ * in memory while scrolling; everything else stays lazy-loaded by default.
  */
 $w = (int) $meme['width'];
 $h = (int) $meme['height'];
+$index = $index ?? null;
+$lazy = $index === null || $index >= 12;
 ?>
 <article class="card">
   <?php if (!empty($rank) && $rank <= 3): ?>
@@ -14,7 +19,7 @@ $h = (int) $meme['height'];
   <?php endif ?>
   <a class="card-link" href="<?= e(lurl(meme_url($meme))) ?>" aria-label="<?= e($meme['title']) ?>">
     <img class="card-img" src="<?= e(meme_img_src($meme)) ?>" alt="<?= e($meme['title']) ?>"
-      <?= $w > 0 ? 'width="' . $w . '" height="' . $h . '"' : '' ?> loading="lazy" decoding="async">
+      <?= $w > 0 ? 'width="' . $w . '" height="' . $h . '"' : '' ?><?= $lazy ? ' loading="lazy"' : '' ?> decoding="async">
   </a>
   <div class="card-overlay"></div>
   <span class="card-views">
