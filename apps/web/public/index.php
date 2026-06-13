@@ -90,6 +90,9 @@ if (preg_match('#^/meme/([a-z0-9-]+)$#', $path, $m)) {
         'canonical' => BASE_URL . lurl(meme_url($meme)),
         'alternates' => alternates(meme_url($meme)),
         'og_image' => meme_img_abs($meme),
+        'og_image_width' => (int) $meme['width'],
+        'og_image_height' => (int) $meme['height'],
+        'og_image_alt' => $meme['title'],
         'meme' => $meme,
         'related' => repo_related($meme),
     ]);
