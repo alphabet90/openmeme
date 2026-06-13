@@ -21,6 +21,7 @@
     "generate-prompt": "pnpm --filter @openmeme/dev generate-prompt",
     "benchmark": "pnpm --filter @openmeme/dev benchmark",
     "db-check": "pnpm --filter @openmeme/dev db-check",
+    "optimize-images": "pnpm --filter @openmeme/dev build && pnpm --filter @openmeme/dev optimize-images",
     "index": "pnpm --filter @openmeme/web index"
   },
   "keywords": ["meme", "reddit", "scraper", "monorepo"],
