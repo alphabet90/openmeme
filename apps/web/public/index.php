@@ -15,6 +15,8 @@ require __DIR__ . '/../src/i18n.php';
 require __DIR__ . '/../src/repo.php';
 require __DIR__ . '/../src/pages.php';
 
+send_security_headers();
+
 $path = rawurldecode((string) parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 
 // PHP built-in dev server: serve static files and /memes/* images directly.
@@ -88,6 +90,9 @@ if (preg_match('#^/meme/([a-z0-9-]+)$#', $path, $m)) {
         'canonical' => BASE_URL . lurl(meme_url($meme)),
         'alternates' => alternates(meme_url($meme)),
         'og_image' => meme_img_abs($meme),
+        'og_image_width' => (int) $meme['width'],
+        'og_image_height' => (int) $meme['height'],
+        'og_image_alt' => $meme['title'],
         'meme' => $meme,
         'related' => repo_related($meme),
     ]);
@@ -210,7 +215,6 @@ if ($path === '/random') {
 if ($path === '/api/suggest') {
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: public, max-age=60');
-    header('X-Content-Type-Options: nosniff');
     echo json_encode(repo_suggest((string) ($_GET['q'] ?? '')), JSON_UNESCAPED_UNICODE);
     exit;
 }

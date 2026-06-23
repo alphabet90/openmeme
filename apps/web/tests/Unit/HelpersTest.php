@@ -29,6 +29,31 @@ final class HelpersTest extends TestCase
         $this->assertSame('https://cdn.test/memes/reaction/cat.jpg', $abs);
     }
 
+    public function testSrcsetEmptyForImageWithoutVariants(): void
+    {
+        // A small original keeps its own filename — no -800/-340 siblings exist.
+        $this->assertSame('', meme_img_srcset(['image' => 'reaction/cat.jpg', 'width' => 500]));
+    }
+
+    public function testSrcsetEmitsBothCandidatesForWideVariant(): void
+    {
+        // Host-agnostic so it holds whether or not CDN_URL is configured.
+        $meme = ['image' => 'reaction/foo-800.jpg', 'width' => 800];
+        $base = meme_img_src($meme);
+        $this->assertSame(
+            $base . ' 800w, ' . substr($base, 0, -strlen('-800.jpg')) . '-340.jpg 340w',
+            meme_img_srcset($meme)
+        );
+    }
+
+    public function testSrcsetEmptyForNarrowVariantWithoutA340Sibling(): void
+    {
+        // Sources <=340px wide only get a -800 (compress-only) variant; emitting
+        // a -340 candidate here would 404. width is the indexed -800 width.
+        $meme = ['image' => 'simpsons/lionel-hutz-empty-briefcase-800.jpg', 'width' => 320];
+        $this->assertSame('', meme_img_srcset($meme));
+    }
+
     /**
      * CDN_URL is a constant fixed when config.php loads, so each branch
      * needs a fresh PHP process with a controlled environment.

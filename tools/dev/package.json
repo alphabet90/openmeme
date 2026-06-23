@@ -16,6 +16,7 @@
     "generate-prompt": "node dist/index.js generate-prompt",
     "benchmark": "node dist/index.js benchmark",
     "db-check": "node dist/index.js db-check",
+    "optimize-images": "node dist/index.js optimize-images",
     "setup-hooks": "node dist/index.js setup-hooks"
   },
   "dependencies": {

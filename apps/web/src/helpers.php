@@ -7,6 +7,62 @@ function e(?string $s): string
     return htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
 }
 
+/** Per-request CSP nonce for the layout's inline <script>/<style> blocks. */
+function csp_nonce(): string
+{
+    static $nonce = null;
+    return $nonce ??= base64_encode(random_bytes(16));
+}
+
+/**
+ * Content-Security-Policy for dynamic responses. Inline scripts/styles must
+ * carry csp_nonce(); the only third parties are Google Fonts and CDN_URL.
+ */
+function csp_policy(): string
+{
+    $nonce = "'nonce-" . csp_nonce() . "'";
+    $img = "'self'" . (CDN_URL !== '' ? ' ' . CDN_URL : '');
+    $directives = [
+        "default-src 'self'",
+        "script-src 'self' $nonce",
+        "style-src 'self' $nonce https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com",
+        "img-src $img",
+        "connect-src 'self'",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'self'",
+    ];
+    if (is_https()) {
+        $directives[] = 'upgrade-insecure-requests';
+    }
+    return implode('; ', $directives);
+}
+
+/**
+ * OWASP-recommended security headers for every dynamic response.
+ * nginx adds its own minimal set on static-asset locations (see nginx.conf);
+ * keep the two in sync rather than duplicating headers across layers.
+ */
+function send_security_headers(): void
+{
+    header_remove('X-Powered-By');
+    header('Content-Security-Policy: ' . csp_policy());
+    header('X-Content-Type-Options: nosniff');
+    header('X-Frame-Options: SAMEORIGIN');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('X-XSS-Protection: 0');
+    header('Permissions-Policy: camera=(), geolocation=(), microphone=(), payment=(), usb=()');
+    header('Cross-Origin-Opener-Policy: same-origin');
+    header('Cross-Origin-Resource-Policy: same-origin');
+    // Browsers ignore HSTS over plain HTTP, so only send it when the request
+    // arrived via TLS (directly or at the proxy in front of us).
+    if (is_https()) {
+        header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+    }
+}
+
 /** Render a template into the shared layout. */
 function render(string $template, array $vars = []): void
 {
@@ -74,6 +130,29 @@ function meme_img(array $meme): string
 function meme_img_src(array $meme): string
 {
     return CDN_URL !== '' ? CDN_URL . meme_img($meme) : meme_img($meme);
+}
+
+/**
+ * Responsive srcset for card thumbnails. The optimize-images tool (tools/dev)
+ * writes -800.jpg + -340.jpg variants and points the MDX image: at the -800
+ * one, so a "-800.jpg" suffix marks a meme that has variants. Returns
+ * "<url-800> 800w, <url-340> 340w" for those, or "" for memes without
+ * variants (small originals) so callers can omit srcset entirely.
+ *
+ * The -340 variant is only generated for sources wider than 340px; narrower
+ * images get a -800 (compress-only) variant alone. `width` is the indexed
+ * -800 variant's width, so width <= 340 means there is no -340 sibling and
+ * the single remaining candidate makes srcset pointless — bail in that case
+ * to avoid emitting a 404ing "-340.jpg 340w" candidate.
+ */
+function meme_img_srcset(array $meme): string
+{
+    $src800 = meme_img_src($meme);
+    if (!str_ends_with($src800, '-800.jpg') || (int) ($meme['width'] ?? 0) <= 340) {
+        return '';
+    }
+    $src340 = substr($src800, 0, -strlen('-800.jpg')) . '-340.jpg';
+    return $src800 . ' 800w, ' . $src340 . ' 340w';
 }
 
 /** Absolute image URL for OG tags / JSON-LD. */

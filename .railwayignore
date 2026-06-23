@@ -1,0 +1,4 @@
+# Source-of-truth original images: kept in git, but never served at runtime
+# (every MDX image: points at the -800 variant; nginx never requests -original).
+# Excluding them keeps the railway up upload and the built image small.
+memes/**/*-original.*

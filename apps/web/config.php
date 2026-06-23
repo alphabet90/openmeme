@@ -83,11 +83,15 @@ function env(string $key, string $default = ''): string
     return $v !== '' ? $v : $default;
 }
 
+/** True when the request arrived over TLS, directly or at a trusted proxy. */
+function is_https(): bool
+{
+    return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
+}
+
 function detect_base_url(): string
 {
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost:8090';
-    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-        || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
-    $scheme = $isHttps ? 'https' : 'http';
-    return $scheme . '://' . $host;
+    return (is_https() ? 'https' : 'http') . '://' . $host;
 }

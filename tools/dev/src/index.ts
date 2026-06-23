@@ -64,6 +64,21 @@ program
   });
 
 program
+  .command("optimize-images")
+  .description("Generate responsive image sizes with @squoosh/cli and update MDX references")
+  .option("-p, --path <path>", "Path to memes directory", "./memes")
+  .option("--threshold <kb>", "Only optimize images larger than this (KB)", "80")
+  .option("-q, --quality <n>", "Encoder quality for jpg (1-100)", "75")
+  .option("--sizes <list>", "Comma-separated widths to generate, aspect ratio preserved", "800,340")
+  .option("--limit <n>", "Process at most N images (largest first)")
+  .option("--batch-size <n>", "Images per squoosh invocation", "20")
+  .option("--dry-run", "List candidates without modifying files", false)
+  .action(async (options) => {
+    const { optimizeImagesCommand } = await import("./commands/optimize-images.js");
+    await optimizeImagesCommand(options);
+  });
+
+program
   .command("setup-hooks")
   .description("Setup git hooks for the repository")
   .option("--pre-commit", "Install pre-commit hook", true)

@@ -10,10 +10,14 @@ $w = (int) $meme['width'];
 $h = (int) $meme['height'];
 $index = $index ?? null;
 $lazy = $index === null || $index >= 12;
+// srcset is only emitted for memes that have generated -800/-340 variants;
+// sizes mirrors the masonry column counts (7 → 4 → 3 → 2 across breakpoints).
+$srcset = meme_img_srcset($meme);
+$sizes = '(max-width: 600px) 45vw, (max-width: 900px) 31vw, (max-width: 1200px) 23vw, 14vw';
 ?>
 <article class="card">
   <a class="card-link" href="<?= e(lurl(meme_url($meme))) ?>" aria-label="<?= e($meme['title']) ?>">
-    <img class="card-img" src="<?= e(meme_img_src($meme)) ?>" alt="<?= e($meme['title']) ?>"
+    <img class="card-img" src="<?= e(meme_img_src($meme)) ?>"<?= $srcset !== '' ? ' srcset="' . e($srcset) . '" sizes="' . e($sizes) . '"' : '' ?> alt="<?= e($meme['title']) ?>"
       <?= $w > 0 ? 'width="' . $w . '" height="' . $h . '"' : '' ?><?= $lazy ? ' loading="lazy"' : '' ?> decoding="async">
   </a>
   <div class="card-overlay"></div>
