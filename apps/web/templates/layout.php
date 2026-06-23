@@ -36,9 +36,16 @@ $navCategories = repo_categories(6);
 <?php endif ?>
 <meta name="twitter:card" content="summary_large_image">
 <?php endif ?>
+<?php $font_css = 'https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@300;400;500;600;700&display=swap' ?>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<?php /* Load Google Fonts off the critical path: preload, attach as print
+   (non-blocking), then a nonce'd script flips it to all media on load.
+   Inline onload handlers are CSP-blocked, so the swap lives in a script. */ ?>
+<link rel="preload" as="style" href="<?= e($font_css) ?>">
+<link rel="stylesheet" href="<?= e($font_css) ?>" media="print" data-async-style>
+<noscript><link rel="stylesheet" href="<?= e($font_css) ?>"></noscript>
+<script nonce="<?= e(csp_nonce()) ?>">document.querySelectorAll('link[data-async-style]').forEach(function(l){l.sheet?l.media='all':l.addEventListener('load',function(){this.media='all'})});</script>
 <link rel="stylesheet" href="<?= e(asset('/assets/app.css')) ?>">
 <?php if (!empty($is_home)): ?>
 <script type="application/ld+json" nonce="<?= e(csp_nonce()) ?>">
