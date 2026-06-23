@@ -4,13 +4,10 @@ const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = (env, argv) => ({
-  entry: {
-    app: './assets/js/app.js',
-    critical: './assets/css/critical.css',
-  },
+  entry: './assets/js/app.js',
   output: {
     path: path.resolve(__dirname, 'public/assets'),
-    filename: '[name].js',
+    filename: 'app.js',
     clean: true,
   },
   module: {
@@ -21,7 +18,7 @@ module.exports = (env, argv) => ({
       },
     ],
   },
-  plugins: [new MiniCssExtractPlugin({ filename: '[name].css' })],
+  plugins: [new MiniCssExtractPlugin({ filename: 'app.css' })],
   optimization: {
     minimizer: [new TerserPlugin({ extractComments: false }), new CssMinimizerPlugin()],
   },

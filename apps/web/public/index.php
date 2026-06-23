@@ -54,15 +54,15 @@ define('REQUEST_PATH', $path . ($query === '' ? '' : '?' . $query));
 // ── Routes ──────────────────────────────────────────────────────
 
 if ($path === '/') {
-    $totalMemes = (int) repo_stats()['memes'];
+    $stats = repo_stats();
     render('home', [
         'page_title' => t('home.meta_title'),
-        'meta_description' => t('home.meta_description', compact_num($totalMemes)),
+        'meta_description' => t('home.meta_description', compact_num((int) $stats['memes'])),
         'canonical' => BASE_URL . lurl('/'),
         'alternates' => alternates('/'),
         'trending' => repo_trending(PAGE_SIZE),
         'top_categories' => repo_categories(8),
-        'total_memes' => $totalMemes,
+        'stats' => $stats,
         'is_home' => true,
     ]);
     exit;

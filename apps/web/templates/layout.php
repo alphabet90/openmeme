@@ -1,5 +1,6 @@
 <?php
 /** @var string $templateFile */
+$stats = repo_stats();
 $navCategories = repo_categories(6);
 ?><!DOCTYPE html>
 <html lang="<?= e(locale_tag()) ?>">
@@ -20,11 +21,7 @@ $navCategories = repo_categories(6);
 <meta property="og:title" content="<?= e($page_title ?? 'OpenMeme') ?>">
 <meta property="og:description" content="<?= e($meta_description ?? '') ?>">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="OpenMeme">
 <meta property="og:locale" content="<?= e(str_replace('-', '_', locale_tag())) ?>">
-<?php foreach (LOCALES as $k => $l): if ($k !== LOCALE): ?>
-<meta property="og:locale:alternate" content="<?= e(str_replace('-', '_', $l['tag'])) ?>">
-<?php endif; endforeach ?>
 <?php if (!empty($canonical)): ?>
 <meta property="og:url" content="<?= e($canonical) ?>">
 <?php endif ?>
@@ -37,34 +34,12 @@ $navCategories = repo_categories(6);
 <?php if (!empty($og_image_alt)): ?>
 <meta property="og:image:alt" content="<?= e($og_image_alt) ?>">
 <?php endif ?>
-<?php endif ?>
-<meta name="twitter:card" content="<?= !empty($og_image) ? 'summary_large_image' : 'summary' ?>">
-<meta name="twitter:title" content="<?= e($page_title ?? 'OpenMeme') ?>">
-<meta name="twitter:description" content="<?= e($meta_description ?? '') ?>">
-<?php if (CDN_URL !== ''): ?>
-<link rel="preconnect" href="<?= e(CDN_URL) ?>">
+<meta name="twitter:card" content="summary_large_image">
 <?php endif ?>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" href="https://fonts.gstatic.com/s/anton/v27/1Ptgg87LROyAm3Kz-C8.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="https://fonts.gstatic.com/s/spacegrotesk/v22/V8mDoQDjQSkFtoMM3T6r8E7mPbF4Cw.woff2" as="font" type="font/woff2" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<?php $criticalCss = @file_get_contents(SITE_ROOT . '/public/assets/critical.css'); ?>
-<?php if ($criticalCss !== false): ?>
-<style nonce="<?= e(csp_nonce()) ?>"><?= $criticalCss ?></style>
-<link rel="preload" href="<?= e(asset('/assets/app.css')) ?>" as="style">
-<link rel="stylesheet" href="<?= e(asset('/assets/app.css')) ?>" media="print" data-async-css>
-<script nonce="<?= e(csp_nonce()) ?>">
-(function () {
-  var l = document.querySelector('[data-async-css]');
-  l.addEventListener('load', function () { l.media = 'all'; });
-  if (l.sheet) l.media = 'all';
-})();
-</script>
-<noscript><link rel="stylesheet" href="<?= e(asset('/assets/app.css')) ?>"></noscript>
-<?php else: ?>
 <link rel="stylesheet" href="<?= e(asset('/assets/app.css')) ?>">
-<?php endif ?>
 <?php if (!empty($is_home)): ?>
 <script type="application/ld+json" nonce="<?= e(csp_nonce()) ?>">
 <?= json_encode([
@@ -151,6 +126,7 @@ $navCategories = repo_categories(6);
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
+    <button class="msearch-go" type="submit"><?= e(t('nav.search_btn')) ?></button>
   </form>
   <div class="msearch-body" data-msearch-body></div>
 </div>
@@ -161,12 +137,12 @@ $navCategories = repo_categories(6);
 
 <footer class="footer">
   <div class="footer-grid">
-    <div class="footer-brand-col">
+    <div>
       <p class="footer-brand">OPEN<span class="lime">MEME</span></p>
       <p class="footer-tagline"><?= e(t('footer.tagline')) ?></p>
     </div>
 
-    <nav class="footer-explore" aria-label="<?= e(t('footer.nav_label')) ?>">
+    <nav aria-label="<?= e(t('footer.nav_label')) ?>">
       <h3 class="footer-col-title"><?= e(t('footer.explore')) ?></h3>
       <ul>
         <li><a href="<?= e(lurl('/')) ?>"><?= e(t('footer.home')) ?></a></li>
@@ -177,7 +153,7 @@ $navCategories = repo_categories(6);
       </ul>
     </nav>
 
-    <nav class="footer-categories" aria-label="<?= e(t('footer.categories_label')) ?>">
+    <nav aria-label="<?= e(t('footer.categories_label')) ?>">
       <h3 class="footer-col-title"><?= e(t('footer.categories')) ?></h3>
       <ul>
         <?php foreach (array_slice($navCategories, 0, 5) as $c): ?>
@@ -186,7 +162,7 @@ $navCategories = repo_categories(6);
       </ul>
     </nav>
 
-    <nav class="footer-legal" aria-label="<?= e(t('footer.legal_label')) ?>">
+    <nav aria-label="<?= e(t('footer.legal_label')) ?>">
       <h3 class="footer-col-title"><?= e(t('footer.legal')) ?></h3>
       <ul>
         <li><a href="<?= e(lurl('/terminos')) ?>"><?= e(t('footer.terms')) ?></a></li>
@@ -205,9 +181,19 @@ $navCategories = repo_categories(6);
 <script nonce="<?= e(csp_nonce()) ?>">
 window.OM = <?= json_encode([
     'prefix' => LOCALES[LOCALE]['prefix'],
+    'trending' => array_map(
+        fn ($m) => $m['title'],
+        array_slice(repo_trending(6), 0, 6)
+    ),
+    'categories' => array_map(
+        fn ($c) => ['name' => cat_label($c['category']), 'slug' => $c['category']],
+        $navCategories
+    ),
     'i18n' => [
         'recents' => t('js.recents'),
         'clear' => t('js.clear'),
+        'trending' => t('js.trending'),
+        'explore' => t('js.explore'),
         'no_suggestions' => t('js.no_suggestions', '%s'),
         'press_enter' => t('js.press_enter'),
         'remove' => t('js.remove'),
