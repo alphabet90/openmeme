@@ -245,28 +245,68 @@ $(window).on('keydown', (e) => {
   }
 });
 
-/* ── home: append the next batch of trending cards in place ── */
-$('[data-show-more]').on('click', function (e) {
-  e.preventDefault();
-  const $btn = $(this);
-  if ($btn.hasClass('loading')) return;
-  const offset = parseInt($btn.attr('data-offset'), 10) || 0;
+/* ── home: infinite scroll the trending grid ──
+ * The "show more" anchor doubles as the scroll sentinel: an
+ * IntersectionObserver auto-loads the next batch as it nears the
+ * viewport. Clicking still works (and is the no-JS fallback link). */
+(function () {
+  const $btn = $('[data-show-more]');
+  if (!$btn.length) return;
+
   const label = $btn.contents().first()[0];
   const original = label.textContent.trim();
-  $btn.addClass('loading');
-  label.textContent = $btn.data('loading');
-  $.get(PREFIX + '/api/memes', { offset }, (html) => {
-    const $cards = $($.parseHTML(html)).filter('.card');
-    $('[data-home-grid]').append($cards);
-    $btn.removeClass('loading');
-    label.textContent = original;
-    $btn.attr('data-offset', offset + $cards.length);
-    if (!$cards.length) $btn.parent().remove();
-  }).fail(() => {
-    // fall back to the plain /top listing link
-    window.location.href = $btn.attr('href');
+  let done = false;
+
+  const loadMore = () => {
+    if (done || $btn.hasClass('loading')) return Promise.resolve();
+    const offset = parseInt($btn.attr('data-offset'), 10) || 0;
+    $btn.addClass('loading');
+    label.textContent = $btn.data('loading');
+    return $.get(PREFIX + '/api/memes', { offset })
+      .then((html) => {
+        const $cards = $($.parseHTML(html)).filter('.card');
+        $('[data-home-grid]').append($cards);
+        $btn.removeClass('loading');
+        label.textContent = original;
+        $btn.attr('data-offset', offset + $cards.length);
+        if (!$cards.length) {
+          done = true;
+          if (observer) observer.disconnect();
+          $btn.parent().remove();
+        }
+      })
+      .fail(() => {
+        // network error: stop auto-loading, leave the plain /top link working
+        if (observer) observer.disconnect();
+        $btn.removeClass('loading');
+        label.textContent = original;
+      });
+  };
+
+  // Manual click keeps working as a fallback / explicit trigger.
+  $btn.on('click', (e) => {
+    e.preventDefault();
+    loadMore();
   });
-});
+
+  let observer = null;
+  if ('IntersectionObserver' in window) {
+    observer = new IntersectionObserver((entries) => {
+      if (entries.some((en) => en.isIntersecting)) {
+        // Chain so that if the sentinel is still in view after a batch
+        // (tall viewport, short batch), we keep filling until it scrolls off.
+        loadMore().then(() => {
+          if (!done && observer) {
+            const el = $btn[0];
+            const r = el.getBoundingClientRect();
+            if (r.top < window.innerHeight) loadMore();
+          }
+        });
+      }
+    }, { rootMargin: '600px 0px' });
+    observer.observe($btn[0]);
+  }
+})();
 
 /* ── card / detail actions: copy image + native share ── */
 /* System clipboards only accept PNG, so JPEG/WebP/GIF are redrawn on a
