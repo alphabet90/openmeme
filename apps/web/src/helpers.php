@@ -132,6 +132,29 @@ function meme_img_src(array $meme): string
     return CDN_URL !== '' ? CDN_URL . meme_img($meme) : meme_img($meme);
 }
 
+/**
+ * Responsive srcset for card thumbnails. The optimize-images tool (tools/dev)
+ * writes -800.jpg + -340.jpg variants and points the MDX image: at the -800
+ * one, so a "-800.jpg" suffix marks a meme that has variants. Returns
+ * "<url-800> 800w, <url-340> 340w" for those, or "" for memes without
+ * variants (small originals) so callers can omit srcset entirely.
+ *
+ * The -340 variant is only generated for sources wider than 340px; narrower
+ * images get a -800 (compress-only) variant alone. `width` is the indexed
+ * -800 variant's width, so width <= 340 means there is no -340 sibling and
+ * the single remaining candidate makes srcset pointless — bail in that case
+ * to avoid emitting a 404ing "-340.jpg 340w" candidate.
+ */
+function meme_img_srcset(array $meme): string
+{
+    $src800 = meme_img_src($meme);
+    if (!str_ends_with($src800, '-800.jpg') || (int) ($meme['width'] ?? 0) <= 340) {
+        return '';
+    }
+    $src340 = substr($src800, 0, -strlen('-800.jpg')) . '-340.jpg';
+    return $src800 . ' 800w, ' . $src340 . ' 340w';
+}
+
 /** Absolute image URL for OG tags / JSON-LD. */
 function meme_img_abs(array $meme): string
 {
